@@ -1,12 +1,17 @@
 package com.github.unaszole.bible.implementations;
 
 import com.github.unaszole.bible.CachedDownloader;
+import com.github.unaszole.bible.osisbuilder.parser.Context;
+import com.github.unaszole.bible.osisbuilder.parser.ContextMetadata;
+import com.github.unaszole.bible.osisbuilder.parser.ContextType;
+import com.github.unaszole.bible.osisbuilder.parser.Parser;
 import com.github.unaszole.bible.osisbuilder.versification.characteristics.VersificationCharacteristics;
 
 import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;
 
@@ -18,14 +23,22 @@ import java.nio.file.Files;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Chouraqui implements VersificationCharacteristics {
+	
+	/*
+		Section 1 : Specify all the pages to download.
+		For this bible, it's 1 or 2 web pages per book.
+	*/
 	
 	private static final String URL_PREFIX = "https://www.spiritualland.org/Les%20Bibles%20Version%20Html/Bible%20-%20Version%20Chouraqui/";
 	
@@ -130,12 +143,6 @@ public class Chouraqui implements VersificationCharacteristics {
 	
 	private static final List<BibleBook> BOOKS = new ArrayList<BibleBook>(BOOK_PAGES.keySet());
 	
-	private final CachedDownloader downloader;
-	
-	public Chouraqui(Path cachePath) {
-		this.downloader = new CachedDownloader(cachePath);
-	}
-	
 	private static URL getUrl(String urlPostfix) {
 		try {
 			return new URL(URL_PREFIX + urlPostfix);
@@ -152,6 +159,97 @@ public class Chouraqui implements VersificationCharacteristics {
 			.collect(Collectors.toList());
 	}
 	
+	/*
+		Section 2 : Specify how to parse all items in a given page.
+	*/
+	
+	private static class ElementParser extends Parser<Element> {
+		private final static String CHAPTER_TITLE_REGEXP = "^Chapitre (\\d+)\\.$";
+		private final static String S_CHAPTER_TITLE_CONTAINER = ":is(div,p):matches(" + CHAPTER_TITLE_REGEXP + ")";
+		private final static String S_NONCHAPTER_STRONG_CONTAINER = "div:not(" + S_CHAPTER_TITLE_CONTAINER + "):has(> strong)";
+		private final static String S_SECTION_TITLE_CONTAINER = S_CHAPTER_TITLE_CONTAINER + " ~ " + S_NONCHAPTER_STRONG_CONTAINER;
+		private final static String S_BOOK_INTRO_CONTAINER = S_NONCHAPTER_STRONG_CONTAINER + ":not(" + S_CHAPTER_TITLE_CONTAINER + " ~ div)";
+		private final static String VERSE_START_REGEXP = "^(\\d+)\\.\\s+(.*)$";
+		private final static String S_VERSE_START_CONTAINER = S_CHAPTER_TITLE_CONTAINER + " ~ div:matches(" + VERSE_START_REGEXP + ")";
+		private final static String S_VERSE_CONTINUATION_CONTAINER = S_VERSE_START_CONTAINER + " ~ div:not(:is("
+			+ S_CHAPTER_TITLE_CONTAINER + ", " + S_SECTION_TITLE_CONTAINER + ", " + S_VERSE_START_CONTAINER + "))";
+		
+		private final static Evaluator BOOK_TITLE_SELECTOR = QueryParser.parse(".text1titre div strong");
+		private final static Evaluator BOOK_INTRO_SELECTOR = QueryParser.parse("table:has(.text1titre) ~ div " + S_BOOK_INTRO_CONTAINER);
+		private final static Evaluator CHAPTER_TITLE_SELECTOR = QueryParser.parse("table:has(.text1titre) ~ div " + S_CHAPTER_TITLE_CONTAINER);
+		private final static Evaluator SECTION_TITLE_SELECTOR = QueryParser.parse("table:has(.text1titre) ~ div " + S_SECTION_TITLE_CONTAINER);
+		private final static Evaluator VERSE_START_SELECTOR = QueryParser.parse("table:has(.text1titre) ~ div " + S_VERSE_START_CONTAINER);
+		private final static Evaluator VERSE_CONTINUATION_SELECTOR = QueryParser.parse("table:has(.text1titre) ~ div " + S_VERSE_CONTINUATION_CONTAINER);
+		
+		private final static Pattern CHAPTER_TITLE_PATTERN = Pattern.compile(CHAPTER_TITLE_REGEXP);
+		private final static Pattern VERSE_START_PATTERN = Pattern.compile(VERSE_START_REGEXP);
+		
+		private static String extract(Pattern pattern, int groupNb, String sourceString) {
+			Matcher matcher = pattern.matcher(sourceString);
+			if(matcher.matches()) {
+				return matcher.group(groupNb);
+			}
+			throw new RuntimeException(sourceString + " did not match " + pattern);
+		}
+		
+		protected ContextMetadata readContext(ContextMetadata parent, ContextType type, Element e) {
+			switch(type) {
+				case BOOK:
+					return e.is(BOOK_TITLE_SELECTOR) ? ContextMetadata.forBook(parent.book) : null;
+				
+				case BOOK_TITLE_TEXT:
+					return e.is(BOOK_TITLE_SELECTOR) ? ContextMetadata.forBookTitleText(parent.book) : null;
+				
+				case BOOK_INTRO:
+					return e.is(BOOK_INTRO_SELECTOR) ? ContextMetadata.forBookIntro(parent.book) : null;
+				
+				case BOOK_INTRO_TEXT:
+					return e.is(BOOK_INTRO_SELECTOR) ? ContextMetadata.forBookIntroText(parent.book) : null;
+				
+				case CHAPTER:
+					return e.is(CHAPTER_TITLE_SELECTOR) ? ContextMetadata.forChapter(parent.book,
+						Integer.valueOf(extract(CHAPTER_TITLE_PATTERN, 1, e.text()))) : null;
+				
+				case SECTION:
+					return e.is(SECTION_TITLE_SELECTOR) ? ContextMetadata.forSection(parent.book,
+						parent.chapter) : null;
+				
+				case VERSE:
+					return e.is(VERSE_START_SELECTOR) ? ContextMetadata.forVerse(parent.book, parent.chapter,
+						Integer.valueOf(extract(VERSE_START_PATTERN, 1, e.text()))) : null;
+				
+				case VERSE_TEXT:
+					return e.is(VERSE_CONTINUATION_SELECTOR) ? ContextMetadata.forVerseText(parent.book,
+						parent.chapter, parent.verse) : null;
+				
+				default:
+					return null;
+			}
+		}
+		
+		protected String readContent(ContextMetadata context, Element e) {
+			switch(context.type) {
+				case BOOK_INTRO:
+				case BOOK_INTRO_TEXT:
+				case SECTION:
+				case VERSE_TEXT:
+					return e.text();
+				
+				case VERSE:
+					return extract(VERSE_START_PATTERN, 2, e.text());
+				
+				default:
+					return null;
+			}
+		}
+	}
+	
+	private final CachedDownloader downloader;
+	
+	public Chouraqui(Path cachePath) {
+		this.downloader = new CachedDownloader(cachePath);
+	}
+	
 	@Override
 	public Boolean containsBook(BibleBook book) {
 		return BOOKS.contains(book);
@@ -162,40 +260,10 @@ public class Chouraqui implements VersificationCharacteristics {
 		return BOOKS.indexOf(book);
 	}
 	
-	private final static String CHAPTER_TITLE_REGEXP = "^Chapitre (\\d+)\\.$";
-	private final static String S_CHAPTER_TITLE_CONTAINER = ":is(div,p):matches(" + CHAPTER_TITLE_REGEXP + ")";
-	private final static String S_NONCHAPTER_STRONG_CONTAINER = "div:not(" + S_CHAPTER_TITLE_CONTAINER + "):has(> strong)";
-	private final static String S_SECTION_TITLE_CONTAINER = S_CHAPTER_TITLE_CONTAINER + " ~ " + S_NONCHAPTER_STRONG_CONTAINER;
-	private final static String S_BOOK_INTRO_CONTAINER = S_NONCHAPTER_STRONG_CONTAINER + ":not(" + S_CHAPTER_TITLE_CONTAINER + " ~ div)";
-	
-	private final static Evaluator BOOK_TITLE_SELECTOR = QueryParser.parse(".text1titre div strong");
-	private final static Evaluator BOOK_INTRO_SELECTOR = QueryParser.parse("table:has(.text1titre) ~ div " + S_BOOK_INTRO_CONTAINER);
-	private final static Evaluator CHAPTER_TITLE_SELECTOR = QueryParser.parse("table:has(.text1titre) ~ div " + S_CHAPTER_TITLE_CONTAINER);
-	private final static Pattern CHAPTER_TITLE_PATTERN = Pattern.compile(CHAPTER_TITLE_REGEXP);
-	private final static Evaluator SECTION_TITLE_SELECTOR = QueryParser.parse("table:has(.text1titre) ~ div " + S_SECTION_TITLE_CONTAINER);
-	
 	@Override
 	public Integer getLastChapter(BibleBook book) {
 		
 		int maxChapter = 0;
-		
-		try {
-			for(URL pageUrl: getPageUrls(book)) {
-				Path localPath = downloader.getFile(pageUrl);
-				System.out.println(book + ": " + localPath);
-				
-				Document doc = Jsoup.parse(localPath.toFile());
-				for(Element chapterTitle: doc.select(CHAPTER_TITLE_SELECTOR)) {
-					Matcher chapterMatcher = CHAPTER_TITLE_PATTERN.matcher(chapterTitle.ownText());
-					if(chapterMatcher.matches()) {
-						maxChapter = Math.max(maxChapter, Integer.valueOf(chapterMatcher.group(1)));
-					}
-				}
-			}
-		}
-		catch(Exception e) {
-			throw new RuntimeException(e);
-		}
 		
 		return maxChapter;
 	}
@@ -216,13 +284,24 @@ public class Chouraqui implements VersificationCharacteristics {
 	private void dumpBookData(BibleBook book) throws Exception {
 		for(URL pageUrl: getPageUrls(book)) {
 			Path localPath = downloader.getFile(pageUrl);
+			
+			System.out.println(localPath);
+			
 			Document doc = Jsoup.parse(localPath.toFile());
 			
+			Context context = new ElementParser().extract(doc.stream(),
+				new ContextMetadata(ContextType.DOCUMENT, book, 0, 0),
+				ContextMetadata.forBook(book),
+				ContextType.SECTION
+			);
 			
-			System.out.println("Book title : " + doc.select(BOOK_TITLE_SELECTOR).eachText());
-			System.out.println("Book intro : " + doc.select(BOOK_INTRO_SELECTOR).eachText());
-			System.out.println("Chapter title : " + doc.select(CHAPTER_TITLE_SELECTOR).eachText());
-			System.out.println("Section title : " + doc.select(SECTION_TITLE_SELECTOR).eachText());
+			System.out.println(context);
+			
+			
+			//System.out.println("Book title : " + doc.select(BOOK_TITLE_SELECTOR).eachText());
+			//System.out.println("Book intro : " + doc.select(BOOK_INTRO_SELECTOR).eachText());
+			//System.out.println("Chapter title : " + doc.select(CHAPTER_TITLE_SELECTOR).eachText());
+			//System.out.println("Section title : " + doc.select(SECTION_TITLE_SELECTOR).eachText());
 		}
 	}
 	
