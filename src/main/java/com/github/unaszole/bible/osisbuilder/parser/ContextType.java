@@ -11,7 +11,7 @@ public enum ContextType {
 	BOOK_INTRO(List.of(BOOK_INTRO_TEXT)),
 	BOOK_TITLE_TEXT(List.of()),
 	BOOK(List.of(ContextType.BOOK_TITLE_TEXT, ContextType.BOOK_INTRO, ContextType.CHAPTER)),
-	DOCUMENT(List.of(ContextType.BOOK));
+	DOCUMENT(List.of(ContextType.BOOK, ContextType.CHAPTER));
 	
 	public final List<ContextType> allowedChildren;
 	

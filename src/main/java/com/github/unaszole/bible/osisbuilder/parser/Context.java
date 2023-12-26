@@ -1,10 +1,21 @@
 package com.github.unaszole.bible.osisbuilder.parser;
 
+import org.crosswire.jsword.versification.BibleBook;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class Context {
+	
+	public static Context docRoot(BibleBook book) {
+		return new Context(
+			null,
+			new ContextMetadata(ContextType.DOCUMENT, book, 0, 0),
+			null
+		);
+	}
 	
 	public final Context parent;
 	public final ContextMetadata metadata;
@@ -27,6 +38,17 @@ public class Context {
 	
 	public List<Context> getChildren() {
 		return Collections.unmodifiableList(children);
+	}
+	
+	public boolean isDescendantOf(ContextMetadata otherContext) {
+		Context currentAncestor = this;
+		while(currentAncestor != null) {
+			if(Objects.equals(currentAncestor.metadata, otherContext)) {
+				return true;
+			}
+			currentAncestor = currentAncestor.parent;
+		}
+		return false;
 	}
 	
 	@Override
