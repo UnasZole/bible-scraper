@@ -51,7 +51,7 @@ public abstract class Parser<Lexeme> {
 			return null;
 		}
 		
-		ContextType parentLastChildType = parent.getLastChildType();
+		ContextType parentLastChildType = parent.getLastChild().map(c -> c.metadata.type).orElse(null);
 		boolean allowedFromNow = parentLastChildType == null;
 		for(ContextType childType: parent.metadata.type.allowedChildren) {
 			if(childType == parentLastChildType) {
@@ -98,21 +98,29 @@ public abstract class Parser<Lexeme> {
 				if(nextCtxMeta != null) {
 					// Lexeme starts a new context.
 					
-					// All ancestors of the current context which are not ancestors of the new context are now complete.
-					// Send them to capture.
-					Context currentAncestor = currentContext;
-					while(currentAncestor != null && !nextCtxParent.isDescendantOf(currentAncestor.metadata)) {
-						if(capture.test(currentAncestor)) {
-							// If the capture function has completed, stop parsing.
-							return;
+					if(Objects.equals(nextCtxMeta, nextCtxParent.getLastChild().map(c -> c.metadata).orElse(null))) {
+						// New context is identical to its previous sibling : nothing to do, just set it as current.
+						currentContext = nextCtxParent.getLastChild().get();
+					}
+					else {
+						// It really starts a new context !
+						
+						// All ancestors of the current context which are not ancestors of the new context are now complete.
+						// Send them to capture.
+						Context currentAncestor = currentContext;
+						while(currentAncestor != null && !nextCtxParent.isDescendantOf(currentAncestor.metadata)) {
+							if(capture.test(currentAncestor)) {
+								// If the capture function has completed, stop parsing.
+								return;
+							}
+							
+							currentAncestor = currentAncestor.parent;
 						}
 						
-						currentAncestor = currentAncestor.parent;
+						// Instantiate a new context using the lexeme.
+						currentContext = new Context(nextCtxParent, nextCtxMeta, readContent(nextCtxMeta, lexeme));
+						nextCtxParent.addChild(currentContext);
 					}
-					
-					// Instantiate a new context using the lexeme.
-					currentContext = new Context(nextCtxParent, nextCtxMeta, readContent(nextCtxMeta, lexeme));
-					nextCtxParent.addChild(currentContext);
 				}
 				
 				// No new context : lexeme was insignificant.

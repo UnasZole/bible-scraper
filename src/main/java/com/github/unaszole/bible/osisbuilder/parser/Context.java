@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Context {
 	
@@ -32,8 +33,8 @@ public class Context {
 		children.add(child);
 	}
 	
-	public ContextType getLastChildType() {
-		return children.isEmpty() ? null : children.get(children.size() - 1).metadata.type;
+	public Optional<Context> getLastChild() {
+		return children.isEmpty() ? Optional.empty() : Optional.of(children.get(children.size() - 1));
 	}
 	
 	public List<Context> getChildren() {

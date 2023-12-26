@@ -174,7 +174,7 @@ public class Chouraqui implements VersificationCharacteristics {
 		private final static String S_VERSE_CONTINUATION_CONTAINER = S_VERSE_START_CONTAINER + " ~ div:not(:is("
 			+ S_CHAPTER_TITLE_CONTAINER + ", " + S_SECTION_TITLE_CONTAINER + ", " + S_VERSE_START_CONTAINER + "))";
 		
-		private final static Evaluator BOOK_TITLE_SELECTOR = QueryParser.parse(".text1titre div strong");
+		private final static Evaluator BOOK_TITLE_SELECTOR = QueryParser.parse(".text1titre div strong, body > table + div:has(strong)");
 		private final static Evaluator BOOK_INTRO_SELECTOR = QueryParser.parse(S_BOOK_INTRO_CONTAINER + ":not(.text1titre *)");
 		private final static Evaluator CHAPTER_TITLE_SELECTOR = QueryParser.parse(S_CHAPTER_TITLE_CONTAINER + ":not(.text1titre *)");
 		private final static Evaluator SECTION_TITLE_SELECTOR = QueryParser.parse(S_SECTION_TITLE_CONTAINER + ":not(.text1titre *)");
