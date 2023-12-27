@@ -10,14 +10,6 @@ import java.util.Optional;
 
 public class Context {
 	
-	public static Context docRoot(BibleBook book) {
-		return new Context(
-			null,
-			new ContextMetadata(ContextType.DOCUMENT, book, 0, 0),
-			null
-		);
-	}
-	
 	public final Context parent;
 	public final ContextMetadata metadata;
 	public final String content;
@@ -27,6 +19,10 @@ public class Context {
 		this.parent = parent;
 		this.metadata = metadata;
 		this.content = content;
+	}
+	
+	public Context(ContextMetadata metadata) {
+		this(null, metadata, null);
 	}
 	
 	public void addChild(Context child) {

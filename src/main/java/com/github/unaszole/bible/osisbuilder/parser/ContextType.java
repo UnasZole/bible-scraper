@@ -3,15 +3,22 @@ package com.github.unaszole.bible.osisbuilder.parser;
 import java.util.List;
 
 public enum ContextType {
-	VERSE_TEXT(List.of()),
-	VERSE(List.of(ContextType.VERSE_TEXT)),
-	SECTION(List.of(ContextType.VERSE)),
-	CHAPTER(List.of(ContextType.VERSE, ContextType.SECTION)),
-	BOOK_INTRO_TEXT(List.of()),
-	BOOK_INTRO(List.of(BOOK_INTRO_TEXT)),
-	BOOK_TITLE_TEXT(List.of()),
-	BOOK(List.of(ContextType.BOOK_TITLE_TEXT, ContextType.BOOK_INTRO, ContextType.CHAPTER)),
-	DOCUMENT(List.of(ContextType.BOOK, ContextType.CHAPTER));
+	VERSE_ADD(List.of()),
+	VERSE(List.of(VERSE_ADD)),
+	
+	SECTION_TITLE_ADD(List.of()),
+	SECTION(List.of(SECTION_TITLE_ADD, VERSE)),
+	
+	CHAPTER_TITLE_ADD(List.of()),
+	CHAPTER(List.of(CHAPTER_TITLE_ADD, VERSE, SECTION)),
+	
+	BOOK_INTRO_ADD(List.of()),
+	BOOK_INTRO(List.of(BOOK_INTRO_ADD)),
+	
+	BOOK_TITLE_ADD(List.of()),
+	BOOK(List.of(BOOK_TITLE_ADD, BOOK_INTRO, CHAPTER)),
+	
+	BIBLE(List.of(BOOK));
 	
 	public final List<ContextType> allowedChildren;
 	

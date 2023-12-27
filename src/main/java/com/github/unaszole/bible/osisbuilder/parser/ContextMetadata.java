@@ -19,32 +19,40 @@ public class ContextMetadata {
 		return new ContextMetadata(ContextType.BOOK, book, 0, 0);
 	}
 	
-	public static ContextMetadata forBookTitleText(BibleBook book) {
-		return new ContextMetadata(ContextType.BOOK_TITLE_TEXT, book, 0, 0);
+	public static ContextMetadata forBookTitleAdd(BibleBook book) {
+		return new ContextMetadata(ContextType.BOOK_TITLE_ADD, book, 0, 0);
 	}
 	
 	public static ContextMetadata forBookIntro(BibleBook book) {
 		return new ContextMetadata(ContextType.BOOK_INTRO, book, 0, 0);
 	}
 	
-	public static ContextMetadata forBookIntroText(BibleBook book) {
-		return new ContextMetadata(ContextType.BOOK_INTRO_TEXT, book, 0, 0);
+	public static ContextMetadata forBookIntroAdd(BibleBook book) {
+		return new ContextMetadata(ContextType.BOOK_INTRO_ADD, book, 0, 0);
 	}
 	
 	public static ContextMetadata forChapter(BibleBook book, int chapter) {
 		return new ContextMetadata(ContextType.CHAPTER, book, chapter, 0);
 	}
 	
+	public static ContextMetadata forChapterTitleAdd(BibleBook book, int chapter) {
+		return new ContextMetadata(ContextType.CHAPTER_TITLE_ADD, book, chapter, 0);
+	}
+	
 	public static ContextMetadata forSection(BibleBook book, int chapter) {
 		return new ContextMetadata(ContextType.SECTION, book, chapter, 0);
+	}
+	
+	public static ContextMetadata forSectionTitleAdd(BibleBook book, int chapter) {
+		return new ContextMetadata(ContextType.SECTION_TITLE_ADD, book, chapter, 0);
 	}
 	
 	public static ContextMetadata forVerse(BibleBook book, int chapter, int verse) {
 		return new ContextMetadata(ContextType.VERSE, book, chapter, verse);
 	}
 	
-	public static ContextMetadata forVerseText(BibleBook book, int chapter, int verse) {
-		return new ContextMetadata(ContextType.VERSE_TEXT, book, chapter, verse);
+	public static ContextMetadata forVerseAdd(BibleBook book, int chapter, int verse) {
+		return new ContextMetadata(ContextType.VERSE_ADD, book, chapter, verse);
 	}
 	
 	@Override

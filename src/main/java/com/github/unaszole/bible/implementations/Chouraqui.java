@@ -198,14 +198,14 @@ public class Chouraqui implements VersificationCharacteristics {
 				case BOOK:
 					return e.is(BOOK_TITLE_SELECTOR) ? ContextMetadata.forBook(parent.book) : null;
 				
-				case BOOK_TITLE_TEXT:
-					return e.is(BOOK_TITLE_SELECTOR) ? ContextMetadata.forBookTitleText(parent.book) : null;
+				case BOOK_TITLE_ADD:
+					return e.is(BOOK_TITLE_SELECTOR) ? ContextMetadata.forBookTitleAdd(parent.book) : null;
 				
 				case BOOK_INTRO:
 					return e.is(BOOK_INTRO_SELECTOR) ? ContextMetadata.forBookIntro(parent.book) : null;
 				
-				case BOOK_INTRO_TEXT:
-					return e.is(BOOK_INTRO_SELECTOR) ? ContextMetadata.forBookIntroText(parent.book) : null;
+				case BOOK_INTRO_ADD:
+					return e.is(BOOK_INTRO_SELECTOR) ? ContextMetadata.forBookIntroAdd(parent.book) : null;
 				
 				case CHAPTER:
 					return e.is(CHAPTER_TITLE_SELECTOR) ? ContextMetadata.forChapter(parent.book,
@@ -219,8 +219,8 @@ public class Chouraqui implements VersificationCharacteristics {
 					return e.is(VERSE_START_SELECTOR) ? ContextMetadata.forVerse(parent.book, parent.chapter,
 						Integer.valueOf(extract(VERSE_START_PATTERN, 1, e.text()))) : null;
 				
-				case VERSE_TEXT:
-					return e.is(VERSE_CONTINUATION_SELECTOR) ? ContextMetadata.forVerseText(parent.book,
+				case VERSE_ADD:
+					return e.is(VERSE_CONTINUATION_SELECTOR) ? ContextMetadata.forVerseAdd(parent.book,
 						parent.chapter, parent.verse) : null;
 				
 				default:
@@ -232,12 +232,12 @@ public class Chouraqui implements VersificationCharacteristics {
 		protected String readContent(ContextMetadata context, Element e) {
 			switch(context.type) {
 				case BOOK:
-				case BOOK_TITLE_TEXT:
+				case BOOK_TITLE_ADD:
 				case BOOK_INTRO:
-				case BOOK_INTRO_TEXT:
+				case BOOK_INTRO_ADD:
 				case CHAPTER:
 				case SECTION:
-				case VERSE_TEXT:
+				case VERSE_ADD:
 					return e.text();
 				
 				case VERSE:
@@ -320,7 +320,7 @@ public class Chouraqui implements VersificationCharacteristics {
 		
 		for(Document doc: getDocs(book)) {
 			Context context = new ElementParser().extract(doc.stream(),
-				Context.docRoot(book),
+				new Context(ContextMetadata.forBook(book)),
 				ContextType.CHAPTER,
 				ContextMetadata.forBook(book)
 			);
@@ -341,7 +341,7 @@ public class Chouraqui implements VersificationCharacteristics {
 		
 		for(Document doc: getDocs(book)) {
 			Context context = new ElementParser().extract(doc.stream(),
-				Context.docRoot(book),
+				new Context(ContextMetadata.forBook(book)),
 				ContextType.VERSE,
 				ContextMetadata.forChapter(book, chapter)
 			);
@@ -380,7 +380,7 @@ public class Chouraqui implements VersificationCharacteristics {
 			Document doc = Jsoup.parse(localPath.toFile());
 			
 			Context context = new ElementParser().extract(doc.stream(),
-				Context.docRoot(book),
+				new Context(ContextMetadata.forBook(book)),
 				ContextType.CHAPTER,
 				ContextMetadata.forBook(book)
 			);
