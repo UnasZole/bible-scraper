@@ -23,14 +23,19 @@ import java.nio.file.Files;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
+import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 public class Chouraqui implements VersificationCharacteristics {
@@ -84,8 +89,7 @@ public class Chouraqui implements VersificationCharacteristics {
 		// ECRITS
 		Map.entry(BibleBook.PS, List.of("Ketoubim%20%20Hagiographes%20Les%20Psaumes%201.html", "Ketoubim%20%20Hagiographes%20Les%20Psaumes%202.html")),
 		Map.entry(BibleBook.PROV, List.of("Mishle%20%20Les%20Proverbes.html")),
-		
-		// IOB
+		// Missing : IOB
 		Map.entry(BibleBook.SONG, List.of("Shir%20Hashirim%20Le%20Cantique%20des%20Cantiques.html")),
 		Map.entry(BibleBook.RUTH, List.of("Rout%20%20Routh%20%20Ruth.html")),
 		Map.entry(BibleBook.LAM, List.of("Eikha%20%20Lamentations.html")),
@@ -100,8 +104,8 @@ public class Chouraqui implements VersificationCharacteristics {
 		// DEUTERO
 		Map.entry(BibleBook.TOB, List.of("Liminaire%20pour%20Tobyah.html")),
 		Map.entry(BibleBook.JDT, List.of("Liminaire%20pour%20Iehoudit.html")),
-		Map.entry(BibleBook.MACC1, List.of("Liminaire%20pour%201%20Hashmonaim.html")),
-		Map.entry(BibleBook.MACC2, List.of("Liminaire%20pour%202%20Hashmonaim.html")),
+		//**/Map.entry(BibleBook.MACC1, List.of("Liminaire%20pour%201%20Hashmonaim.html")),
+		//**/Map.entry(BibleBook.MACC2, List.of("Liminaire%20pour%202%20Hashmonaim.html")),
 		Map.entry(BibleBook.WIS, List.of("Liminaire%20pour%20Sagesse%20de%20Shelomo.html")),
 		Map.entry(BibleBook.SIR, List.of("Liminaire%20pour%20Ben%20Sira.html")),
 		Map.entry(BibleBook.BAR, List.of("Liminaire%20pour%20Baroukh.html")),
@@ -176,6 +180,7 @@ public class Chouraqui implements VersificationCharacteristics {
 		
 		private final static Evaluator BOOK_TITLE_SELECTOR = QueryParser.parse(".text1titre div strong, body > table + div:has(strong)");
 		private final static Evaluator BOOK_INTRO_SELECTOR = QueryParser.parse(S_BOOK_INTRO_CONTAINER + ":not(.text1titre *)");
+		private final static Evaluator BOOK_INTRO_BR_SELECTOR = QueryParser.parse(S_BOOK_INTRO_CONTAINER + ":not(.text1titre *) + br");
 		private final static Evaluator CHAPTER_TITLE_SELECTOR = QueryParser.parse(S_CHAPTER_TITLE_CONTAINER + ":not(.text1titre *)");
 		private final static Evaluator SECTION_TITLE_SELECTOR = QueryParser.parse(S_SECTION_TITLE_CONTAINER + ":not(.text1titre *)");
 		private final static Evaluator VERSE_START_SELECTOR = QueryParser.parse(S_VERSE_START_CONTAINER + ":not(.text1titre *)");
@@ -193,55 +198,76 @@ public class Chouraqui implements VersificationCharacteristics {
 		}
 		
 		@Override
-		protected ContextMetadata readContext(ContextMetadata parent, ContextType type, Element e) {
+		protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, Element e) {
+			ContextMetadata parent = ancestors.peekFirst();
+			
 			switch(type) {
-				case BOOK:
-					return e.is(BOOK_TITLE_SELECTOR) ? ContextMetadata.forBook(parent.book) : null;
-				
-				case BOOK_TITLE_ADD:
-					return e.is(BOOK_TITLE_SELECTOR) ? ContextMetadata.forBookTitleAdd(parent.book) : null;
-				
-				case BOOK_INTRO:
-					return e.is(BOOK_INTRO_SELECTOR) ? ContextMetadata.forBookIntro(parent.book) : null;
-				
-				case BOOK_INTRO_ADD:
-					return e.is(BOOK_INTRO_SELECTOR) ? ContextMetadata.forBookIntroAdd(parent.book) : null;
+				case BOOK_TITLE:
+					return e.is(BOOK_TITLE_SELECTOR) ? new Context(
+							ContextMetadata.forBookTitle(parent.book),
+							new Context(ContextMetadata.forText(), e.text())
+						) : null;
 				
 				case CHAPTER:
-					return e.is(CHAPTER_TITLE_SELECTOR) ? ContextMetadata.forChapter(parent.book,
-						Integer.valueOf(extract(CHAPTER_TITLE_PATTERN, 1, e.text()))) : null;
+					if(e.is(CHAPTER_TITLE_SELECTOR)) {
+						int chapterNb = Integer.valueOf(extract(CHAPTER_TITLE_PATTERN, 1, e.text()));
+						return new Context(
+							ContextMetadata.forChapter(parent.book, chapterNb),
+							new Context(
+								ContextMetadata.forChapterTitle(parent.book, chapterNb),
+								new Context(ContextMetadata.forText(), e.text())
+							)
+						);
+					}
 				
-				case SECTION:
-					return e.is(SECTION_TITLE_SELECTOR) ? ContextMetadata.forSection(parent.book,
-						parent.chapter) : null;
-				
-				case VERSE:
-					return e.is(VERSE_START_SELECTOR) ? ContextMetadata.forVerse(parent.book, parent.chapter,
-						Integer.valueOf(extract(VERSE_START_PATTERN, 1, e.text()))) : null;
-				
-				case VERSE_ADD:
-					return e.is(VERSE_CONTINUATION_SELECTOR) ? ContextMetadata.forVerseAdd(parent.book,
-						parent.chapter, parent.verse) : null;
-				
-				default:
-					return null;
-			}
-		}
-		
-		@Override
-		protected String readContent(ContextMetadata context, Element e) {
-			switch(context.type) {
-				case BOOK:
-				case BOOK_TITLE_ADD:
-				case BOOK_INTRO:
-				case BOOK_INTRO_ADD:
-				case CHAPTER:
-				case SECTION:
-				case VERSE_ADD:
-					return e.text();
+				case SECTION_TITLE:
+					return e.is(SECTION_TITLE_SELECTOR) ? new Context(
+						ContextMetadata.forSectionTitle(parent.book, parent.chapter),
+						new Context(ContextMetadata.forText(), e.text())
+					) : null;
 				
 				case VERSE:
-					return extract(VERSE_START_PATTERN, 2, e.text());
+					if(e.is(VERSE_START_SELECTOR)) {
+						int verseNb = Integer.valueOf(extract(VERSE_START_PATTERN, 1, e.text()));
+						String verseText = extract(VERSE_START_PATTERN, 2, e.text());
+						
+						ContextMetadata verseMeta = ContextMetadata.forVerse(parent.book, parent.chapter, verseNb);
+						
+						return new Context(verseMeta,
+							new Context(
+								ContextMetadata.forStructuredText(),
+								new Context(ContextMetadata.forText(), verseText)
+							)
+						);
+					}
+				
+				case PARAGRAPH_BREAK:
+					
+					if(ancestors.stream().anyMatch(a -> a.type == ContextType.BOOK_INTRO)) {
+						return e.is(BOOK_INTRO_BR_SELECTOR) ? new Context(
+							ContextMetadata.forParagraphBreak()
+						) : null;
+					}
+					
+				case TEXT:
+					
+					if("".equals(e.text())) {
+						// Do not create empty text nodes.
+						return null;
+					}
+					
+					if(ancestors.stream().anyMatch(a -> a.type == ContextType.BOOK_INTRO)) {
+						// Trying to find structured text within a book intro.
+						return e.is(BOOK_INTRO_SELECTOR) ? new Context(
+							ContextMetadata.forText(), e.text()
+						) : null;
+					}
+					else if(ancestors.stream().anyMatch(a -> a.type == ContextType.VERSE)) {
+						// Trying to find additional text within a verse.
+						return e.is(VERSE_CONTINUATION_SELECTOR) ? new Context(
+							ContextMetadata.forText(), e.text()
+						) : null;
+					}
 				
 				default:
 					return null;
@@ -257,27 +283,40 @@ public class Chouraqui implements VersificationCharacteristics {
 		private final static Evaluator UNFORMATTED_CHAPTER_CONTENT_SELECTOR = QueryParser.parse(S_UNFORMATTED_CHAPTER_CONTENT + ":not(.text1titre *)");
 		private final static Pattern UNFORMATTED_VERSE_PATTERN = Pattern.compile(UNFORMATTED_VERSE_REGEXP);
 		
+		private static class UnformattedChapterParser extends Parser<MatchResult> {
+			@Override
+			protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, MatchResult verseMatch) {
+				ContextMetadata parent = ancestors.peekFirst();
+				switch(type) {
+					case VERSE:
+						ContextMetadata verseMeta = ContextMetadata.forVerse(
+							parent.book,
+							parent.chapter, 
+							Integer.valueOf(verseMatch.group(1))
+						);
+						return new Context(
+							verseMeta,
+							new Context(
+								ContextMetadata.fromParent(ContextType.STRUCTURED_TEXT, verseMeta),
+								new Context(ContextMetadata.fromParent(ContextType.TEXT, verseMeta), verseMatch.group(2))
+							)
+						);
+				}
+				return null;
+			}
+		}
+		
 		@Override
-		protected boolean parseExternally(Element e, Context currentContext, ContextType maxDepth, Predicate<Context> capture) {
-			if(currentContext.metadata.type == ContextType.CHAPTER && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
-				if(maxDepth == ContextType.CHAPTER) {
-					// If max depth is at chapter level, we just ignore the chapter contents.
-					return true;
-				}
-				
-				// Else we parse all unformatted verses and append them to the chapter.
+		protected boolean parseExternally(Element e, Deque<Context> currentContextStack, ContextType maxDepth, Predicate<Context> capture) {
+			
+			Optional<Context> chapterContext = currentContextStack.stream()
+				.filter(c -> c.metadata.type == ContextType.CHAPTER)
+				.findFirst();
+			
+			if(chapterContext.isPresent() && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
+				// We parse all unformatted verses and pass them to a dedicated parser.
 				Matcher verseMatcher = UNFORMATTED_VERSE_PATTERN.matcher(e.text());
-				while(verseMatcher.find()) {
-					currentContext.addChild(new Context(
-						currentContext,
-						ContextMetadata.forVerse(
-							currentContext.metadata.book,
-							currentContext.metadata.chapter, 
-							Integer.valueOf(verseMatcher.group(1))
-						),
-						verseMatcher.group(2)
-					));
-				}
+				new UnformattedChapterParser().parse(verseMatcher.results(), currentContextStack, maxDepth, capture);
 				
 				return true;
 			}
@@ -304,6 +343,25 @@ public class Chouraqui implements VersificationCharacteristics {
 		}
 	}
 	
+	private Stream<Element> getDocStream(BibleBook book) {
+		Deque<Document> docs = new LinkedList<>(getDocs(book));
+		Stream<Element> stream = docs.removeFirst().stream();
+		
+		while(!docs.isEmpty()) {
+			stream = Stream.concat(stream, docs.removeFirst().stream());
+		}
+		
+		return stream;
+	}
+	
+	private Context extractFromBook(BibleBook book, ContextMetadata wantedContext, ContextType maxDepth) {
+		return new ElementParser().extract(getDocStream(book),
+			new Context(ContextMetadata.forBook(book)),
+			maxDepth,
+			wantedContext
+		);
+	}
+	
 	@Override
 	public Boolean containsBook(BibleBook book) {
 		return BOOKS.contains(book);
@@ -318,17 +376,11 @@ public class Chouraqui implements VersificationCharacteristics {
 	public Integer getLastChapter(BibleBook book) {
 		int maxChapter = 0;
 		
-		for(Document doc: getDocs(book)) {
-			Context context = new ElementParser().extract(doc.stream(),
-				new Context(ContextMetadata.forBook(book)),
-				ContextType.CHAPTER,
-				ContextMetadata.forBook(book)
-			);
-			
-			for(Context child: context.getChildren()) {
-				if(child.metadata.type == ContextType.CHAPTER) {
-					maxChapter = Math.max(maxChapter, child.metadata.chapter);
-				}
+		Context context = extractFromBook(book, ContextMetadata.forBook(book), ContextType.CHAPTER);
+		
+		for(Context child: context.getChildren()) {
+			if(child.metadata.type == ContextType.CHAPTER) {
+				maxChapter = Math.max(maxChapter, child.metadata.chapter);
 			}
 		}
 		
@@ -339,23 +391,15 @@ public class Chouraqui implements VersificationCharacteristics {
 	public Integer getLastVerse(BibleBook book, int chapter) {
 		int maxVerse = 0;
 		
-		for(Document doc: getDocs(book)) {
-			Context context = new ElementParser().extract(doc.stream(),
-				new Context(ContextMetadata.forBook(book)),
-				ContextType.VERSE,
-				ContextMetadata.forChapter(book, chapter)
-			);
-			
-			if(context != null) {			
-				for(Context child: context.getChildren()) {
-					if(child.metadata.type == ContextType.VERSE) {
-						maxVerse = Math.max(maxVerse, child.metadata.verse);
-					}
-					else if(child.metadata.type == ContextType.SECTION) {
-						for(Context subChild: child.getChildren()) {
-							maxVerse = Math.max(maxVerse, subChild.metadata.verse);
-						}
-					}
+		Context context = extractFromBook(book, ContextMetadata.forChapter(book, chapter), ContextType.VERSE);
+		
+		for(Context child: context.getChildren()) {
+			if(child.metadata.type == ContextType.VERSE) {
+				maxVerse = Math.max(maxVerse, child.metadata.verse);
+			}
+			else if(child.metadata.type == ContextType.SECTION) {
+				for(Context subChild: child.getChildren()) {
+					maxVerse = Math.max(maxVerse, subChild.metadata.verse);
 				}
 			}
 		}
@@ -372,27 +416,7 @@ public class Chouraqui implements VersificationCharacteristics {
 	}
 	
 	private void dumpBookData(BibleBook book) throws Exception {
-		for(URL pageUrl: getPageUrls(book)) {
-			Path localPath = downloader.getFile(pageUrl);
-			
-			System.out.println(localPath);
-			
-			Document doc = Jsoup.parse(localPath.toFile());
-			
-			Context context = new ElementParser().extract(doc.stream(),
-				new Context(ContextMetadata.forBook(book)),
-				ContextType.CHAPTER,
-				ContextMetadata.forBook(book)
-			);
-			
-			System.out.println(context);
-			
-			
-			//System.out.println("Book title : " + doc.select(BOOK_TITLE_SELECTOR).eachText());
-			//System.out.println("Book intro : " + doc.select(BOOK_INTRO_SELECTOR).eachText());
-			//System.out.println("Chapter title : " + doc.select(CHAPTER_TITLE_SELECTOR).eachText());
-			//System.out.println("Section title : " + doc.select(SECTION_TITLE_SELECTOR).eachText());
-		}
+		System.out.println(extractFromBook(book, ContextMetadata.forBook(book), null));
 	}
 	
 	public static void main(String[] args) throws Exception {

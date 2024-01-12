@@ -7,22 +7,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Context {
 	
-	public final Context parent;
 	public final ContextMetadata metadata;
 	public final String content;
 	private List<Context> children = new ArrayList<>();
 	
-	public Context(Context parent, ContextMetadata metadata, String content) {
-		this.parent = parent;
+	public Context(ContextMetadata metadata, Context... children) {
 		this.metadata = metadata;
-		this.content = content;
+		this.children.addAll(List.of(children));
+		this.content = null;
 	}
 	
-	public Context(ContextMetadata metadata) {
-		this(null, metadata, null);
+	public Context(ContextMetadata metadata, String content) {
+		this.metadata = metadata;
+		this.content = content;
 	}
 	
 	public void addChild(Context child) {
@@ -37,15 +39,36 @@ public class Context {
 		return Collections.unmodifiableList(children);
 	}
 	
-	public boolean isDescendantOf(ContextMetadata otherContext) {
-		Context currentAncestor = this;
-		while(currentAncestor != null) {
-			if(Objects.equals(currentAncestor.metadata, otherContext)) {
-				return true;
-			}
-			currentAncestor = currentAncestor.parent;
+	public Set<ContextType> getAllowedTypesForNextChild() {
+		return metadata.type.getAllowedTypesForNextChild(
+			children.stream().map(c -> c.metadata.type).collect(Collectors.toList())
+		);
+	}
+	
+	public boolean isIncomplete() {
+		return metadata.type.isIncomplete(
+			children.stream().map(c -> c.metadata.type).collect(Collectors.toList())
+		);
+	}
+	
+	public Optional<List<Context>> getPathFromAncestor(Context ancestor) {
+		if(this == ancestor) {
+			return Optional.of(List.of());
 		}
-		return false;
+		
+		for(Context closerAncestor: ancestor.getChildren()) {
+			Optional<List<Context>> pathFromCloserAncestor = this.getPathFromAncestor(closerAncestor);
+			
+			if(pathFromCloserAncestor.isPresent()) {
+				List<Context> output = new ArrayList<>();
+				output.add(closerAncestor);
+				output.addAll(pathFromCloserAncestor.get());
+				return Optional.of(output);
+			}
+		}
+		
+		// Given context is actually not an ancestor, no path.
+		return Optional.empty();
 	}
 	
 	@Override
