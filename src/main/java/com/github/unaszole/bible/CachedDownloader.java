@@ -34,8 +34,9 @@ public class CachedDownloader {
 	
 	private final Path cacheDirectory;
 	
-	public CachedDownloader(Path cacheDirectory) {
+	public CachedDownloader(Path cacheDirectory) throws IOException {
 		this.cacheDirectory = cacheDirectory;
+		Files.createDirectories(cacheDirectory);
 	}
 	
 	public Path getFile(URL url) throws IOException {
