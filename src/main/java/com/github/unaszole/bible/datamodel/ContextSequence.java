@@ -1,4 +1,4 @@
-package com.github.unaszole.bible.osisbuilder.parser;
+package com.github.unaszole.bible.datamodel;
 
 import java.util.Queue;
 import java.util.Set;

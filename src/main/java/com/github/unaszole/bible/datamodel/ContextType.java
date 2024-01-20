@@ -1,11 +1,11 @@
-package com.github.unaszole.bible.osisbuilder.parser;
+package com.github.unaszole.bible.datamodel;
 
 import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
-import static com.github.unaszole.bible.osisbuilder.parser.ContextSequence.*;
+import static com.github.unaszole.bible.datamodel.ContextSequence.*;
 
 public enum ContextType {
 	
@@ -13,20 +13,20 @@ public enum ContextType {
 	TEXT(false),
 	PARAGRAPH_BREAK(false),
 	
-	// A structured text node may be implicitly built to encompass found content.
-	STRUCTURED_TEXT(true, any(TEXT, PARAGRAPH_BREAK)),
+	// A text structure may be implicitly built to encompass found content.
+	SECTION_TITLE(true, atLeastOne(TEXT)),
+	MAJOR_SECTION_TITLE(true, atLeastOne(TEXT)),
+	STRUCTURED_TEXT(true, any(MAJOR_SECTION_TITLE, SECTION_TITLE, TEXT, PARAGRAPH_BREAK)),
 	
 	// Verse must be built from a lexeme that provides a verse number.
-	VERSE(false, one(STRUCTURED_TEXT)), 
-	
-	// Sections may be implicitly derived (no mandatory data outside of the chapter's metadata).
-	SECTION_TITLE(true, atLeastOne(TEXT)),
-	SECTION(true, atMostOne(SECTION_TITLE), atLeastOne(VERSE)),
+	VERSE(false, one(STRUCTURED_TEXT)),
 	
 	// Chapter must be built from a lexeme that provides a chapter number.
 	// The chapter title can be derived implicitly.
+	// The chapter may start with some structure elements before the verses (usually just a section title).
+	// Other structure element delimiters (ie section titles, paragraphs.) will be contained inside each verse context.
 	CHAPTER_TITLE(true, atLeastOne(TEXT)),
-	CHAPTER(false, atMostOne(CHAPTER_TITLE), atLeastOne(SECTION)),
+	CHAPTER(false, atMostOne(CHAPTER_TITLE), atMostOne(STRUCTURED_TEXT), atLeastOne(VERSE)),
 	
 	// Book must be built from a lexeme that provides a book identifier.
 	// The contained book title and intro can be derived implicitly.

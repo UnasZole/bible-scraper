@@ -1,7 +1,7 @@
-package com.github.unaszole.bible.osisbuilder;
+package com.github.unaszole.bible;
 
-import com.github.unaszole.bible.osisbuilder.parser.ContextMetadata;
-import com.github.unaszole.bible.osisbuilder.parser.Scraper;
+import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.scraping.Scraper;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.nio.file.Files;
@@ -18,7 +18,7 @@ public class Entrypoint {
 
         Class<? extends Scraper> scraperClass = (Class<? extends Scraper>) Class.forName(className.contains(".")
                 ? className
-                : "com.github.unaszole.bible.implementations.scrapers." + className);
+                : "com.github.unaszole.bible.scraping.implementations." + className);
 
         return scraperClass.getConstructor(Path.class, String[].class).newInstance(cachePath, flags);
     }

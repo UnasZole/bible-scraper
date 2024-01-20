@@ -1,7 +1,10 @@
-package com.github.unaszole.bible.implementations.scrapers;
+package com.github.unaszole.bible.scraping.implementations;
 
 import com.github.unaszole.bible.CachedDownloader;
-import com.github.unaszole.bible.osisbuilder.parser.*;
+import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.*;
 import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -187,7 +190,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 				
 				case SECTION_TITLE:
 					return e.is(SECTION_TITLE_SELECTOR) ? new Context(
-						ContextMetadata.forSectionTitle(parent.book, parent.chapter),
+						ContextMetadata.forSectionTitle(),
 						new Context(ContextMetadata.forText(), e.text())
 					) : null;
 				
@@ -221,13 +224,13 @@ public class ChouraquiSpiritualLand implements Scraper {
 						return null;
 					}
 					
-					if(ancestors.stream().anyMatch(a -> a.type == ContextType.BOOK_INTRO)) {
+					if(isUnderA(ContextType.BOOK_INTRO, ancestors)) {
 						// Trying to find structured text within a book intro.
 						return e.is(BOOK_INTRO_SELECTOR) ? new Context(
 							ContextMetadata.forText(), e.text()
 						) : null;
 					}
-					else if(ancestors.stream().anyMatch(a -> a.type == ContextType.VERSE)) {
+					else if(isInVerseText(ancestors)) {
 						// Trying to find additional text within a verse.
 						return e.is(VERSE_CONTINUATION_SELECTOR) ? new Context(
 							ContextMetadata.forText(), e.text()

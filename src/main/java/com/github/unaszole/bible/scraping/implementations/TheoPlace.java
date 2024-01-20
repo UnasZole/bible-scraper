@@ -1,7 +1,10 @@
-package com.github.unaszole.bible.implementations.scrapers;
+package com.github.unaszole.bible.scraping.implementations;
 
 import com.github.unaszole.bible.CachedDownloader;
-import com.github.unaszole.bible.osisbuilder.parser.*;
+import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.*;
 import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -142,9 +145,28 @@ public class TheoPlace implements Scraper {
     private static class ChapterParser extends Parser<Element> {
 
         private final static Evaluator CHAPTER_TITLE_SELECTOR = QueryParser.parse("h1.mb-3");
-        private final static Evaluator SECTION_TITLE_SELECTOR = QueryParser.parse("#logos > h2, #logos > h3");
+        private final static Evaluator H2_SELECTOR = QueryParser.parse("#logos > h2");
+        private final static Evaluator H3_SELECTOR = QueryParser.parse("#logos > h3");
         private final static Evaluator VERSE_START_SELECTOR = QueryParser.parse("#logos > span.verset");
         private final static Evaluator VERSE_TEXT_SELECTOR = QueryParser.parse("#logos > span[data-verset]");
+
+        private boolean isSectionTitle(boolean major, Element e) {
+            if(e.is(H3_SELECTOR)) {
+                // H3 is always a minor section title.
+                return !major;
+            }
+            if(e.is(H2_SELECTOR)) {
+                // H2 can be either major or minor... See https://theo.place/bible-dby-7-3
+                // How do we determine ?
+                if(e.nextElementSibling().is(H3_SELECTOR)) {
+                    // If the H3 has an immediately following H3, then H2 is the major section title and H3 the minor.
+                    return major;
+                }
+                // Else, assume the H2 is just a minor section.
+                return !major;
+            }
+            return false;
+        }
 
         @Override
         protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, Element e) {
@@ -166,14 +188,20 @@ public class TheoPlace implements Scraper {
                     ) : null;
 
                 case TEXT:
-                    if(ancestors.stream().anyMatch(a -> a.type == ContextType.SECTION_TITLE)) {
-                        return e.is(SECTION_TITLE_SELECTOR) ? new Context(
+
+                    if(isUnderA(ContextType.MAJOR_SECTION_TITLE, ancestors)) {
+                        return isSectionTitle(true, e) ? new Context(
                                 ContextMetadata.forText(),
                                 e.text()
                         ) : null;
                     }
-
-                    if(ancestors.stream().anyMatch(a -> a.type == ContextType.VERSE)) {
+                    else if(isUnderA(ContextType.SECTION_TITLE, ancestors)) {
+                        return isSectionTitle(false, e) ? new Context(
+                                ContextMetadata.forText(),
+                                e.text()
+                        ) : null;
+                    }
+                    else if(isInVerseText(ancestors)) {
                         return e.is(VERSE_TEXT_SELECTOR) ? new Context(
                                 ContextMetadata.forText(),
                                 e.text()

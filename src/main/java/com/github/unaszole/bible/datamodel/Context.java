@@ -1,11 +1,8 @@
-package com.github.unaszole.bible.osisbuilder.parser;
-
-import org.crosswire.jsword.versification.BibleBook;
+package com.github.unaszole.bible.datamodel;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;

@@ -1,5 +1,8 @@
-package com.github.unaszole.bible.osisbuilder.parser;
+package com.github.unaszole.bible.scraping;
 
+import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.ContextType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +52,22 @@ public abstract class Parser<Lexeme> {
 		// No manual parsing is done by default.
 		// This method should be overridden by implementations if some lexemes require manual parsing.
 		return false;
+	}
+
+	/**
+	 * Utility method for parsers : check if the current context is located under a context of a given type.
+	 * @param searchedAncestorType The type of ancestor to search for.
+	 * @param ancestors The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
+	 * @return True if an ancestor of the searched type is present, false otherwise.
+	 */
+	protected final boolean isUnderA(ContextType searchedAncestorType, Deque<ContextMetadata> ancestors) {
+		return ancestors.stream().anyMatch(a -> a.type == searchedAncestorType);
+	}
+
+	protected final boolean isInVerseText(Deque<ContextMetadata> ancestors) {
+		return isUnderA(ContextType.VERSE, ancestors) &&
+				!isUnderA(ContextType.MAJOR_SECTION_TITLE, ancestors) &&
+				!isUnderA(ContextType.SECTION_TITLE, ancestors);
 	}
 	
 	private void integrateNewContext(Context existingAncestor, List<ContextMetadata> implicitAncestors, Context newContext) {
@@ -210,7 +229,7 @@ public abstract class Parser<Lexeme> {
 		// Use parseAll if you want to the parser to close and capture the context stack at the end.
 	}
 	
-	private final void parseAll(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextType maxDepth, Predicate<Context> capture) {
+	private void parseAll(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextType maxDepth, Predicate<Context> capture) {
 		parse(lexemes, currentContextStack, maxDepth, capture);
 		while(!currentContextStack.isEmpty()) {
 			if(capture.test(currentContextStack.removeFirst())) {
@@ -224,7 +243,6 @@ public abstract class Parser<Lexeme> {
 		@param lexemes The stream of lexemes produced by the document.
 		@param rootContext The root context of the document.
 		@param maxDepth The deepest type of context we wish to consider. Children of these contexts won't be returned in the output.
-		@param wantedContext The metadata of the context we wish to extract.
 		@return The given rootContext, filled with all contents retrieved from the document.
 	*/
 	public final Context fill(Stream<Lexeme> lexemes, Context rootContext, ContextType maxDepth) {

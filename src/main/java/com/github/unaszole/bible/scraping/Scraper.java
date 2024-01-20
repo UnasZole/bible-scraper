@@ -1,5 +1,7 @@
-package com.github.unaszole.bible.osisbuilder.parser;
+package com.github.unaszole.bible.scraping;
 
+import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.datamodel.ContextMetadata;
 import org.crosswire.jsword.versification.BibleBook;
 
 public interface Scraper {
