@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -204,14 +203,16 @@ public class ChouraquiSpiritualLand implements Scraper {
 						return new Context(verseMeta,
 							new Context(
 								ContextMetadata.forStructuredText(),
-								new Context(ContextMetadata.forText(), verseText)
+								new Context(ContextMetadata.forFlatText(),
+										new Context(ContextMetadata.forText(), verseText)
+								)
 							)
 						);
 					}
 				
 				case PARAGRAPH_BREAK:
 					
-					if(ancestors.stream().anyMatch(a -> a.type == ContextType.BOOK_INTRO)) {
+					if(hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
 						return e.is(BOOK_INTRO_BR_SELECTOR) ? new Context(
 							ContextMetadata.forParagraphBreak()
 						) : null;
@@ -224,7 +225,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 						return null;
 					}
 					
-					if(isUnderA(ContextType.BOOK_INTRO, ancestors)) {
+					if(hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
 						// Trying to find structured text within a book intro.
 						return e.is(BOOK_INTRO_SELECTOR) ? new Context(
 							ContextMetadata.forText(), e.text()
@@ -233,7 +234,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 					else if(isInVerseText(ancestors)) {
 						// Trying to find additional text within a verse.
 						return e.is(VERSE_CONTINUATION_SELECTOR) ? new Context(
-							ContextMetadata.forText(), e.ownText()
+							ContextMetadata.forText(), " " + e.ownText()
 						) : null;
 					}
 				
@@ -265,8 +266,10 @@ public class ChouraquiSpiritualLand implements Scraper {
 						return new Context(
 							verseMeta,
 							new Context(
-								ContextMetadata.fromParent(ContextType.STRUCTURED_TEXT, verseMeta),
-								new Context(ContextMetadata.fromParent(ContextType.TEXT, verseMeta), verseMatch.group(2))
+								ContextMetadata.forStructuredText(),
+								new Context(ContextMetadata.forFlatText(),
+										new Context(ContextMetadata.forText(), verseMatch.group(2))
+								)
 							)
 						);
 				}

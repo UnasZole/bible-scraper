@@ -9,6 +9,8 @@ import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;
@@ -149,6 +151,7 @@ public class TheoPlace implements Scraper {
         private final static Evaluator H3_SELECTOR = QueryParser.parse("#logos > h3");
         private final static Evaluator VERSE_START_SELECTOR = QueryParser.parse("#logos > span.verset");
         private final static Evaluator VERSE_TEXT_SELECTOR = QueryParser.parse("#logos > span[data-verset]");
+        private final static Evaluator NOTE_SELECTOR = QueryParser.parse("#logos button.footnote");
 
         private boolean isSectionTitle(boolean major, Element e) {
             if(e.is(H3_SELECTOR)) {
@@ -166,6 +169,29 @@ public class TheoPlace implements Scraper {
                 return !major;
             }
             return false;
+        }
+
+        private Context parseFlatText(Element e) {
+            Context out = new Context(ContextMetadata.forFlatText());
+            for(Node n: e.childNodes()) {
+                if(n instanceof Element) {
+                    if(((Element) n).is(NOTE_SELECTOR)) {
+                        out.addChild(new Context(ContextMetadata.forNote(),
+                                new Context(ContextMetadata.forText(), n.attr("data-bs-content"))
+                        ));
+                    }
+                    else if(((Element) n).is("br")) {
+                        out.addChild(new Context(ContextMetadata.forText(), " "));
+                    }
+                    else {
+                        out.addChild(new Context(ContextMetadata.forText(), ((Element) n).text()));
+                    }
+                }
+                else if(n instanceof TextNode) {
+                    out.addChild(new Context(ContextMetadata.forText(), ((TextNode) n).text()));
+                }
+            }
+            return out;
         }
 
         @Override
@@ -189,22 +215,21 @@ public class TheoPlace implements Scraper {
                             ContextMetadata.forVerse(parent.book, parent.chapter, Integer.valueOf(e.text()))
                     ) : null;
 
+                case FLAT_TEXT:
+                    if(hasAncestor(ContextType.VERSE, ancestors)) {
+                        return e.is(VERSE_TEXT_SELECTOR) ? parseFlatText(e) : null;
+                    }
+
                 case TEXT:
 
-                    if(isUnderA(ContextType.MAJOR_SECTION_TITLE, ancestors)) {
+                    if(hasAncestor(ContextType.MAJOR_SECTION_TITLE, ancestors)) {
                         return isSectionTitle(true, e) ? new Context(
                                 ContextMetadata.forText(),
                                 e.text()
                         ) : null;
                     }
-                    else if(isUnderA(ContextType.SECTION_TITLE, ancestors)) {
+                    else if(hasAncestor(ContextType.SECTION_TITLE, ancestors)) {
                         return isSectionTitle(false, e) ? new Context(
-                                ContextMetadata.forText(),
-                                e.text()
-                        ) : null;
-                    }
-                    else if(isInVerseText(ancestors)) {
-                        return e.is(VERSE_TEXT_SELECTOR) ? new Context(
                                 ContextMetadata.forText(),
                                 e.text()
                         ) : null;

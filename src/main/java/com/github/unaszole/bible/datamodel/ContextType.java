@@ -14,9 +14,11 @@ public enum ContextType {
 	PARAGRAPH_BREAK(false),
 	
 	// A text structure may be implicitly built to encompass found content.
+	NOTE(true, atLeastOne(TEXT)),
+	FLAT_TEXT(true, atLeastOne(NOTE, TEXT)),
 	SECTION_TITLE(true, atLeastOne(TEXT)),
 	MAJOR_SECTION_TITLE(true, atLeastOne(TEXT)),
-	STRUCTURED_TEXT(true, any(MAJOR_SECTION_TITLE, SECTION_TITLE, TEXT, PARAGRAPH_BREAK)),
+	STRUCTURED_TEXT(true, any(MAJOR_SECTION_TITLE, SECTION_TITLE, FLAT_TEXT, PARAGRAPH_BREAK)),
 	
 	// Verse must be built from a lexeme that provides a verse number.
 	VERSE(false, one(STRUCTURED_TEXT)),

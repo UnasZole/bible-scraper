@@ -47,12 +47,13 @@ public class Entrypoint {
             wantedMetadata = ContextMetadata.forBible();
         }
 
+        /*
+        System.out.println(scraper.fetch(wantedMetadata));
+        /*/
         BibleWriter writer = new OsisBibleWriter(System.out,
                 Versifications.instance().getVersification(SystemCatholic2.V11N_NAME),
                 "plop", "gnu", "fr");
-
         WritingConsumer consumer = null;
-
         switch (wantedMetadata.type) {
             case BIBLE:
             case BOOK:
@@ -61,8 +62,8 @@ public class Entrypoint {
             case CHAPTER:
                 consumer = new WritingConsumer(writer.book(wantedMetadata.book).contents());
         }
-
         ContextConsumer.consumeAll(consumer, scraper.fetch(wantedMetadata));
+        //*/
     }
 
 }

@@ -53,19 +53,21 @@ public abstract class Parser<Lexeme> {
 	}
 
 	/**
-	 * Utility method for parsers : check if the current context is located under a context of a given type.
+	 * Utility method for parsers : check if the current context is a descendant of a context of a given type.
 	 * @param searchedAncestorType The type of ancestor to search for.
 	 * @param ancestors The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
 	 * @return True if an ancestor of the searched type is present, false otherwise.
 	 */
-	protected final boolean isUnderA(ContextType searchedAncestorType, Deque<ContextMetadata> ancestors) {
+	protected final boolean hasAncestor(ContextType searchedAncestorType, Deque<ContextMetadata> ancestors) {
 		return ancestors.stream().anyMatch(a -> a.type == searchedAncestorType);
 	}
 
+	protected final boolean hasParent(ContextType searchedParentType, Deque<ContextMetadata> ancestors) {
+		return ancestors.peekFirst().type == searchedParentType;
+	}
+
 	protected final boolean isInVerseText(Deque<ContextMetadata> ancestors) {
-		return isUnderA(ContextType.VERSE, ancestors) &&
-				!isUnderA(ContextType.MAJOR_SECTION_TITLE, ancestors) &&
-				!isUnderA(ContextType.SECTION_TITLE, ancestors);
+		return hasAncestor(ContextType.VERSE, ancestors) && hasParent(ContextType.STRUCTURED_TEXT, ancestors);
 	}
 	
 	private void integrateNewContext(Context existingAncestor, List<ContextMetadata> implicitAncestors, Context newContext) {

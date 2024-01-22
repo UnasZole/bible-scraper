@@ -36,6 +36,13 @@ public interface StructuredTextWriter<ParentWriter, ThisWriter> {
     ThisWriter text(String str);
 
     /**
+     * Write a note.
+     * @param str The text of the note.
+     * @return This writer, to keep writing.
+     */
+    ThisWriter note(String str);
+
+    /**
      * Close this writer and all its pending entities.
      * @return The parent writer to keep writing, or null if no parent.
      */

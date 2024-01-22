@@ -40,7 +40,8 @@ public class WritingConsumer implements ContextConsumer {
     }
 
     private WriterHolder currentWriter;
-    private boolean ignoreText = false;
+    private boolean inFlatText = false;
+    private boolean inNote = false;
 
     public WritingConsumer(BibleWriter writer) {
         this.currentWriter = new WriterHolder(writer);
@@ -67,13 +68,13 @@ public class WritingConsumer implements ContextConsumer {
 
     private Object openContext(Context context) {
         switch (context.metadata.type) {
-            case BOOK_TITLE:
-            case CHAPTER_TITLE:
-            case MAJOR_SECTION_TITLE:
-            case SECTION_TITLE:
-                // These tags can contain TEXT contexts, that needs to be aggregated on closing.
-                // So ignore all TEXT events until they are closed.
-                ignoreText = true;
+            case FLAT_TEXT:
+                // A FLAT_TEXT is a subsection of a STRUCTURED_TEXT, that can append text (and notes) to the structured text.
+                // (Contrary to other text nodes which are aggregated on parent element close)
+                inFlatText = true;
+                return null;
+            case NOTE:
+                inNote = true;
                 return null;
 
             case BOOK:
@@ -96,10 +97,15 @@ public class WritingConsumer implements ContextConsumer {
 
     private Object closeContext(Context context) {
         switch(context.metadata.type) {
+            // When exiting a flat text, we stop capturing TEXT elements.
+            case FLAT_TEXT:
+                inFlatText = false;
+                return null;
+
             // The following contexts are written on closure.
             case TEXT:
-                if(!ignoreText && currentWriter.isStructuredTextWriter()) {
-                    return currentWriter.asStructuredTextWriter().text(context.content + " ");
+                if(inFlatText && !inNote) {
+                    return currentWriter.asStructuredTextWriter().text(context.content);
                 }
                 else {
                     return null;
@@ -109,17 +115,16 @@ public class WritingConsumer implements ContextConsumer {
 
             // The following contexts aggregate their text content when closing.
             case BOOK_TITLE:
-                ignoreText = false;
                 return currentWriter.asBookWriter().title(aggregateContents(context));
             case CHAPTER_TITLE:
-                ignoreText = false;
                 return currentWriter.asBookContentsWriter().chapterTitle(aggregateContents(context));
             case MAJOR_SECTION_TITLE:
-                ignoreText = false;
                 return currentWriter.asStructuredTextWriter().majorSection(aggregateContents(context));
             case SECTION_TITLE:
-                ignoreText = false;
                 return currentWriter.asStructuredTextWriter().section(aggregateContents(context));
+            case NOTE:
+                inNote = false;
+                return currentWriter.asStructuredTextWriter().note(aggregateContents(context));
 
             // The following contexts close the current writer.
             case BOOK_INTRO:

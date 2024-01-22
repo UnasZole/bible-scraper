@@ -55,13 +55,23 @@ public class ContextMetadata {
 		return new ContextMetadata(ContextType.SECTION_TITLE, null, 0, 0);
 	}
 
+	public static ContextMetadata forParagraphBreak() {
+		return new ContextMetadata(ContextType.PARAGRAPH_BREAK, null, 0, 0);
+	}
+
+	public static ContextMetadata forFlatText() {
+		return new ContextMetadata(ContextType.FLAT_TEXT, null, 0, 0);
+	}
+
+	public static ContextMetadata forNote() {
+		return new ContextMetadata(ContextType.NOTE, null, 0, 0);
+	}
+
 	public static ContextMetadata forText() {
 		return new ContextMetadata(ContextType.TEXT, null, 0, 0);
 	}
 
-	public static ContextMetadata forParagraphBreak() {
-		return new ContextMetadata(ContextType.PARAGRAPH_BREAK, null, 0, 0);
-	}
+
 
 
 	

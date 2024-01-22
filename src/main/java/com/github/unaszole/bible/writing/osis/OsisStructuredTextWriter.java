@@ -21,31 +21,21 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
 
     protected abstract ThisWriter getThis();
 
-    private void openParagraph() {
-        // Close the current paragraph if any.
-        closeCurrentParagraph();
+    private void openMajorSection(String title) {
+        // Close the current section if any.
+        closeCurrentSection();
 
-        // <p>
-        writeStartElement("p");
-        this.inParagraph = true;
-        // Paragraph is active when opened.
-        this.inActiveParagraph = true;
-    }
+        // <div>
+        writeStartElement("div");
+        writeAttribute("type", "majorSection");
 
-    private void closeCurrentParagraph() {
-        if(inParagraph) {
-            writeEndElement();
-            // </p>
-            this.inParagraph = false;
-            this.inActiveParagraph = false;
-        }
-    }
+        // <title>
+        writeStartElement("title");
+        writeCharacters(title);
+        writeEndElement();
+        // </title>
 
-    protected final void ensureInActiveParagraph() {
-        if(!inActiveParagraph) {
-            // If we're not in a paragraph, or an inactive one, we need to open a new paragraph.
-            openParagraph();
-        }
+        this.inMajorSection = true;
     }
 
     private void openSection(String title) {
@@ -65,6 +55,33 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
         this.inSection = true;
     }
 
+    private void openParagraph() {
+        // Close the current paragraph if any.
+        closeCurrentParagraph();
+
+        // <p>
+        writeStartElement("p");
+        this.inParagraph = true;
+        // Paragraph is active when opened.
+        this.inActiveParagraph = true;
+    }
+
+    protected final void ensureInActiveParagraph() {
+        if(!inActiveParagraph) {
+            // If we're not in a paragraph, or an inactive one, we need to open a new paragraph.
+            openParagraph();
+        }
+    }
+
+    private void closeCurrentParagraph() {
+        if(inParagraph) {
+            writeEndElement();
+            // </p>
+            this.inParagraph = false;
+            this.inActiveParagraph = false;
+        }
+    }
+
     private void closeCurrentSection() {
         // Always close the paragraph when closing a section.
         closeCurrentParagraph();
@@ -74,23 +91,6 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
             // </div>
             this.inSection = false;
         }
-    }
-
-    private void openMajorSection(String title) {
-        // Close the current section if any.
-        closeCurrentSection();
-
-        // <div>
-        writeStartElement("div");
-        writeAttribute("type", "majorSection");
-
-        // <title>
-        writeStartElement("title");
-        writeCharacters(title);
-        writeEndElement();
-        // </title>
-
-        this.inMajorSection = true;
     }
 
     private void closeCurrentMajorSection() {
@@ -120,6 +120,17 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
     public ThisWriter paragraph() {
         // Mark the current paragraph as inactive to force opening a new one on next action.
         this.inActiveParagraph = false;
+        return getThis();
+    }
+
+    @Override
+    public ThisWriter note(String str) {
+        // <note>
+        writeStartElement("note");
+        writeCharacters(str);
+        writeEndElement();
+        // </note>
+
         return getThis();
     }
 
