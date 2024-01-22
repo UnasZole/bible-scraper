@@ -11,9 +11,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,10 +43,10 @@ public abstract class Parser<Lexeme> {
 		@param lexeme The lexeme to parse with an external logic.
 		@param currentContextStack The current context stack when this lexeme was reached. This stack may be modified during the external parsing.
 		@param maxDepth The deepest type of context we wish to parse. Descendants of these contexts will be ignored.
-		@param capture A function that consumes all completed contexts in order. Returns true if the parsing should be stopped.
+	 	@param consumer A function that consumes context events in order, and returns instructions to continue or stop parsing.
 		@return True if the lexeme was handled by external parsing (and thus should be ignored by this parser), false otherwise.
 	*/
-	protected boolean parseExternally(Lexeme lexeme, Deque<Context> currentContextStack, ContextType maxDepth, Predicate<Context> capture) {
+	protected boolean parseExternally(Lexeme lexeme, Deque<Context> currentContextStack, ContextType maxDepth, ContextConsumer consumer) {
 		// No manual parsing is done by default.
 		// This method should be overridden by implementations if some lexemes require manual parsing.
 		return false;
@@ -155,22 +153,33 @@ public abstract class Parser<Lexeme> {
 			lexeme, maxDepth);
 	}
 	
-	private void navigateToAppendPoint(Deque<Context> currentContextStack, Predicate<Context> capture) {
+	private ContextConsumer.Instruction navigateToAppendPoint(Deque<Context> currentContextStack, ContextConsumer consumer) {
 		Context currentContext = currentContextStack.peekFirst();
-		
+
+		// We're navigating to a new active context : consume its opening first.
+		ContextConsumer.Instruction out = consumer.consume(ContextConsumer.EventType.OPEN, currentContext);
+		if(out == ContextConsumer.Instruction.TERMINATE) {
+			return out;
+		}
+
+		// Then check its children to navigate deeper.
 		List<Context> children = currentContext.getChildren();
 		if(children.isEmpty()) {
-			return;
+			// No child, just continue.
+			return ContextConsumer.Instruction.CONTINUE;
 		}
 		else {
-			if(children.size() > 1) {
-				// If there is more than one child, capture recursively all the previous ones.
-				// TODO.
+			// If there is more than one child, consume recursively all the previous ones.
+			for(int i = 0; i < children.size() - 1; i++) {
+				out = ContextConsumer.consumeAll(consumer, children.get(i));
+				if(out == ContextConsumer.Instruction.TERMINATE) {
+					return out;
+				}
 			}
 			
 			// Navigate to the last child and call recursively.
 			currentContextStack.addFirst(children.get(children.size() - 1));
-			navigateToAppendPoint(currentContextStack, capture);
+			return navigateToAppendPoint(currentContextStack, consumer);
 		}
 	}
 	
@@ -184,14 +193,14 @@ public abstract class Parser<Lexeme> {
 		@param currentContextStack The stack of contexts we are in when starting the parse. Must contain at least one context.
 			The deepest (last) context in that stack is the root context of the document.
 		@param maxDepth The deepest type of context we wish to parse. Descendants of these contexts will be ignored.
-		@param capture A function that consumes all completed contexts in order. Returns true if the parsing should be stopped.
+		@param consumer A function that consumes context events in order, and returns instructions to continue or stop parsing.
 	*/
-	public final void parse(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextType maxDepth, Predicate<Context> capture) {
+	public final void parse(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextType maxDepth, ContextConsumer consumer) {
 		Iterator<Lexeme> lexIt = lexemes.iterator();
 		while(lexIt.hasNext()) {
 			Lexeme lexeme = lexIt.next();
 			
-			if(!parseExternally(lexeme, currentContextStack, maxDepth, capture))
+			if(!parseExternally(lexeme, currentContextStack, maxDepth, consumer))
 			{
 				// Check if this lexeme creates another context, either as descendant of the current.
 				LinkedList<Context> nextContextStack = new LinkedList(currentContextStack);
@@ -207,17 +216,21 @@ public abstract class Parser<Lexeme> {
 					
 					// Move up the current context stack to align with the next context stack.
 					while(currentContextStack.peekFirst() != nextContextStack.peekFirst()) {
-						// Every item from the current stack that is not on the next stack is completed : capture it.
+						// Every item from the current stack that is not on the next stack is completed : send a close event.
 						assert !currentContextStack.peekFirst().isIncomplete() : "Context to close " + currentContextStack.peekFirst() + " must be complete";
-						if(capture.test(currentContextStack.removeFirst())) {
-							// If the capture function has completed, stop parsing.
+						if(consumer.consume(ContextConsumer.EventType.CLOSE, currentContextStack.removeFirst()) == ContextConsumer.Instruction.TERMINATE) {
+							// If the instruction is to terminate, stop parsing here.
 							return;
 						}
 					}
 					
 					// Finally, navigate to the current "append point" : this is the last child (of the last child of the last child, recursively),
 					// of the newly added context, ie the place that may be extended by the next lexeme.
-					navigateToAppendPoint(currentContextStack, capture);
+					// Consume all these newly added contexts on the way.
+					if(navigateToAppendPoint(currentContextStack, consumer) == ContextConsumer.Instruction.TERMINATE) {
+						// If the instruction is to terminate, stop parsing here.
+						return;
+					}
 				}
 				
 				// No new context : lexeme was insignificant.
@@ -226,13 +239,13 @@ public abstract class Parser<Lexeme> {
 		
 		// Stream is empty : no more parsing action in the core parsing logic.
 		// Note that the context stack is left as-is, so another parser may take over.
-		// Use parseAll if you want to the parser to close and capture the context stack at the end.
+		// Use parseAll if you want to the parser to close and consume the context stack at the end.
 	}
 	
-	private void parseAll(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextType maxDepth, Predicate<Context> capture) {
-		parse(lexemes, currentContextStack, maxDepth, capture);
+	private void parseAll(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextType maxDepth, ContextConsumer consumer) {
+		parse(lexemes, currentContextStack, maxDepth, consumer);
 		while(!currentContextStack.isEmpty()) {
-			if(capture.test(currentContextStack.removeFirst())) {
+			if(ContextConsumer.Instruction.TERMINATE == consumer.consume(ContextConsumer.EventType.CLOSE, currentContextStack.removeFirst())) {
 				return;
 			}
 		}
@@ -246,7 +259,7 @@ public abstract class Parser<Lexeme> {
 		@return The given rootContext, filled with all contents retrieved from the document.
 	*/
 	public final Context fill(Stream<Lexeme> lexemes, Context rootContext, ContextType maxDepth) {
-		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), maxDepth, c -> false);
+		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), maxDepth, ContextConsumer.PARSE_ALL);
 		return rootContext;
 	}
 	
@@ -259,14 +272,8 @@ public abstract class Parser<Lexeme> {
 		@return The context matching the wantedContext metadata, containing all its children up to maxDepth.
 	*/
 	public final Context extract(Stream<Lexeme> lexemes, Context rootContext, ContextType maxDepth, ContextMetadata wantedContext) {
-		Context[] outputContext = { null };
-		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), maxDepth, c -> {
-			if(Objects.equals(c.metadata, wantedContext)) {
-				outputContext[0] = c;
-				return true;
-			}
-			return false;
-		});
-		return outputContext[0];
+		ContextConsumer.Extractor extractor = new ContextConsumer.Extractor(wantedContext);
+		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), maxDepth, extractor);
+		return extractor.getOutput();
 	}
 }

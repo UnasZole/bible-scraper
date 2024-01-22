@@ -173,6 +173,7 @@ public class TheoPlace implements Scraper {
             ContextMetadata parent = ancestors.peekFirst();
 
             switch(type) {
+                /*
                 case CHAPTER_TITLE:
                     return e.is(CHAPTER_TITLE_SELECTOR) ? new Context(
                             ContextMetadata.forChapterTitle(parent.book, parent.chapter),
@@ -181,6 +182,7 @@ public class TheoPlace implements Scraper {
                                     e.ownText()
                             )
                     ) : null;
+                */
 
                 case VERSE:
                     return e.is(VERSE_START_SELECTOR) ? new Context(

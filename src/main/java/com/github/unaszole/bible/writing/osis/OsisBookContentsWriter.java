@@ -11,6 +11,8 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
 
     private final BibleBook book;
     private int currentChapter = -1;
+    private boolean inActiveChapter = false;
+    private String pendingChapterTitle = null;
     private int currentVerse = -1;
 
     public OsisBookContentsWriter(BookWriter parent, XMLStreamWriter xmlWriter, BibleBook book) {
@@ -26,47 +28,62 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
         return getCurrentChapterOsisId() + "." + currentVerse;
     }
 
+    private void writeChapterTitle(String title) {
+        // <title type="chapter">
+        writeStartElement("title");
+        writeAttribute("type", "chapter");
+        writeCharacters(title);
+        writeEndElement();
+        // </title>
+    }
+
+    private void openChapter(int chapterNb) {
+        // <chapter sID>
+        writeEmptyElement("chapter");
+        writeAttribute("sID", getCurrentChapterOsisId());
+        writeAttribute("osisID", getCurrentChapterOsisId());
+        // </chapter>
+
+        this.inActiveChapter = true;
+
+        if(pendingChapterTitle != null) {
+            writeChapterTitle(pendingChapterTitle);
+            pendingChapterTitle = null;
+        }
+    }
+    protected final void ensureInActiveChapter() {
+        if(!inActiveChapter) {
+            // If we're not in a paragraph, or an inactive one, we need to open a new paragraph.
+            openChapter(currentChapter);
+        }
+    }
+
     private void openVerse(int verseNb) {
         // Close the current verse if any.
         closeCurrentVerse();
 
-        // Make sure we're in an active paragraph for the verse start.
+        this.currentVerse = verseNb;
+
+        // Make sure we're in an active paragraph and chapter for the verse start.
         ensureInActiveParagraph();
+        ensureInActiveChapter();
 
         // <verse sID>
-        writeStartElement("verse");
+        writeEmptyElement("verse");
         writeAttribute("sID", getCurrentVerseOsisId());
         writeAttribute("osisID", getCurrentVerseOsisId());
-        writeEndElement();
         // </verse>
-
-        this.currentVerse = verseNb;
     }
 
     private void closeCurrentVerse() {
         if(currentVerse >= 0) {
             // <verse eID>
-            writeStartElement("verse");
+            writeEmptyElement("verse");
             writeAttribute("eID", getCurrentVerseOsisId());
-            writeEndElement();
             // </verse>
 
             this.currentVerse = -1;
         }
-    }
-
-    private void openChapter(int chapterNb) {
-        // Close the current chapter if any.
-        closeCurrentChapter();
-
-        this.currentChapter = chapterNb;
-
-        // <chapter sID>
-        writeStartElement("chapter");
-        writeAttribute("sID", getCurrentChapterOsisId());
-        writeAttribute("osisID", getCurrentChapterOsisId());
-        writeEndElement();
-        // </chapter>
     }
 
     private void closeCurrentChapter() {
@@ -75,9 +92,8 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
 
         if(currentChapter >= 0) {
             // <chapter eID>
-            writeStartElement("chapter");
+            writeEmptyElement("chapter");
             writeAttribute("eID", getCurrentChapterOsisId());
-            writeEndElement();
             // </chapter>
 
             this.currentChapter = -1;
@@ -86,21 +102,25 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
 
     @Override
     public BookContentsWriter chapter(int chapterNb) {
-        openChapter(chapterNb);
+        // Close the current chapter if any.
+        closeCurrentChapter();
+
+        // Set the new chapter number, but inactive yet.
+        // (To be printed on first verse).
+        this.currentChapter = chapterNb;
+        this.inActiveChapter = false;
+
         return getThis();
     }
 
     @Override
-    public BookContentsWriter chapter(int chapterNb, String chapterTitle) {
-        openChapter(chapterNb);
-
-        // <title type="chapter">
-        writeStartElement("title");
-        writeAttribute("type", "chapter");
-        writeCharacters(chapterTitle);
-        writeEndElement();
-        // </title>
-
+    public BookContentsWriter chapterTitle(String title) {
+        if(inActiveChapter) {
+            writeChapterTitle(title);
+        }
+        else {
+            this.pendingChapterTitle = title;
+        }
         return getThis();
     }
 

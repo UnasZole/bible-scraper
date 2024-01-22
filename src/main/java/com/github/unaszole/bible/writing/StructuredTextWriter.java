@@ -64,19 +64,18 @@ public interface StructuredTextWriter<ParentWriter, ThisWriter> {
      */
     interface BookContentsWriter extends StructuredTextWriter<BookWriter, BookContentsWriter> {
         /**
-         * Mark the start of a new chapter, without a title.
+         * Mark the start of a new chapter.
          * @param chapterNb The chapter number.
          * @return This writer, to keep writing.
          */
         BookContentsWriter chapter(int chapterNb);
 
         /**
-         * Mark the start of a new chapter, with a title.
-         * @param chapterNb The chapter number.
-         * @param chapterTitle The title.
+         * Write a chapter title.
+         * @param title The title.
          * @return This writer, to keep writing.
          */
-        BookContentsWriter chapter(int chapterNb, String chapterTitle);
+        BookContentsWriter chapterTitle(String title);
 
         /**
          * Mark the start of a new verse.

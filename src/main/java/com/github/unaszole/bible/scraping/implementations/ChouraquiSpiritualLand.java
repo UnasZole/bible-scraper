@@ -180,11 +180,11 @@ public class ChouraquiSpiritualLand implements Scraper {
 					if(e.is(CHAPTER_TITLE_SELECTOR)) {
 						int chapterNb = Integer.valueOf(extract(CHAPTER_TITLE_PATTERN, 1, e.text()));
 						return new Context(
-							ContextMetadata.forChapter(parent.book, chapterNb),
+							ContextMetadata.forChapter(parent.book, chapterNb) /*,
 							new Context(
 								ContextMetadata.forChapterTitle(parent.book, chapterNb),
 								new Context(ContextMetadata.forText(), e.text())
-							)
+							)*/
 						);
 					}
 				
@@ -233,7 +233,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 					else if(isInVerseText(ancestors)) {
 						// Trying to find additional text within a verse.
 						return e.is(VERSE_CONTINUATION_SELECTOR) ? new Context(
-							ContextMetadata.forText(), e.text()
+							ContextMetadata.forText(), e.ownText()
 						) : null;
 					}
 				
@@ -275,7 +275,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 		}
 		
 		@Override
-		protected boolean parseExternally(Element e, Deque<Context> currentContextStack, ContextType maxDepth, Predicate<Context> capture) {
+		protected boolean parseExternally(Element e, Deque<Context> currentContextStack, ContextType maxDepth, ContextConsumer consumer) {
 			
 			Optional<Context> chapterContext = currentContextStack.stream()
 				.filter(c -> c.metadata.type == ContextType.CHAPTER)
@@ -284,7 +284,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 			if(chapterContext.isPresent() && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
 				// We parse all unformatted verses and pass them to a dedicated parser.
 				Matcher verseMatcher = UNFORMATTED_VERSE_PATTERN.matcher(e.text());
-				new UnformattedChapterParser().parse(verseMatcher.results(), currentContextStack, maxDepth, capture);
+				new UnformattedChapterParser().parse(verseMatcher.results(), currentContextStack, maxDepth, consumer);
 				
 				return true;
 			}

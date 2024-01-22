@@ -62,18 +62,19 @@ public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 		return new OsisBookIntroWriter(this, xmlWriter);
 	}
 
-	@Override
-	public StructuredTextWriter.BookContentsWriter contents() {
-		return new OsisBookContentsWriter(this, xmlWriter, book);
-	}
-
 	private void closeIntroduction() {
 		if(introOpened) {
 			writeEndElement();
 			// </div>
-			
+
 			this.introOpened = false;
-		} 
+		}
+	}
+
+	@Override
+	public StructuredTextWriter.BookContentsWriter contents() {
+		closeIntroduction();
+		return new OsisBookContentsWriter(this, xmlWriter, book);
 	}
 
 	@Override

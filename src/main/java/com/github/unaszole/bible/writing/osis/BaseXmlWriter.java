@@ -54,6 +54,14 @@ public class BaseXmlWriter {
         }
     }
 
+    protected final void writeEmptyElement(String tagName) {
+        try {
+            xmlWriter.writeEmptyElement(OSIS_NS, tagName);
+        } catch (XMLStreamException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     protected final void writeAttribute(String name, String value) {
         try {
             xmlWriter.writeAttribute(name, value);
