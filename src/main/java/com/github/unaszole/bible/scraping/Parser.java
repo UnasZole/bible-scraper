@@ -62,12 +62,8 @@ public abstract class Parser<Lexeme> {
 		return ancestors.stream().anyMatch(a -> a.type == searchedAncestorType);
 	}
 
-	protected final boolean hasParent(ContextType searchedParentType, Deque<ContextMetadata> ancestors) {
-		return ancestors.peekFirst().type == searchedParentType;
-	}
-
 	protected final boolean isInVerseText(Deque<ContextMetadata> ancestors) {
-		return hasAncestor(ContextType.VERSE, ancestors) && hasParent(ContextType.STRUCTURED_TEXT, ancestors);
+		return hasAncestor(ContextType.VERSE, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors);
 	}
 	
 	private void integrateNewContext(Context existingAncestor, List<ContextMetadata> implicitAncestors, Context newContext) {

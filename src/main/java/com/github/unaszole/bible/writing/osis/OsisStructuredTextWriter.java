@@ -11,6 +11,7 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
     private final ParentWriter parent;
     private boolean inMajorSection = false;
     private boolean inSection = false;
+    private boolean inMinorSection = false;
     private boolean inParagraph = false;
     private boolean inActiveParagraph = false;
 
@@ -55,6 +56,23 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
         this.inSection = true;
     }
 
+    private void openMinorSection(String title) {
+        // Close the current section if any.
+        closeCurrentMinorSection();
+
+        // <div>
+        writeStartElement("div");
+        writeAttribute("type", "minorSection");
+
+        // <title>
+        writeStartElement("title");
+        writeCharacters(title);
+        writeEndElement();
+        // </title>
+
+        this.inMinorSection = true;
+    }
+
     private void openParagraph() {
         // Close the current paragraph if any.
         closeCurrentParagraph();
@@ -82,9 +100,20 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
         }
     }
 
-    private void closeCurrentSection() {
+    private void closeCurrentMinorSection() {
         // Always close the paragraph when closing a section.
         closeCurrentParagraph();
+
+        if(inMinorSection) {
+            writeEndElement();
+            // </div>
+            this.inMinorSection = false;
+        }
+    }
+
+    private void closeCurrentSection() {
+        // Always close the minor section when closing a section.
+        closeCurrentMinorSection();
 
         if(inSection) {
             writeEndElement();
@@ -113,6 +142,12 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
     @Override
     public ThisWriter section(String title) {
         openSection(title);
+        return getThis();
+    }
+
+    @Override
+    public ThisWriter minorSection(String title) {
+        openMinorSection(title);
         return getThis();
     }
 

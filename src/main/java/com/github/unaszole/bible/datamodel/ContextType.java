@@ -10,15 +10,33 @@ import static com.github.unaszole.bible.datamodel.ContextSequence.*;
 public enum ContextType {
 	
 	// Content nodes are read from actual data.
+	/**
+	 * An atomic text node.
+	 * A sequence of such text nodes should be considered as a single string, ie. concatenated without additional spaces.
+	 */
 	TEXT(false),
 	PARAGRAPH_BREAK(false),
 	
 	// A text structure may be implicitly built to encompass found content.
+	/**
+	 * An inline note, that may be inserted at any point in a flat text.
+	 */
 	NOTE(true, atLeastOne(TEXT)),
+	/**
+	 * A flat text, ie. a text that does not have any structure - but may contain notes.
+	 * All its contents should be considered as a single string, with the notes either rendered directly in-place or
+	 * via an in-place reference to an external rendering (eg. footnote).
+	 */
 	FLAT_TEXT(true, atLeastOne(NOTE, TEXT)),
+	MINOR_SECTION_TITLE(true, atLeastOne(TEXT)),
 	SECTION_TITLE(true, atLeastOne(TEXT)),
 	MAJOR_SECTION_TITLE(true, atLeastOne(TEXT)),
-	STRUCTURED_TEXT(true, any(MAJOR_SECTION_TITLE, SECTION_TITLE, FLAT_TEXT, PARAGRAPH_BREAK)),
+	/**
+	 * A structured text, ie. flat texts joined by structural delimiters.
+	 * Two successive flat texts are joined by an implicit paragraph break.
+	 * Explicit paragraph breaks should be used when a paragraph starts before the first flat text or after the last.
+	 */
+	STRUCTURED_TEXT(true, any(MAJOR_SECTION_TITLE, SECTION_TITLE, MINOR_SECTION_TITLE, FLAT_TEXT, PARAGRAPH_BREAK)),
 	
 	// Verse must be built from a lexeme that provides a verse number.
 	VERSE(false, one(STRUCTURED_TEXT)),

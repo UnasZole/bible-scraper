@@ -55,6 +55,10 @@ public class ContextMetadata {
 		return new ContextMetadata(ContextType.SECTION_TITLE, null, 0, 0);
 	}
 
+	public static ContextMetadata forMinorSectionTitle() {
+		return new ContextMetadata(ContextType.MINOR_SECTION_TITLE, null, 0, 0);
+	}
+
 	public static ContextMetadata forParagraphBreak() {
 		return new ContextMetadata(ContextType.PARAGRAPH_BREAK, null, 0, 0);
 	}

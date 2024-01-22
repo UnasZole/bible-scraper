@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.writing;
 
 import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.ContextConsumer;
 
 import java.util.Optional;
@@ -41,6 +42,7 @@ public class WritingConsumer implements ContextConsumer {
 
     private WriterHolder currentWriter;
     private boolean inFlatText = false;
+    private boolean justClosedFlatText = false;
     private boolean inNote = false;
 
     public WritingConsumer(BibleWriter writer) {
@@ -72,6 +74,10 @@ public class WritingConsumer implements ContextConsumer {
                 // A FLAT_TEXT is a subsection of a STRUCTURED_TEXT, that can append text (and notes) to the structured text.
                 // (Contrary to other text nodes which are aggregated on parent element close)
                 inFlatText = true;
+                if(justClosedFlatText) {
+                    // Successive flat texts are joined by an implicit paragraph break.
+                    return currentWriter.asStructuredTextWriter().paragraph();
+                }
                 return null;
             case NOTE:
                 inNote = true;
@@ -96,6 +102,8 @@ public class WritingConsumer implements ContextConsumer {
     }
 
     private Object closeContext(Context context) {
+        justClosedFlatText = context.metadata.type == ContextType.FLAT_TEXT;
+
         switch(context.metadata.type) {
             // When exiting a flat text, we stop capturing TEXT elements.
             case FLAT_TEXT:
@@ -110,6 +118,7 @@ public class WritingConsumer implements ContextConsumer {
                 else {
                     return null;
                 }
+
             case PARAGRAPH_BREAK:
                 return currentWriter.asStructuredTextWriter().paragraph();
 
@@ -122,6 +131,8 @@ public class WritingConsumer implements ContextConsumer {
                 return currentWriter.asStructuredTextWriter().majorSection(aggregateContents(context));
             case SECTION_TITLE:
                 return currentWriter.asStructuredTextWriter().section(aggregateContents(context));
+            case MINOR_SECTION_TITLE:
+                return currentWriter.asStructuredTextWriter().minorSection(aggregateContents(context));
             case NOTE:
                 inNote = false;
                 return currentWriter.asStructuredTextWriter().note(aggregateContents(context));
@@ -147,6 +158,7 @@ public class WritingConsumer implements ContextConsumer {
         switch(type) {
             case OPEN:
                 currentWriter = Optional.ofNullable(openContext(context)).map(WriterHolder::new).orElse(currentWriter);
+                justClosedFlatText = false;
                 break;
             case CLOSE:
                 currentWriter = Optional.ofNullable(closeContext(context)).map(WriterHolder::new).orElse(currentWriter);

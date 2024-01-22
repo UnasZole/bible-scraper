@@ -16,11 +16,18 @@ public interface StructuredTextWriter<ParentWriter, ThisWriter> {
     ThisWriter majorSection(String title);
 
     /**
-     * Mark the start of a new (minor) section.
+     * Mark the start of a new section.
      * @param title The title.
      * @return This writer, to keep writing.
      */
     ThisWriter section(String title);
+
+    /**
+     * Mark the start of a new minor section.
+     * @param title The title.
+     * @return This writer, to keep writing.
+     */
+    ThisWriter minorSection(String title);
 
     /**
      * Mark the start of a new paragraph.

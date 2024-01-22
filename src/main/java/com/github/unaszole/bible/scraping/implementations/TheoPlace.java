@@ -11,7 +11,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;
 
@@ -144,34 +143,18 @@ public class TheoPlace implements Scraper {
         BOOKS.put(BibleBook.SIR, new BookRef(73, "ecclesiastique", 51));
     };
 
-    private static class ChapterParser extends Parser<Element> {
+    private static class PageParser extends Parser<Element> {
 
-        private final static Evaluator CHAPTER_TITLE_SELECTOR = QueryParser.parse("h1.mb-3");
-        private final static Evaluator H2_SELECTOR = QueryParser.parse("#logos > h2");
-        private final static Evaluator H3_SELECTOR = QueryParser.parse("#logos > h3");
+        private final static Evaluator DOC_TITLE_SELECTOR = QueryParser.parse("h1.mb-3");
+        private final static Evaluator MAJOR_SECTION_TITLE_SELECTOR = QueryParser.parse("#logos > h2");
+        private final static Evaluator SECTION_TITLE_SELECTOR = QueryParser.parse("#logos > h3:not(:has(> em))");
+        private final static Evaluator MINOR_SECTION_TITLE_SELECTOR = QueryParser.parse("#logos > h3:has(> em)");
+        private final static Evaluator BOOK_INTRO_PARAGRAPH_SELECTOR = QueryParser.parse("#logos > p");
         private final static Evaluator VERSE_START_SELECTOR = QueryParser.parse("#logos > span.verset");
         private final static Evaluator VERSE_TEXT_SELECTOR = QueryParser.parse("#logos > span[data-verset]");
         private final static Evaluator NOTE_SELECTOR = QueryParser.parse("#logos button.footnote");
 
-        private boolean isSectionTitle(boolean major, Element e) {
-            if(e.is(H3_SELECTOR)) {
-                // H3 is always a minor section title.
-                return !major;
-            }
-            if(e.is(H2_SELECTOR)) {
-                // H2 can be either major or minor... See https://theo.place/bible-dby-7-3
-                // How do we determine ?
-                if(e.nextElementSibling().is(H3_SELECTOR)) {
-                    // If the H3 has an immediately following H3, then H2 is the major section title and H3 the minor.
-                    return major;
-                }
-                // Else, assume the H2 is just a minor section.
-                return !major;
-            }
-            return false;
-        }
-
-        private Context parseFlatText(Element e) {
+        public static Context parseFlatText(Element e) {
             Context out = new Context(ContextMetadata.forFlatText());
             for(Node n: e.childNodes()) {
                 if(n instanceof Element) {
@@ -194,6 +177,16 @@ public class TheoPlace implements Scraper {
             return out;
         }
 
+        private boolean isMajorSectionTitle(Element e) {
+            // H2 can be either major or normal... See https://theo.place/bible-dby-7-3
+            // It is major only if immediately followed by a normal.
+            return e.is(MAJOR_SECTION_TITLE_SELECTOR) && e.nextElementSibling().is(SECTION_TITLE_SELECTOR);
+        }
+        private boolean isSectionTitle(Element e) {
+            // If H2 is not major, then it's a normal section.
+            return e.is(SECTION_TITLE_SELECTOR) || (e.is(MAJOR_SECTION_TITLE_SELECTOR) && !isMajorSectionTitle(e));
+        }
+
         @Override
         protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, Element e) {
             ContextMetadata parent = ancestors.peekFirst();
@@ -201,7 +194,7 @@ public class TheoPlace implements Scraper {
             switch(type) {
                 /*
                 case CHAPTER_TITLE:
-                    return e.is(CHAPTER_TITLE_SELECTOR) ? new Context(
+                    return e.is(H1_SELECTOR) ? new Context(
                             ContextMetadata.forChapterTitle(parent.book, parent.chapter),
                             new Context(
                                     ContextMetadata.forText(),
@@ -216,20 +209,32 @@ public class TheoPlace implements Scraper {
                     ) : null;
 
                 case FLAT_TEXT:
+                    if(hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
+                        return e.is(BOOK_INTRO_PARAGRAPH_SELECTOR) ? parseFlatText(e) : null;
+                    }
                     if(hasAncestor(ContextType.VERSE, ancestors)) {
                         return e.is(VERSE_TEXT_SELECTOR) ? parseFlatText(e) : null;
                     }
+                    return null;
 
                 case TEXT:
-
+                    if(hasAncestor(ContextType.BOOK_TITLE, ancestors)) {
+                        return e.is(DOC_TITLE_SELECTOR) ? new Context(ContextMetadata.forText(), e.ownText()) : null;
+                    }
                     if(hasAncestor(ContextType.MAJOR_SECTION_TITLE, ancestors)) {
-                        return isSectionTitle(true, e) ? new Context(
+                        return isMajorSectionTitle(e) ? new Context(
                                 ContextMetadata.forText(),
                                 e.text()
                         ) : null;
                     }
-                    else if(hasAncestor(ContextType.SECTION_TITLE, ancestors)) {
-                        return isSectionTitle(false, e) ? new Context(
+                    if(hasAncestor(ContextType.SECTION_TITLE, ancestors)) {
+                        return isSectionTitle(e) ? new Context(
+                                ContextMetadata.forText(),
+                                e.text()
+                        ) : null;
+                    }
+                    if(hasAncestor(ContextType.MINOR_SECTION_TITLE, ancestors)) {
+                        return e.is(MINOR_SECTION_TITLE_SELECTOR) ? new Context(
                                 ContextMetadata.forText(),
                                 e.text()
                         ) : null;
@@ -260,7 +265,7 @@ public class TheoPlace implements Scraper {
             }
 
             Context chapterCtx = new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter));
-            return new ChapterParser().extract(
+            return new PageParser().extract(
                     doc.stream(),
                     chapterCtx,
                     null,
@@ -273,30 +278,6 @@ public class TheoPlace implements Scraper {
                 return null;
             }
 
-            if(wantedContext.type == ContextType.BOOK_TITLE) {
-                Element title = book.getBookIntroDocument(downloader, bible).select("h1").first();
-                if(title != null) {
-                    return new Context(wantedContext,
-                            new Context(ContextMetadata.forText(), title.ownText()));
-                }
-                return null;
-            }
-            if(wantedContext.type == ContextType.BOOK_INTRO) {
-                Elements paragraphs = book.getBookIntroDocument(downloader, bible).select("#logos > p");
-                if(!paragraphs.isEmpty()) {
-                    Context introCtx = new Context(wantedContext);
-                    Context structuredTextCtx = new Context(ContextMetadata.forStructuredText());
-                    introCtx.addChild(structuredTextCtx);
-
-                    for(Element paragraph: paragraphs) {
-                        structuredTextCtx.addChild(new Context(ContextMetadata.forText(), paragraph.text()));
-                        structuredTextCtx.addChild(new Context(ContextMetadata.forParagraphBreak()));
-                    }
-
-                    return introCtx;
-                }
-                return null;
-            }
             if(wantedContext.type == ContextType.BOOK) {
                 // If fetching a full book, build from all subcomponents.
                 Context bookCtx = new Context(wantedContext);
@@ -316,6 +297,12 @@ public class TheoPlace implements Scraper {
                 }
 
                 return bookCtx.getChildren().isEmpty() ? null : bookCtx;
+            }
+            else {
+                // Book subcomponents without a specified chapter : parse from intro page.
+                Document doc = book.getBookIntroDocument(downloader, bible);
+                Context bookCtx = new Context(ContextMetadata.forBook(wantedContext.book));
+                return new PageParser().extract(doc.stream(), bookCtx, null, wantedContext);
             }
         }
         if(wantedContext.type == ContextType.BIBLE) {

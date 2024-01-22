@@ -49,7 +49,7 @@ public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 	public StructuredTextWriter.BookIntroWriter introduction() {
 		// <div>
 		writeStartElement("div");
-		writeAttribute("type", "section");
+		writeAttribute("type", "introduction");
 		
 			// <title>
 			writeStartElement("title");
