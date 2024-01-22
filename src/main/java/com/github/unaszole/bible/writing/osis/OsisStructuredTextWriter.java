@@ -23,7 +23,7 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
 
     private void openMajorSection(String title) {
         // Close the current section if any.
-        closeCurrentSection();
+        closeCurrentMajorSection();
 
         // <div>
         writeStartElement("div");
