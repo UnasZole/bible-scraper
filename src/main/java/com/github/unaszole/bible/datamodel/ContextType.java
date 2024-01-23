@@ -12,7 +12,8 @@ public enum ContextType {
 	// Content nodes are read from actual data.
 	/**
 	 * An atomic text node.
-	 * A sequence of such text nodes should be considered as a single string, ie. concatenated without additional spaces.
+	 * Has a context value : its text contents.
+	 * A sequence of such text nodes should be considered as a single string, ie. their values concatenated without additional spaces.
 	 */
 	TEXT(false),
 	PARAGRAPH_BREAK(false),
@@ -39,6 +40,10 @@ public enum ContextType {
 	STRUCTURED_TEXT(true, any(MAJOR_SECTION_TITLE, SECTION_TITLE, MINOR_SECTION_TITLE, FLAT_TEXT, PARAGRAPH_BREAK)),
 	
 	// Verse must be built from a lexeme that provides a verse number.
+	/**
+	 * A verse.
+	 * Has a context value : the string representation of the verse number in the source document.
+	 */
 	VERSE(false, one(STRUCTURED_TEXT)),
 	
 	// Chapter must be built from a lexeme that provides a chapter number.
@@ -46,11 +51,16 @@ public enum ContextType {
 	// The chapter may start with some structure elements before the verses (usually just a section title).
 	// Other structure element delimiters (ie section titles, paragraphs.) will be contained inside each verse context.
 	CHAPTER_TITLE(true, atLeastOne(TEXT)),
+	/**
+	 * A verse.
+	 * Has a context value : the string representation of the context number in the source document.
+	 */
 	CHAPTER(false, atMostOne(CHAPTER_TITLE), atMostOne(STRUCTURED_TEXT), atLeastOne(VERSE)),
 	
 	// Book must be built from a lexeme that provides a book identifier.
 	// The contained book title and intro can be derived implicitly.
-	BOOK_INTRO(true, one(STRUCTURED_TEXT)),
+	BOOK_INTRO_TITLE(true, atLeastOne(TEXT)),
+	BOOK_INTRO(true, atMostOne(BOOK_INTRO_TITLE), one(STRUCTURED_TEXT)),
 	BOOK_TITLE(true, atLeastOne(TEXT)),
 	BOOK(false, atMostOne(BOOK_TITLE), atMostOne(BOOK_INTRO), atLeastOne(CHAPTER)),
 	

@@ -55,7 +55,9 @@ public interface StructuredTextWriter<ParentWriter, ThisWriter> {
      */
     ParentWriter closeText();
 
-    interface BookIntroWriter extends StructuredTextWriter<BookWriter, BookIntroWriter> {};
+    interface BookIntroWriter extends StructuredTextWriter<BookWriter, BookIntroWriter> {
+        BookIntroWriter title(String title);
+    };
 
     /**
      This is a specialised version of the structured text writer, that is able to handle chapters and verses.
@@ -80,9 +82,10 @@ public interface StructuredTextWriter<ParentWriter, ThisWriter> {
         /**
          * Mark the start of a new chapter.
          * @param chapterNb The chapter number.
+         * @param sourceNb The string representation of the chapter number in the source document.
          * @return This writer, to keep writing.
          */
-        BookContentsWriter chapter(int chapterNb);
+        BookContentsWriter chapter(int chapterNb, String...sourceNb);
 
         /**
          * Write a chapter title.
@@ -94,8 +97,9 @@ public interface StructuredTextWriter<ParentWriter, ThisWriter> {
         /**
          * Mark the start of a new verse.
          * @param verseNb The verse number.
+         * @param sourceNb The string representation of the verse number in the source document.
          * @return This writer, to keep writing.
          */
-        BookContentsWriter verse(int verseNb);
+        BookContentsWriter verse(int verseNb, String...sourceNb);
     };
 }

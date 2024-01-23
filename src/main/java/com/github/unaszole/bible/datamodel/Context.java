@@ -10,18 +10,17 @@ import java.util.stream.Collectors;
 public class Context {
 	
 	public final ContextMetadata metadata;
-	public final String content;
-	private List<Context> children = new ArrayList<>();
-	
+	public final String value;
+	private final List<Context> children = new ArrayList<>();
+
 	public Context(ContextMetadata metadata, Context... children) {
-		this.metadata = metadata;
-		this.children.addAll(List.of(children));
-		this.content = null;
+		this(metadata, null, children);
 	}
-	
-	public Context(ContextMetadata metadata, String content) {
+
+	public Context(ContextMetadata metadata, String value, Context... children) {
 		this.metadata = metadata;
-		this.content = content;
+		this.value = value;
+		this.children.addAll(List.of(children));
 	}
 	
 	public void addChild(Context child) {
@@ -71,7 +70,7 @@ public class Context {
 	@Override
 	public String toString() {
 		return metadata +
-			(content != null ? "{" + content + "}" : "") +
+			(value != null ? "{" + value + "}" : "") +
 			(!children.isEmpty() ? "(" + children + ")" : "");
 	}
 }

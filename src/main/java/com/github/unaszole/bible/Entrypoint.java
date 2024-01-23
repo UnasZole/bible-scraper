@@ -63,6 +63,7 @@ public class Entrypoint {
                 consumer = new WritingConsumer(writer.book(wantedMetadata.book).contents());
         }
         ContextConsumer.consumeAll(consumer, scraper.fetch(wantedMetadata));
+        System.out.println();
         //*/
     }
 

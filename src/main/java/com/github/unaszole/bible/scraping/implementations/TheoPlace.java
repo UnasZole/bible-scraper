@@ -205,7 +205,7 @@ public class TheoPlace implements Scraper {
 
                 case VERSE:
                     return e.is(VERSE_START_SELECTOR) ? new Context(
-                            ContextMetadata.forVerse(parent.book, parent.chapter, Integer.valueOf(e.text()))
+                            ContextMetadata.forVerse(parent.book, parent.chapter, Integer.valueOf(e.text())), e.text()
                     ) : null;
 
                 case FLAT_TEXT:
@@ -264,7 +264,8 @@ public class TheoPlace implements Scraper {
                 return null;
             }
 
-            Context chapterCtx = new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter));
+            Context chapterCtx = new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter),
+                    Integer.toString(wantedContext.chapter));
             return new PageParser().extract(
                     doc.stream(),
                     chapterCtx,

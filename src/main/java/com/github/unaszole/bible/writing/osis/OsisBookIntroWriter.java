@@ -15,4 +15,14 @@ public class OsisBookIntroWriter extends OsisStructuredTextWriter<BookWriter, St
     protected OsisBookIntroWriter getThis() {
         return this;
     }
+
+    @Override
+    public BookIntroWriter title(String title) {
+        // <title>
+        writeStartElement("title");
+        writeCharacters(title);
+        writeEndElement();
+        // </title>
+        return getThis();
+    }
 }

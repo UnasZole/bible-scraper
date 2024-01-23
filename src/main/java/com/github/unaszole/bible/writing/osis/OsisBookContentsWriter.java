@@ -11,6 +11,7 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
 
     private final BibleBook book;
     private int currentChapter = -1;
+    private String[] currentChapterSourceNb = null;
     private boolean inActiveChapter = false;
     private String pendingChapterTitle = null;
     private int currentVerse = -1;
@@ -22,6 +23,12 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
 
     private String getCurrentChapterOsisId() {
         return book.getOSIS() + "." + currentChapter;
+    }
+    private String getCurrentChapterMilestoneID() {
+        return getCurrentChapterOsisId() + (currentChapterSourceNb.length > 0 ?
+                "-aka-" + String.join("-", currentChapterSourceNb)
+                : ""
+        );
     }
 
     private String getCurrentVerseOsisId() {
@@ -37,11 +44,14 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
         // </title>
     }
 
-    private void openChapter(int chapterNb) {
+    private void openChapter() {
         // <chapter sID>
         writeEmptyElement("chapter");
-        writeAttribute("sID", getCurrentChapterOsisId());
+        writeAttribute("sID", getCurrentChapterMilestoneID());
         writeAttribute("osisID", getCurrentChapterOsisId());
+        if(currentChapterSourceNb.length > 0) {
+            writeAttribute("n", currentChapterSourceNb[0]);
+        }
         // </chapter>
 
         this.inActiveChapter = true;
@@ -53,12 +63,12 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
     }
     protected final void ensureInActiveChapter() {
         if(!inActiveChapter) {
-            // If we're not in a paragraph, or an inactive one, we need to open a new paragraph.
-            openChapter(currentChapter);
+            // If we're not in a chapter, or an inactive one, we need to open a new chapter.
+            openChapter();
         }
     }
 
-    private void openVerse(int verseNb) {
+    private void openVerse(int verseNb, String... sourceNb) {
         // Close the current verse if any.
         closeCurrentVerse();
 
@@ -72,6 +82,9 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
         writeEmptyElement("verse");
         writeAttribute("sID", getCurrentVerseOsisId());
         writeAttribute("osisID", getCurrentVerseOsisId());
+        if(sourceNb.length > 0) {
+            writeAttribute("n", sourceNb[0]);
+        }
         // </verse>
     }
 
@@ -93,21 +106,23 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
         if(currentChapter >= 0) {
             // <chapter eID>
             writeEmptyElement("chapter");
-            writeAttribute("eID", getCurrentChapterOsisId());
+            writeAttribute("eID", getCurrentChapterMilestoneID());
             // </chapter>
 
             this.currentChapter = -1;
+            this.currentChapterSourceNb = null;
         }
     }
 
     @Override
-    public BookContentsWriter chapter(int chapterNb) {
+    public BookContentsWriter chapter(int chapterNb, String... sourceNb) {
         // Close the current chapter if any.
         closeCurrentChapter();
 
         // Set the new chapter number, but inactive yet.
         // (To be printed on first verse).
         this.currentChapter = chapterNb;
+        this.currentChapterSourceNb = sourceNb;
         this.inActiveChapter = false;
 
         return getThis();
@@ -125,8 +140,8 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
     }
 
     @Override
-    public BookContentsWriter verse(int verseNb) {
-        openVerse(verseNb);
+    public BookContentsWriter verse(int verseNb, String... sourceNb) {
+        openVerse(verseNb, sourceNb);
         return getThis();
     }
 

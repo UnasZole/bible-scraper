@@ -58,8 +58,8 @@ public class WritingConsumer implements ContextConsumer {
     }
 
     public String aggregateContents(Context context) {
-        if(context.content != null) {
-            return context.content;
+        if(context.value != null) {
+            return context.value;
         }
         else {
             return context.getChildren().stream()
@@ -94,9 +94,9 @@ public class WritingConsumer implements ContextConsumer {
                     // we need to move down from the book to the book contents.
                     currentWriter = new WriterHolder(currentWriter.asBookWriter().contents());
                 }
-                return currentWriter.asBookContentsWriter().chapter(context.metadata.chapter);
+                return currentWriter.asBookContentsWriter().chapter(context.metadata.chapter, context.value);
             case VERSE:
-                return currentWriter.asBookContentsWriter().verse(context.metadata.verse);
+                return currentWriter.asBookContentsWriter().verse(context.metadata.verse, context.value);
         }
         return null;
     }
@@ -113,7 +113,7 @@ public class WritingConsumer implements ContextConsumer {
             // The following contexts are written on closure.
             case TEXT:
                 if(inFlatText && !inNote) {
-                    return currentWriter.asStructuredTextWriter().text(context.content);
+                    return currentWriter.asStructuredTextWriter().text(context.value);
                 }
                 else {
                     return null;
@@ -125,6 +125,8 @@ public class WritingConsumer implements ContextConsumer {
             // The following contexts aggregate their text content when closing.
             case BOOK_TITLE:
                 return currentWriter.asBookWriter().title(aggregateContents(context));
+            case BOOK_INTRO_TITLE:
+                return currentWriter.asBookIntroWriter().title(aggregateContents(context));
             case CHAPTER_TITLE:
                 return currentWriter.asBookContentsWriter().chapterTitle(aggregateContents(context));
             case MAJOR_SECTION_TITLE:

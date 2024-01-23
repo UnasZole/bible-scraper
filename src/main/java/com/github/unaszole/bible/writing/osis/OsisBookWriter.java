@@ -50,14 +50,8 @@ public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 		// <div>
 		writeStartElement("div");
 		writeAttribute("type", "introduction");
-		
-			// <title>
-			writeStartElement("title");
-			writeCharacters("Introduction");
-			writeEndElement();
-			// </title>
-		
-			this.introOpened = true;
+
+		this.introOpened = true;
 		
 		return new OsisBookIntroWriter(this, xmlWriter);
 	}

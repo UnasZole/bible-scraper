@@ -5,7 +5,19 @@ import org.crosswire.jsword.versification.BibleBook;
 public class ContextMetadata {
 	public final ContextType type;
 	public final BibleBook book;
+	/**
+	 * The chapter number in standardised OSIS-compatible form, ie. the position of the chapter within the book,
+	 * starting at 1.
+	 * (Since chapter 0 is impossible in OSIS, this field may be set to zero for contexts which don't need to carry
+	 * a chapter number).
+	 */
 	public final int chapter;
+	/**
+	 * The verse number in standardised OSIS-compatible form, ie. the position of the verse within the book,
+	 * starting at 1.
+	 * (Since verse number 0 is reserved for pre-verse titles in OSIS, this field may be set to zero for contexts
+	 * which don't need to carry a verse number).
+	 */
 	public final int verse;
 	
 	public ContextMetadata(ContextType type, BibleBook book, int chapter, int verse) {
