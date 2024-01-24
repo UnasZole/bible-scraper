@@ -30,6 +30,12 @@ public class ParsingUtils {
                 String nbStr = matcher.group(1);
                 nb = nbStr == null ? 0 : Integer.parseInt(nbStr);
                 letter = matcher.group(2).toUpperCase().charAt(0);
+
+                if(book == BibleBook.ESTH && chapter == 8 && nb == 12 && letter == 'X') {
+                    // The verse usually labelled Esth 8 12X is also sometimes labelled 12W...
+                    // Align the behaviour for both.
+                    letter = 'W';
+                }
             }
             else {
                 nb = Integer.parseInt(parsedNb);
