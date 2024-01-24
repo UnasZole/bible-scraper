@@ -6,12 +6,8 @@ import com.github.unaszole.bible.datamodel.ContextType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,11 +38,10 @@ public abstract class Parser<Lexeme> {
 		
 		@param lexeme The lexeme to parse with an external logic.
 		@param currentContextStack The current context stack when this lexeme was reached. This stack may be modified during the external parsing.
-		@param maxDepth The deepest type of context we wish to parse. Descendants of these contexts will be ignored.
 	 	@param consumer A function that consumes context events in order, and returns instructions to continue or stop parsing.
 		@return True if the lexeme was handled by external parsing (and thus should be ignored by this parser), false otherwise.
 	*/
-	protected boolean parseExternally(Lexeme lexeme, Deque<Context> currentContextStack, ContextType maxDepth, ContextConsumer consumer) {
+	protected boolean parseExternally(Lexeme lexeme, Deque<Context> currentContextStack, ContextConsumer consumer) {
 		// No manual parsing is done by default.
 		// This method should be overridden by implementations if some lexemes require manual parsing.
 		return false;
@@ -62,11 +57,15 @@ public abstract class Parser<Lexeme> {
 		return ancestors.stream().anyMatch(a -> a.type == searchedAncestorType);
 	}
 
+	protected final boolean hasAncestorCtx(ContextType searchedAncestorType, Deque<Context> ancestors) {
+		return ancestors.stream().anyMatch(a -> a.metadata.type == searchedAncestorType);
+	}
+
 	protected final boolean isInVerseText(Deque<ContextMetadata> ancestors) {
 		return hasAncestor(ContextType.VERSE, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors);
 	}
 	
-	private void integrateNewContext(Context existingAncestor, List<ContextMetadata> implicitAncestors, Context newContext) {
+	private static void integrateNewContext(Context existingAncestor, List<ContextMetadata> implicitAncestors, Context newContext) {
 		Context currentAncestor = existingAncestor;
 		for(ContextMetadata implicitAncestor: implicitAncestors) {
 			Context newAncestor = new Context(implicitAncestor);
@@ -76,79 +75,148 @@ public abstract class Parser<Lexeme> {
 		
 		currentAncestor.addChild(newContext);
 	}
-	
-	private <E> List<E> append(List<E> originalList, E newElt) {
-		List<E> outList = new ArrayList<>(originalList);
-		outList.add(newElt);
-		return outList;
-	}
-	
-	private Deque<ContextMetadata> buildAncestorStack(Deque<Context> contextStack, List<ContextMetadata> implicitAncestors) {
-		Deque<ContextMetadata> outList = new LinkedList<>();
-		
-		outList.addAll(contextStack.stream().map(c -> c.metadata).collect(Collectors.toList()));
-		
-		for(ContextMetadata implicitAncestor: implicitAncestors) {
-			outList.addFirst(implicitAncestor);
-		}
-		
-		return outList;
-	}
-	
+
 	/**
-		@param contextStack The current stack of the evaluation, where first element (top of the stack) is the closest existing ancestor.
-		@param implicitAncestors The list of implicit contexts ready to be created, where fist element is a child of the contextStack top,
-			and last element is the closest implicit ancestor.
-		@param allowedTypes The allowed types for the context at this point.
-		@param lexeme The lexeme being processed.
-		@param maxDepth The deepest type of context to explore.
-	*/
-	private Context getNextContextFrom(Deque<Context> contextStack, List<ContextMetadata> implicitAncestors,
-		Set<ContextType> allowedTypes, Lexeme lexeme, ContextType maxDepth) {
-		Context closestAncestor = contextStack.peekFirst();
-		ContextType parent = implicitAncestors.isEmpty() ? closestAncestor.metadata.type : implicitAncestors.get(implicitAncestors.size() - 1).type;
-			
-		if(parent == maxDepth) {
-			// Parent is the max depth : we don't look at possible child contexts.
-			return null;
-		}
-		
-		Deque<ContextMetadata> ancestorStack = buildAncestorStack(contextStack, implicitAncestors);
-		
-		// Check all allowed types for next child.
-		for(ContextType childType: allowedTypes) {
-			// Check if the lexeme can build a context of this type.
-			Context nextCtx = readContext(ancestorStack, childType, lexeme);
-			
-			if(nextCtx != null) {
-				// We built a new context from the lexeme !
-				
-				assert childType == nextCtx.metadata.type : "Parsed context type " + nextCtx.metadata.type + " must match expected " + childType;
-				
-				// Integrate it with the existing ancestor and return it.
-				integrateNewContext(closestAncestor, implicitAncestors, nextCtx);
-				return nextCtx;
+	 *
+	 * @param contextStack The current stack of the evaluation, with possible implicit contexts appended.
+	 *                     First element (top of the stack) is the direct parent of the element being checked.
+	 * @param allowedEltTypes The type of elements allowed at this point in the stack.
+	 * @param isTypeOkForNext Returns true if an element at the given stack position and of the given type is accepted as end of the path.
+	 * @return The list of implicit contexts built to reach the accepted element type (not including this accepted element type).
+	 */
+	private static List<ContextMetadata> getImplicitPathToNext(Deque<ContextMetadata> contextStack,
+													  Set<ContextType> allowedEltTypes,
+													  BiPredicate<Deque<ContextMetadata>, ContextType> isTypeOkForNext) {
+		for(ContextType eltType: allowedEltTypes) {
+			if(isTypeOkForNext.test(contextStack, eltType)) {
+				// If this element type is accepted at the current stack location, return an empty list.
+				// (No additional implicit element needed.)
+				return List.of();
 			}
-			else if(childType.implicitAllowed) {
-				// Else, if this type can be created implicitly, look recursively if the lexeme opens its first child.
-				nextCtx = getNextContextFrom(contextStack,
-					append(implicitAncestors, ContextMetadata.fromParent(childType, closestAncestor.metadata)),
-					childType.getAllowedTypesForFirstChild(), lexeme, maxDepth);
-				
-				if(nextCtx != null) {
-					// If a new context was returned recursively, it's already integrated. Return it directly.
-					return nextCtx;
+
+			if(eltType.implicitAllowed) {
+				// If this element type can be created implicitly, look for an implicit path from it.
+
+				// Build an implicit context for this element.
+				ContextMetadata eltMeta = ContextMetadata.fromParent(eltType, contextStack.peekFirst());
+
+				// Build a new context stack, with an implicit context for this element on top.
+				Deque<ContextMetadata> contextStackWithElt = new LinkedList<>(contextStack);
+				contextStackWithElt.addFirst(eltMeta);
+
+				// Recursively search for an implicit path from this element's children.
+				List<ContextMetadata> implicitFromThisElt = getImplicitPathToNext(contextStackWithElt,
+						eltType.getAllowedTypesForFirstChild(), isTypeOkForNext);
+
+				if(implicitFromThisElt != null) {
+					// If any found, then return the path with this implicit element and the found path from it.
+					List<ContextMetadata> result = new ArrayList<>();
+					result.add(eltMeta);
+					result.addAll(implicitFromThisElt);
+					return result;
 				}
 			}
 		}
+
+		// None of the allowed element types provided an implicit path ? Then no implicit path available.
 		return null;
 	}
-	
-	private Context getNextContextFrom(Deque<Context> contextStack, Lexeme lexeme, ContextType maxDepth) {
-		Context parent = contextStack.peekFirst();
-		
-		return getNextContextFrom(contextStack, List.of(), parent.getAllowedTypesForNextChild(),
-			lexeme, maxDepth);
+
+	public static boolean addDescendant(Context rootContext, Context descendant) {
+		Set<ContextType> allowedTypes = rootContext.getAllowedTypesForNextChild();
+
+		if(allowedTypes.contains(descendant.metadata.type)) {
+			// The root context can contain the descendant directly : add it.
+			rootContext.addChild(descendant);
+			return true;
+		}
+
+		Optional<Context> lastChild = rootContext.getLastChild();
+		if(lastChild.isPresent()) {
+			// The root context has a last child : check recursively if it can accept the descendant.
+			if(addDescendant(lastChild.get(), descendant)) {
+				return true;
+			}
+		}
+
+		// Finally, check if an implicit path is possible.
+		// Build a "fake" context stack from this root, as the stack is not used by the predicate anyway.
+		Deque<ContextMetadata> stack = new LinkedList<>();
+		stack.addFirst(rootContext.metadata);
+		List<ContextMetadata> implicitPath = getImplicitPathToNext(stack, allowedTypes,
+				(s, type) -> type == descendant.metadata.type);
+
+		if(implicitPath != null) {
+			// If an implicit path is possible, integrate the descendant to the root via this path.
+			integrateNewContext(rootContext, implicitPath, descendant);
+			return true;
+		}
+
+		// Could not add the descendant to the given root.
+		return false;
+	}
+
+	/**
+	 * Utility method for parser implementations to build a deep context, ie a context containing others.
+	 * Contrary to the Context constructor, which only allows specifying direct children, this method accepts further
+	 * descendants by building implicit ancestors if needed.
+	 * This makes the code calling this method a lot less sensitive to evolutions of the context structure
+	 * (ie enriching the context tree with new implicit elements) than if it was using the Context constructor.
+	 *
+	 * @param metadata The metadata of the context to build.
+	 * @param value The value stored in the context, if any.
+	 * @param descendants The sequence of descendants to append to the built context, in order.
+	 * @return The new context, containing the descendants.
+	 */
+	public static Context buildContext(ContextMetadata metadata, String value, Context... descendants) {
+		Context newContext = new Context(metadata, value);
+		for(Context descendant: descendants) {
+			if(!addDescendant(newContext, descendant)) {
+				throw new IllegalArgumentException("Cannot insert " + descendant + " as descendant of " + newContext);
+			}
+		}
+		return newContext;
+	}
+
+	/**
+	 * Equivalent to {@link #buildContext(ContextMetadata, String, Context...)}, with a null value.
+	 * @param metadata The metadata of the context to build.
+	 * @param descendants The sequence of descendants to append to the built context, in order.
+	 * @return The new context, containing the descendants.
+	 */
+	public static Context buildContext(ContextMetadata metadata, Context... descendants) {
+		return buildContext(metadata, null, descendants);
+	}
+
+	/**
+	 @param contextStack The current stack of the evaluation, where first element (top of the stack) is the closest existing ancestor.
+	 @param lexeme The lexeme being processed.
+	 */
+	private Context getNextContextFrom(Deque<Context> contextStack, Lexeme lexeme) {
+		Context closestAncestor = contextStack.peekFirst();
+
+		// Look for a context that can be opened by this lexeme via an implicit path.
+		final Context[] nextCtx = new Context[] { null };
+		List<ContextMetadata> implicitPath = getImplicitPathToNext(
+				contextStack.stream().map(c -> c.metadata).collect(Collectors.toCollection(LinkedList::new)),
+				closestAncestor.getAllowedTypesForNextChild(),
+				(stack, type) -> {
+					// Try opening a context of the proposed type in the proposed stack location.
+					Context next = readContext(stack, type, lexeme);
+					if(next != null) {
+						// If successful, save it and validate this implicit path.
+						nextCtx[0] = next;
+						return true;
+					}
+					return false;
+				}
+		);
+
+		if(nextCtx[0] != null) {
+			// If a next context was actually built, integrate it as descendant of the closest ancestor.
+			integrateNewContext(closestAncestor, implicitPath, nextCtx[0]);
+		}
+		return nextCtx[0];
 	}
 	
 	private ContextConsumer.Instruction navigateToAppendPoint(Deque<Context> currentContextStack, ContextConsumer consumer) {
@@ -190,23 +258,22 @@ public abstract class Parser<Lexeme> {
 		@param lexemes The stream of lexemes to parse.
 		@param currentContextStack The stack of contexts we are in when starting the parse. Must contain at least one context.
 			The deepest (last) context in that stack is the root context of the document.
-		@param maxDepth The deepest type of context we wish to parse. Descendants of these contexts will be ignored.
 		@param consumer A function that consumes context events in order, and returns instructions to continue or stop parsing.
 	*/
-	public final void parse(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextType maxDepth, ContextConsumer consumer) {
+	public final void parse(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextConsumer consumer) {
 		Iterator<Lexeme> lexIt = lexemes.iterator();
 		while(lexIt.hasNext()) {
 			Lexeme lexeme = lexIt.next();
 			
-			if(!parseExternally(lexeme, currentContextStack, maxDepth, consumer))
+			if(!parseExternally(lexeme, currentContextStack, consumer))
 			{
-				// Check if this lexeme creates another context, either as descendant of the current.
+				// Check if this lexeme creates another context as descendant of the current.
 				LinkedList<Context> nextContextStack = new LinkedList(currentContextStack);
-				Context nextCtx = getNextContextFrom(nextContextStack, lexeme, maxDepth);
+				Context nextCtx = getNextContextFrom(nextContextStack, lexeme);
 				// If not descendant of the current context, and if the current context may be considered complete, try to move up the stack.
 				while(nextContextStack.size() > 1 && !nextContextStack.peekFirst().isIncomplete() && nextCtx == null) {
 					nextContextStack.removeFirst();
-					nextCtx = getNextContextFrom(nextContextStack, lexeme, maxDepth);
+					nextCtx = getNextContextFrom(nextContextStack, lexeme);
 				}
 				
 				if(nextCtx != null) {
@@ -240,8 +307,8 @@ public abstract class Parser<Lexeme> {
 		// Use parseAll if you want to the parser to close and consume the context stack at the end.
 	}
 	
-	private void parseAll(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextType maxDepth, ContextConsumer consumer) {
-		parse(lexemes, currentContextStack, maxDepth, consumer);
+	private void parseAll(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextConsumer consumer) {
+		parse(lexemes, currentContextStack, consumer);
 		while(!currentContextStack.isEmpty()) {
 			if(ContextConsumer.Instruction.TERMINATE == consumer.consume(ContextConsumer.EventType.CLOSE, currentContextStack.removeFirst())) {
 				return;
@@ -253,11 +320,10 @@ public abstract class Parser<Lexeme> {
 		Fill a root context from a document.
 		@param lexemes The stream of lexemes produced by the document.
 		@param rootContext The root context of the document.
-		@param maxDepth The deepest type of context we wish to consider. Children of these contexts won't be returned in the output.
 		@return The given rootContext, filled with all contents retrieved from the document.
 	*/
-	public final Context fill(Stream<Lexeme> lexemes, Context rootContext, ContextType maxDepth) {
-		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), maxDepth, ContextConsumer.PARSE_ALL);
+	public final Context fill(Stream<Lexeme> lexemes, Context rootContext) {
+		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), ContextConsumer.PARSE_ALL);
 		return rootContext;
 	}
 	
@@ -265,13 +331,12 @@ public abstract class Parser<Lexeme> {
 		Extract a wanted context from a document.
 		@param lexemes The stream of lexemes produced by the document.
 		@param rootContext The root context of the document.
-		@param maxDepth The deepest type of context we wish to consider. Children of these contexts won't be returned in the output.
 		@param wantedContext The metadata of the context we wish to extract.
 		@return The context matching the wantedContext metadata, containing all its children up to maxDepth.
 	*/
-	public final Context extract(Stream<Lexeme> lexemes, Context rootContext, ContextType maxDepth, ContextMetadata wantedContext) {
+	public final Context extract(Stream<Lexeme> lexemes, Context rootContext, ContextMetadata wantedContext) {
 		ContextConsumer.Extractor extractor = new ContextConsumer.Extractor(wantedContext);
-		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), maxDepth, extractor);
+		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), extractor);
 		return extractor.getOutput();
 	}
 }

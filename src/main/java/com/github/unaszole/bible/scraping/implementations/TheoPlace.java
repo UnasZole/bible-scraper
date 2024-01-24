@@ -159,19 +159,19 @@ public class TheoPlace implements Scraper {
             for(Node n: e.childNodes()) {
                 if(n instanceof Element) {
                     if(((Element) n).is(NOTE_SELECTOR)) {
-                        out.addChild(new Context(ContextMetadata.forNote(),
+                        addDescendant(out, buildContext(ContextMetadata.forNote(),
                                 new Context(ContextMetadata.forText(), n.attr("data-bs-content"))
                         ));
                     }
                     else if(((Element) n).is("br")) {
-                        out.addChild(new Context(ContextMetadata.forText(), " "));
+                        addDescendant(out, new Context(ContextMetadata.forText(), " "));
                     }
                     else {
-                        out.addChild(new Context(ContextMetadata.forText(), ((Element) n).text()));
+                        addDescendant(out, new Context(ContextMetadata.forText(), ((Element) n).text()));
                     }
                 }
                 else if(n instanceof TextNode) {
-                    out.addChild(new Context(ContextMetadata.forText(), ((TextNode) n).text()));
+                    addDescendant(out, new Context(ContextMetadata.forText(), ((TextNode) n).text()));
                 }
             }
             return out;
@@ -194,8 +194,8 @@ public class TheoPlace implements Scraper {
             switch(type) {
                 /*
                 case CHAPTER_TITLE:
-                    return e.is(H1_SELECTOR) ? new Context(
-                            ContextMetadata.forChapterTitle(parent.book, parent.chapter),
+                    return e.is(H1_SELECTOR) ? buildDeepContext(
+                            ContextMetadata.forChapterTitle(parent.book, parent.chapter), null,
                             new Context(
                                     ContextMetadata.forText(),
                                     e.ownText()
@@ -269,7 +269,6 @@ public class TheoPlace implements Scraper {
             return new PageParser().extract(
                     doc.stream(),
                     chapterCtx,
-                    null,
                     wantedContext
             );
         }
@@ -303,7 +302,7 @@ public class TheoPlace implements Scraper {
                 // Book subcomponents without a specified chapter : parse from intro page.
                 Document doc = book.getBookIntroDocument(downloader, bible);
                 Context bookCtx = new Context(ContextMetadata.forBook(wantedContext.book));
-                return new PageParser().extract(doc.stream(), bookCtx, null, wantedContext);
+                return new PageParser().extract(doc.stream(), bookCtx, wantedContext);
             }
         }
         if(wantedContext.type == ContextType.BIBLE) {

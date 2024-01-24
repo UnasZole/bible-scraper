@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -240,10 +239,10 @@ public class Aelf implements Scraper {
 
                         String verseText = e.ownText();
 
-                        return new Context(verseMeta, verseNb,
-                                new Context(ContextMetadata.forStructuredText(),
-                                        new Context(ContextMetadata.forFlatText(),
-                                                new Context(ContextMetadata.forText(), verseText))));
+                        return buildContext(verseMeta, verseNb,
+                                new Context(ContextMetadata.forFlatText()),
+                                new Context(ContextMetadata.forText(), verseText)
+                        );
                     }
             }
 
@@ -265,7 +264,6 @@ public class Aelf implements Scraper {
                     new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter),
                             String.join("-", book.getPages(wantedContext.chapter))
                     ),
-                    null,
                     wantedContext
             );
         }

@@ -196,18 +196,16 @@ public class ChouraquiSpiritualLand implements Scraper {
 						ContextMetadata chapterMeta = ContextMetadata.forChapter(parent.book,
 								mapToOsisChapterNb(parent.book, chapterNb));
 
-						return new Context(chapterMeta, chapterNb /*,
-								new Context(
-									ContextMetadata.forChapterTitle(parent.book, chapterNb),
-									new Context(ContextMetadata.forText(), e.text())
-								)*/
-						);
+						return buildContext(chapterMeta, chapterNb /*,
+								new Context(ContextMetadata.forChapterTitle(parent.book, chapterNb)),
+								new Context(ContextMetadata.forText(), e.text())
+						*/);
 					}
 				
 				case SECTION_TITLE:
-					return e.is(SECTION_TITLE_SELECTOR) ? new Context(
-						ContextMetadata.forSectionTitle(),
-						new Context(ContextMetadata.forText(), e.text())
+					return e.is(SECTION_TITLE_SELECTOR) ? buildContext(
+							ContextMetadata.forSectionTitle(),
+							new Context(ContextMetadata.forText(), e.text())
 					) : null;
 				
 				case VERSE:
@@ -218,21 +216,17 @@ public class ChouraquiSpiritualLand implements Scraper {
 						ContextMetadata verseMeta = ContextMetadata.forVerse(parent.book, parent.chapter,
 								ParsingUtils.CatholicVersifications.mapVerseNbToOsisVerseNb(
 										parent.book, parent.chapter, verseNb));
-						
-						return new Context(verseMeta, verseNb,
-							new Context(
-								ContextMetadata.forStructuredText(),
-								new Context(ContextMetadata.forFlatText(),
-										new Context(ContextMetadata.forText(), verseText)
-								)
-							)
+
+						return buildContext(verseMeta, verseNb,
+								new Context(ContextMetadata.forFlatText()),
+								new Context(ContextMetadata.forText(), verseText)
 						);
 					}
 				
 				case PARAGRAPH_BREAK:
 					
 					if(hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
-						return e.is(BOOK_INTRO_BR_SELECTOR) ? new Context(
+						return e.is(BOOK_INTRO_BR_SELECTOR) ? buildContext(
 							ContextMetadata.forParagraphBreak()
 						) : null;
 					}
@@ -244,24 +238,24 @@ public class ChouraquiSpiritualLand implements Scraper {
 						return null;
 					}
 					if(hasAncestor(ContextType.BOOK_TITLE, ancestors)) {
-						return e.is(BOOK_TITLE_SELECTOR) && !isBookIntroTitle(e.text()) && !isBookGroupTitle(e.text()) ? new Context(
+						return e.is(BOOK_TITLE_SELECTOR) && !isBookIntroTitle(e.text()) && !isBookGroupTitle(e.text()) ? buildContext(
 									ContextMetadata.forText(), e.text()
 						) : null;
 					}
 					if(hasAncestor(ContextType.BOOK_INTRO_TITLE, ancestors)) {
-						return e.is(S_BOOK_INTRO_TITLE_CONTAINER) ? new Context(
+						return e.is(S_BOOK_INTRO_TITLE_CONTAINER) ? buildContext(
 								ContextMetadata.forText(), e.text()
 						) : null;
 					}
 					if(hasAncestor(ContextType.BOOK_INTRO, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors)) {
 						// Trying to find flat text within a book intro.
-						return e.is(BOOK_INTRO_SELECTOR) ? new Context(
+						return e.is(BOOK_INTRO_SELECTOR) ? buildContext(
 							ContextMetadata.forText(), e.text()
 						) : null;
 					}
 					else if(isInVerseText(ancestors)) {
 						// Trying to find additional text within a verse.
-						return e.is(VERSE_CONTINUATION_SELECTOR) ? new Context(
+						return e.is(VERSE_CONTINUATION_SELECTOR) ? buildContext(
 							ContextMetadata.forText(), " " + e.text()
 						) : null;
 					}
@@ -292,13 +286,9 @@ public class ChouraquiSpiritualLand implements Scraper {
 							parent.chapter, 
 							Integer.parseInt(verseNb)
 						);
-						return new Context(verseMeta, verseNb,
-							new Context(
-								ContextMetadata.forStructuredText(),
-								new Context(ContextMetadata.forFlatText(),
-										new Context(ContextMetadata.forText(), verseMatch.group(2))
-								)
-							)
+						return buildContext(verseMeta, verseNb,
+								new Context(ContextMetadata.forFlatText()),
+								new Context(ContextMetadata.forText(), verseMatch.group(2))
 						);
 				}
 				return null;
@@ -306,16 +296,11 @@ public class ChouraquiSpiritualLand implements Scraper {
 		}
 		
 		@Override
-		protected boolean parseExternally(Element e, Deque<Context> currentContextStack, ContextType maxDepth, ContextConsumer consumer) {
-			
-			Optional<Context> chapterContext = currentContextStack.stream()
-				.filter(c -> c.metadata.type == ContextType.CHAPTER)
-				.findFirst();
-			
-			if(chapterContext.isPresent() && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
-				// We parse all unformatted verses and pass them to a dedicated parser.
+		protected boolean parseExternally(Element e, Deque<Context> currentContextStack, ContextConsumer consumer) {
+			if(hasAncestorCtx(ContextType.CHAPTER, currentContextStack) && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
+				// If lexeme matches as an unformatted sequence of verses, we parse them and pass them to a dedicated parser.
 				Matcher verseMatcher = UNFORMATTED_VERSE_PATTERN.matcher(e.text());
-				new UnformattedChapterParser().parse(verseMatcher.results(), currentContextStack, maxDepth, consumer);
+				new UnformattedChapterParser().parse(verseMatcher.results(), currentContextStack, consumer);
 				
 				return true;
 			}
@@ -353,14 +338,13 @@ public class ChouraquiSpiritualLand implements Scraper {
 		return stream;
 	}
 	
-	private Context extractFromBook(BibleBook book, ContextMetadata wantedContext, ContextType maxDepth) {
+	private Context extractFromBook(BibleBook book, ContextMetadata wantedContext) {
 		if(!BOOKS.containsKey(book)) {
 			return null;
 		}
 
 		return new ElementParser().extract(getDocStream(book),
 			new Context(ContextMetadata.forBook(book)),
-			maxDepth,
 			wantedContext
 		);
 	}
@@ -369,7 +353,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 	public Context fetch(ContextMetadata wantedContext) {
 		if(wantedContext.book != null) {
 			// Fetching contents from a specific book.
-			return extractFromBook(wantedContext.book, wantedContext, null);
+			return extractFromBook(wantedContext.book, wantedContext);
 		}
 		else if(wantedContext.type == ContextType.BIBLE) {
 			// Fetching all available bible contents.
