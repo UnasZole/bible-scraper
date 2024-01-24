@@ -189,6 +189,18 @@ public class ChouraquiSpiritualLand implements Scraper {
 			ContextMetadata parent = ancestors.peekFirst();
 			
 			switch(type) {
+				case BOOK_TITLE:
+					return e.is(BOOK_TITLE_SELECTOR) && !isBookIntroTitle(e.text())
+							&& !isBookGroupTitle(e.text()) ? buildContext(ContextMetadata.forBookTitle(parent.book),
+							new Context(ContextMetadata.forText(), e.text())
+					) : null;
+
+				case BOOK_INTRO_TITLE:
+					return e.is(S_BOOK_INTRO_TITLE_CONTAINER) ? buildContext(
+							ContextMetadata.forBookIntroTitle(parent.book),
+							new Context(ContextMetadata.forText(), e.text())
+					) : null;
+
 				case CHAPTER:
 					if(e.is(CHAPTER_TITLE_SELECTOR)) {
 						String chapterNb = extract(CHAPTER_TITLE_PATTERN, 1, e.text());
@@ -237,16 +249,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 						// Do not create empty text nodes.
 						return null;
 					}
-					if(hasAncestor(ContextType.BOOK_TITLE, ancestors)) {
-						return e.is(BOOK_TITLE_SELECTOR) && !isBookIntroTitle(e.text()) && !isBookGroupTitle(e.text()) ? buildContext(
-									ContextMetadata.forText(), e.text()
-						) : null;
-					}
-					if(hasAncestor(ContextType.BOOK_INTRO_TITLE, ancestors)) {
-						return e.is(S_BOOK_INTRO_TITLE_CONTAINER) ? buildContext(
-								ContextMetadata.forText(), e.text()
-						) : null;
-					}
+
 					if(hasAncestor(ContextType.BOOK_INTRO, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors)) {
 						// Trying to find flat text within a book intro.
 						return e.is(BOOK_INTRO_SELECTOR) ? buildContext(

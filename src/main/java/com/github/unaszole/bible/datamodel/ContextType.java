@@ -8,8 +8,7 @@ import java.util.HashSet;
 import static com.github.unaszole.bible.datamodel.ContextSequence.*;
 
 public enum ContextType {
-	
-	// Content nodes are read from actual data.
+
 	/**
 	 * An atomic text node.
 	 * Has a context value : its text contents.
@@ -17,21 +16,20 @@ public enum ContextType {
 	 */
 	TEXT(false),
 	PARAGRAPH_BREAK(false),
-	
-	// A text structure may be implicitly built to encompass found content.
+
 	/**
 	 * An inline note, that may be inserted at any point in a flat text.
 	 */
-	NOTE(true, atLeastOne(TEXT)),
+	NOTE(false, atLeastOne(TEXT)),
 	/**
 	 * A flat text, ie. a text that does not have any structure - but may contain notes.
 	 * All its contents should be considered as a single string, with the notes either rendered directly in-place or
 	 * via an in-place reference to an external rendering (eg. footnote).
 	 */
 	FLAT_TEXT(true, atLeastOne(NOTE, TEXT)),
-	MINOR_SECTION_TITLE(true, atLeastOne(TEXT)),
-	SECTION_TITLE(true, atLeastOne(TEXT)),
-	MAJOR_SECTION_TITLE(true, atLeastOne(TEXT)),
+	MINOR_SECTION_TITLE(false, atLeastOne(TEXT)),
+	SECTION_TITLE(false, atLeastOne(TEXT)),
+	MAJOR_SECTION_TITLE(false, atLeastOne(TEXT)),
 	/**
 	 * A structured text, ie. flat texts joined by structural delimiters.
 	 * Two successive flat texts are joined by an implicit paragraph break.
@@ -50,7 +48,7 @@ public enum ContextType {
 	// The chapter title can be derived implicitly.
 	// The chapter may start with some structure elements before the verses (usually just a section title).
 	// Other structure element delimiters (ie section titles, paragraphs.) will be contained inside each verse context.
-	CHAPTER_TITLE(true, atLeastOne(TEXT)),
+	CHAPTER_TITLE(false, atLeastOne(TEXT)),
 	/**
 	 * A verse.
 	 * Has a context value : the string representation of the context number in the source document.
@@ -59,9 +57,9 @@ public enum ContextType {
 	
 	// Book must be built from a lexeme that provides a book identifier.
 	// The contained book title and intro can be derived implicitly.
-	BOOK_INTRO_TITLE(true, atLeastOne(TEXT)),
+	BOOK_INTRO_TITLE(false, atLeastOne(TEXT)),
 	BOOK_INTRO(true, atMostOne(BOOK_INTRO_TITLE), one(STRUCTURED_TEXT)),
-	BOOK_TITLE(true, atLeastOne(TEXT)),
+	BOOK_TITLE(false, atLeastOne(TEXT)),
 	BOOK(false, atMostOne(BOOK_TITLE), atMostOne(BOOK_INTRO), atLeastOne(CHAPTER)),
 	
 	// Bible is the root element, it does not contain any metadata nor data.

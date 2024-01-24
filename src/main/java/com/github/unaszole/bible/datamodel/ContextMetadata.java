@@ -42,6 +42,10 @@ public class ContextMetadata {
 	public static ContextMetadata forBookIntro(BibleBook book) {
 		return new ContextMetadata(ContextType.BOOK_INTRO, book, 0, 0);
 	}
+
+	public static ContextMetadata forBookIntroTitle(BibleBook book) {
+		return new ContextMetadata(ContextType.BOOK_INTRO_TITLE, book, 0, 0);
+	}
 	
 	public static ContextMetadata forChapter(BibleBook book, int chapter) {
 		return new ContextMetadata(ContextType.CHAPTER, book, chapter, 0);

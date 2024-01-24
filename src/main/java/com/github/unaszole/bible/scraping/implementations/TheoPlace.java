@@ -192,6 +192,12 @@ public class TheoPlace implements Scraper {
             ContextMetadata parent = ancestors.peekFirst();
 
             switch(type) {
+                case BOOK_TITLE:
+                    return e.is(DOC_TITLE_SELECTOR) ? buildContext(
+                            ContextMetadata.forBookTitle(parent.book),
+                            new Context(ContextMetadata.forText(), e.ownText())
+                    ) : null;
+
                 /*
                 case CHAPTER_TITLE:
                     return e.is(H1_SELECTOR) ? buildDeepContext(
@@ -208,6 +214,24 @@ public class TheoPlace implements Scraper {
                             ContextMetadata.forVerse(parent.book, parent.chapter, Integer.valueOf(e.text())), e.text()
                     ) : null;
 
+                case MAJOR_SECTION_TITLE:
+                    return isMajorSectionTitle(e) ? buildContext(
+                            ContextMetadata.forMajorSectionTitle(),
+                            new Context(ContextMetadata.forText(), e.text())
+                    ) : null;
+
+                case SECTION_TITLE:
+                    return isSectionTitle(e) ? buildContext(
+                            ContextMetadata.forSectionTitle(),
+                            new Context(ContextMetadata.forText(), e.text())
+                    ) : null;
+
+                case MINOR_SECTION_TITLE:
+                    return e.is(MINOR_SECTION_TITLE_SELECTOR) ? buildContext(
+                            ContextMetadata.forMinorSectionTitle(),
+                            new Context(ContextMetadata.forText(), e.text())
+                    ) : null;
+
                 case FLAT_TEXT:
                     if(hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
                         return e.is(BOOK_INTRO_PARAGRAPH_SELECTOR) ? parseFlatText(e) : null;
@@ -216,29 +240,6 @@ public class TheoPlace implements Scraper {
                         return e.is(VERSE_TEXT_SELECTOR) ? parseFlatText(e) : null;
                     }
                     return null;
-
-                case TEXT:
-                    if(hasAncestor(ContextType.BOOK_TITLE, ancestors)) {
-                        return e.is(DOC_TITLE_SELECTOR) ? new Context(ContextMetadata.forText(), e.ownText()) : null;
-                    }
-                    if(hasAncestor(ContextType.MAJOR_SECTION_TITLE, ancestors)) {
-                        return isMajorSectionTitle(e) ? new Context(
-                                ContextMetadata.forText(),
-                                e.text()
-                        ) : null;
-                    }
-                    if(hasAncestor(ContextType.SECTION_TITLE, ancestors)) {
-                        return isSectionTitle(e) ? new Context(
-                                ContextMetadata.forText(),
-                                e.text()
-                        ) : null;
-                    }
-                    if(hasAncestor(ContextType.MINOR_SECTION_TITLE, ancestors)) {
-                        return e.is(MINOR_SECTION_TITLE_SELECTOR) ? new Context(
-                                ContextMetadata.forText(),
-                                e.text()
-                        ) : null;
-                    }
             }
 
             return null;
