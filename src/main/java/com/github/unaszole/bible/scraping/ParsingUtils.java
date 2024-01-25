@@ -1,9 +1,13 @@
 package com.github.unaszole.bible.scraping;
 
+import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.datamodel.ContextMetadata;
 import org.crosswire.jsword.versification.BibleBook;
 
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class ParsingUtils {
     public static class CatholicVersifications {
@@ -90,5 +94,53 @@ public class ParsingUtils {
                 return letterToIntVerseNb(nb + 1, letter);
             }
         }
+    }
+
+    public static <T> Iterator<T> toFlatIterator(Iterator<List<T>> listIt) {
+        final Deque<T> buffer = new LinkedList<>();
+        return new Iterator<T>() {
+            @Override
+            public boolean hasNext() {
+                while(buffer.isEmpty() && listIt.hasNext()) {
+                    buffer.addAll(listIt.next());
+                }
+                return !buffer.isEmpty();
+            }
+
+            @Override
+            public T next() {
+                return buffer.removeFirst();
+            }
+        };
+    }
+
+    public static <T> Stream<T> toStream(Iterator<T> it) {
+        return Stream.iterate((T)null, p -> {
+            if(it.hasNext()) {
+                return it.next();
+            }
+            return null;
+        }).dropWhile(Objects::isNull).takeWhile(Objects::nonNull);
+    }
+
+    public static Stream<ContextEvent> aggregateContextStream(Context rootContext, List<Stream<ContextEvent>> childStreams) {
+        List<Stream<ContextEvent>> streams = new ArrayList<>();
+        streams.add(Stream.of(new ContextEvent(ContextEvent.Type.OPEN, rootContext)));
+        streams.addAll(childStreams);
+        streams.add(Stream.of(new ContextEvent(ContextEvent.Type.CLOSE, rootContext)));
+        return streams.stream().flatMap(s -> s);
+    }
+
+    public static Stream<ContextEvent> extract(Stream<ContextEvent> stream, ContextMetadata wantedContext) {
+        final boolean[] closed = new boolean[] {false};
+        return stream
+                .dropWhile(e -> !(e.type == ContextEvent.Type.OPEN && Objects.equals(e.context.metadata, wantedContext)))
+                .takeWhile(e -> {
+                    if(closed[0]) {
+                        return false;
+                    }
+                    closed[0] = e.type == ContextEvent.Type.CLOSE && Objects.equals(e.context.metadata, wantedContext);
+                    return true;
+                });
     }
 }

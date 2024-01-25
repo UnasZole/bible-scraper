@@ -17,10 +17,7 @@ import org.jsoup.select.QueryParser;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class TheoPlace implements Scraper {
@@ -261,7 +258,7 @@ public class TheoPlace implements Scraper {
     }
 
     @Override
-    public Context fetch(ContextMetadata wantedContext) {
+    public Stream<ContextEvent> stream(ContextMetadata wantedContext) {
         if(wantedContext.chapter != 0) {
             // If fetching a specific chapter, parse from the corresponding document.
             BookRef book = BOOKS.get(wantedContext.book);
@@ -273,7 +270,7 @@ public class TheoPlace implements Scraper {
 
             Context chapterCtx = new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter),
                     Integer.toString(wantedContext.chapter));
-            return new PageParser(doc.stream(), chapterCtx).extract(wantedContext);
+            return ParsingUtils.extract(new PageParser(doc.stream(), chapterCtx).asEventStream(), wantedContext);
         }
         if(wantedContext.book != null) {
             BookRef book = BOOKS.get(wantedContext.book);
@@ -284,40 +281,30 @@ public class TheoPlace implements Scraper {
             if(wantedContext.type == ContextType.BOOK) {
                 // If fetching a full book, build from all subcomponents.
                 Context bookCtx = new Context(wantedContext);
-                Context titleCtx = fetch(ContextMetadata.forBookTitle(wantedContext.book));
-                if(titleCtx != null) {
-                    bookCtx.addChild(titleCtx);
-                }
-                Context introCtx = fetch(ContextMetadata.forBookIntro(wantedContext.book));
-                if(introCtx != null) {
-                    bookCtx.addChild(introCtx);
-                }
+                List<Stream<ContextEvent>> childStreams = new ArrayList<>();
+                childStreams.add(stream(ContextMetadata.forBookTitle(wantedContext.book)));
+                childStreams.add(stream(ContextMetadata.forBookIntro(wantedContext.book)));
                 for(int i = 1; i <= BOOKS.get(wantedContext.book).nbChapters; i++) {
-                    Context chapterCtx = fetch(ContextMetadata.forChapter(wantedContext.book, i));
-                    if(chapterCtx != null) {
-                        bookCtx.addChild(chapterCtx);
-                    }
+                    childStreams.add(stream(ContextMetadata.forChapter(wantedContext.book, i)));
                 }
 
-                return bookCtx.getChildren().isEmpty() ? null : bookCtx;
+                return ParsingUtils.aggregateContextStream(bookCtx, childStreams);
             }
             else {
                 // Book subcomponents without a specified chapter : parse from intro page.
                 Document doc = book.getBookIntroDocument(downloader, bible);
                 Context bookCtx = new Context(ContextMetadata.forBook(wantedContext.book));
-                return new PageParser(doc.stream(), bookCtx).extract(wantedContext);
+                return ParsingUtils.extract(new PageParser(doc.stream(), bookCtx).asEventStream(), wantedContext);
             }
         }
         if(wantedContext.type == ContextType.BIBLE) {
             Context bibleCtx = new Context(ContextMetadata.forBible());
+            List<Stream<ContextEvent>> childStreams = new ArrayList<>();
             for(BibleBook book: BOOKS.keySet()) {
-                Context bookCtx = fetch(ContextMetadata.forBook(book));
-                if(bookCtx != null) {
-                    bibleCtx.addChild(bookCtx);
-                }
+                childStreams.add(stream(ContextMetadata.forBook(book)));
             }
-            return bibleCtx.getChildren().isEmpty() ? null : bibleCtx;
+            return ParsingUtils.aggregateContextStream(bibleCtx, childStreams);
         }
-        return null;
+        return Stream.empty();
     }
 }

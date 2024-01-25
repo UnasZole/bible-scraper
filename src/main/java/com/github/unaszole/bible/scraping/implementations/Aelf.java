@@ -4,6 +4,7 @@ import com.github.unaszole.bible.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.ContextEvent;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.scraping.Scraper;
@@ -17,10 +18,7 @@ import org.jsoup.select.QueryParser;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -263,31 +261,40 @@ public class Aelf implements Scraper {
     }
 
     @Override
-    public Context fetch(ContextMetadata wantedContext) {
+    public Stream<ContextEvent> stream(ContextMetadata wantedContext) {
         if(wantedContext.chapter != 0) {
             BookRef book = BOOKS.get(wantedContext.book);
             Context chapterCtx = new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter),
                     String.join("-", book.getPages(wantedContext.chapter))
             );
-            return new PageParser(book.getDocStream(downloader, wantedContext.chapter), chapterCtx).extract(wantedContext);
+            return ParsingUtils.extract(
+                    new PageParser(book.getDocStream(downloader, wantedContext.chapter), chapterCtx).asEventStream(),
+                    wantedContext
+            );
         }
         if(wantedContext.type == ContextType.BOOK) {
             Context bookCtx = new Context(ContextMetadata.forBook(wantedContext.book));
+            List<Stream<ContextEvent>> childStreams = new ArrayList<>();
+
             BookRef book = BOOKS.get(wantedContext.book);
             for(ChapterRange range: book.ranges) {
                 for(int i = range.begin; i <= range.end; i++) {
-                    bookCtx.addChild(fetch(ContextMetadata.forChapter(wantedContext.book, i)));
+                    childStreams.add(stream(ContextMetadata.forChapter(wantedContext.book, i)));
                 }
             }
-            return bookCtx;
+
+            return ParsingUtils.aggregateContextStream(bookCtx, childStreams);
         }
         if(wantedContext.type == ContextType.BIBLE) {
             Context bibleCtx = new Context(ContextMetadata.forBible());
+            List<Stream<ContextEvent>> childStreams = new ArrayList<>();
+
             for(BibleBook book: BOOKS.keySet()) {
-                bibleCtx.addChild(fetch(ContextMetadata.forBook(book)));
+                childStreams.add(stream(ContextMetadata.forBook(book)));
             }
-            return bibleCtx;
+
+            return ParsingUtils.aggregateContextStream(bibleCtx, childStreams);
         }
-        return null;
+        return Stream.empty();
     }
 }

@@ -351,6 +351,10 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		}
 	}
 
+	public final Stream<ContextEvent> asEventStream() {
+		return ParsingUtils.toStream(ParsingUtils.toFlatIterator(this));
+	}
+
 	public static abstract class TerminalParser<Position> extends Parser<Position> {
 
 		/**

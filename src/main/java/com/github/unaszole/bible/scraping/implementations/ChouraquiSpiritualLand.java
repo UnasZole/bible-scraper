@@ -357,18 +357,20 @@ public class ChouraquiSpiritualLand implements Scraper {
 	}
 
 	@Override
-	public Context fetch(ContextMetadata wantedContext) {
+	public Stream<ContextEvent> stream(ContextMetadata wantedContext) {
 		if(wantedContext.book != null) {
 			// Fetching contents from a specific book.
-			return extractFromBook(wantedContext.book, wantedContext);
+			Context bookCtx = new Context(ContextMetadata.forBook(wantedContext.book));
+			return ParsingUtils.extract(new ElementParser(getDocStream(wantedContext.book), bookCtx).asEventStream(), wantedContext);
 		}
 		else if(wantedContext.type == ContextType.BIBLE) {
 			// Fetching all available bible contents.
-			Context bibleContext = new Context(wantedContext);
+			Context bibleCtx = new Context(wantedContext);
+			List<Stream<ContextEvent>> childStreams = new ArrayList<>();
 			for(BibleBook book: BOOKS.keySet()) {
-				bibleContext.addChild(fetch(ContextMetadata.forBook(book)));
+				childStreams.add(stream(ContextMetadata.forBook(book)));
 			}
-			return bibleContext;
+			return ParsingUtils.aggregateContextStream(bibleCtx, childStreams);
 		}
 		return null;
 	}
