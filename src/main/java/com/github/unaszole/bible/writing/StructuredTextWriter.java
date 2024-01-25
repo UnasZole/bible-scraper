@@ -2,61 +2,52 @@ package com.github.unaszole.bible.writing;
 
 /**
  * Writer for generic structured text.
- * @param <ParentWriter> The parent writer type, to return when closing this writer.
- * @param <ThisWriter> This writer type, to return on all other methods. Allows extensions of this interface
- *                    to maintain the fluent API.
  */
-public interface StructuredTextWriter<ParentWriter, ThisWriter> {
+public interface StructuredTextWriter extends AutoCloseable {
 
     /**
      * Mark the start of a new major section.
      * @param title The title.
      * @return This writer, to keep writing.
      */
-    ThisWriter majorSection(String title);
+    void majorSection(String title);
 
     /**
      * Mark the start of a new section.
      * @param title The title.
      * @return This writer, to keep writing.
      */
-    ThisWriter section(String title);
+    void section(String title);
 
     /**
      * Mark the start of a new minor section.
      * @param title The title.
      * @return This writer, to keep writing.
      */
-    ThisWriter minorSection(String title);
+    void minorSection(String title);
 
     /**
      * Mark the start of a new paragraph.
      * @return This writer, to keep writing.
      */
-    ThisWriter paragraph();
+    void paragraph();
 
     /**
      * Write text contents.
      * @param str The text.
      * @return This writer, to keep writing.
      */
-    ThisWriter text(String str);
+    void text(String str);
 
     /**
      * Write a note.
      * @param str The text of the note.
      * @return This writer, to keep writing.
      */
-    ThisWriter note(String str);
+    void note(String str);
 
-    /**
-     * Close this writer and all its pending entities.
-     * @return The parent writer to keep writing, or null if no parent.
-     */
-    ParentWriter closeText();
-
-    interface BookIntroWriter extends StructuredTextWriter<BookWriter, BookIntroWriter> {
-        BookIntroWriter title(String title);
+    interface BookIntroWriter extends StructuredTextWriter {
+        void title(String title);
     };
 
     /**
@@ -78,21 +69,21 @@ public interface StructuredTextWriter<ParentWriter, ThisWriter> {
      .text("Verse 4 starts in the middle of the paragraph.")
 
      */
-    interface BookContentsWriter extends StructuredTextWriter<BookWriter, BookContentsWriter> {
+    interface BookContentsWriter extends StructuredTextWriter {
         /**
          * Mark the start of a new chapter.
          * @param chapterNb The chapter number.
          * @param sourceNb The string representation of the chapter number in the source document.
          * @return This writer, to keep writing.
          */
-        BookContentsWriter chapter(int chapterNb, String...sourceNb);
+        void chapter(int chapterNb, String...sourceNb);
 
         /**
          * Write a chapter title.
          * @param title The title.
          * @return This writer, to keep writing.
          */
-        BookContentsWriter chapterTitle(String title);
+        void chapterTitle(String title);
 
         /**
          * Mark the start of a new verse.
@@ -100,6 +91,6 @@ public interface StructuredTextWriter<ParentWriter, ThisWriter> {
          * @param sourceNb The string representation of the verse number in the source document.
          * @return This writer, to keep writing.
          */
-        BookContentsWriter verse(int verseNb, String...sourceNb);
+        void verse(int verseNb, String...sourceNb);
     };
 }

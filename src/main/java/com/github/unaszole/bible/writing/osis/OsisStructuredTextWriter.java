@@ -4,23 +4,19 @@ import com.github.unaszole.bible.writing.StructuredTextWriter;
 
 import javax.xml.stream.XMLStreamWriter;
 
-public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
+public abstract class OsisStructuredTextWriter
         extends BaseXmlWriter
-        implements StructuredTextWriter<ParentWriter, ThisWriter> {
+        implements StructuredTextWriter {
 
-    private final ParentWriter parent;
     private boolean inMajorSection = false;
     private boolean inSection = false;
     private boolean inMinorSection = false;
     private boolean inParagraph = false;
     private boolean inActiveParagraph = false;
 
-    public OsisStructuredTextWriter(ParentWriter parent, XMLStreamWriter xmlWriter) {
+    public OsisStructuredTextWriter(XMLStreamWriter xmlWriter) {
         super(xmlWriter);
-        this.parent = parent;
     }
-
-    protected abstract ThisWriter getThis();
 
     private void openMajorSection(String title) {
         // Close the current section if any.
@@ -134,51 +130,43 @@ public abstract class OsisStructuredTextWriter<ParentWriter, ThisWriter>
     }
 
     @Override
-    public ThisWriter majorSection(String title) {
+    public void majorSection(String title) {
         openMajorSection(title);
-        return getThis();
     }
 
     @Override
-    public ThisWriter section(String title) {
+    public void section(String title) {
         openSection(title);
-        return getThis();
     }
 
     @Override
-    public ThisWriter minorSection(String title) {
+    public void minorSection(String title) {
         openMinorSection(title);
-        return getThis();
     }
 
     @Override
-    public ThisWriter paragraph() {
+    public void paragraph() {
         // Mark the current paragraph as inactive to force opening a new one on next action.
         this.inActiveParagraph = false;
-        return getThis();
     }
 
     @Override
-    public ThisWriter note(String str) {
+    public void note(String str) {
         // <note>
         writeStartElement("note");
         writeCharacters(str);
         writeEndElement();
         // </note>
-
-        return getThis();
     }
 
     @Override
-    public ThisWriter text(String str) {
+    public void text(String str) {
         ensureInActiveParagraph();
         writeCharacters(str);
-        return getThis();
     }
 
     @Override
-    public ParentWriter closeText() {
+    public void close() {
         closeCurrentMajorSection();
-        return parent;
     }
 }

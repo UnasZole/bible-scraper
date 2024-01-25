@@ -4,57 +4,26 @@ import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.ContextConsumer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class WritingConsumer implements ContextConsumer {
 
-    private static class WriterHolder {
-        private final Object writer;
 
-        private WriterHolder(Object writer) {
-            this.writer = writer;
-        }
-
-        public boolean isStructuredTextWriter() {
-            return writer instanceof StructuredTextWriter;
-        }
-
-        public BibleWriter asBibleWriter() {
-            return (BibleWriter) writer;
-        }
-        public BookWriter asBookWriter() {
-            return (BookWriter) writer;
-        }
-
-        public StructuredTextWriter<?, ?> asStructuredTextWriter() {
-            return (StructuredTextWriter<?, ?>) writer;
-        }
-
-        public StructuredTextWriter.BookIntroWriter asBookIntroWriter() {
-            return (StructuredTextWriter.BookIntroWriter) writer;
-        }
-
-        public StructuredTextWriter.BookContentsWriter asBookContentsWriter() {
-            return (StructuredTextWriter.BookContentsWriter) writer;
-        }
-    }
-
-    private WriterHolder currentWriter;
+    private BibleWriter writer;
     private boolean inFlatText = false;
     private boolean justClosedFlatText = false;
     private boolean inNote = false;
 
+    private List<Consumer<BookWriter>> pendingBookWrites = null;
+    private List<Consumer<? super StructuredTextWriter.BookIntroWriter>> pendingBookIntroWrites = null;
+    private List<Consumer<? super StructuredTextWriter.BookContentsWriter>> pendingBookContentsWrites = null;
+
     public WritingConsumer(BibleWriter writer) {
-        this.currentWriter = new WriterHolder(writer);
-    }
-
-    public WritingConsumer(BookWriter writer) {
-        this.currentWriter = new WriterHolder(writer);
-    }
-
-    public WritingConsumer(StructuredTextWriter.BookContentsWriter writer) {
-        this.currentWriter = new WriterHolder(writer);
+        this.writer = writer;
     }
 
     public String aggregateContents(Context context) {
@@ -68,102 +37,154 @@ public class WritingConsumer implements ContextConsumer {
         }
     }
 
-    private Object openContext(Context context) {
+    private void addStructuredTextWrite(Consumer<StructuredTextWriter> write) {
+        if(pendingBookIntroWrites != null) {
+            pendingBookIntroWrites.add(write);
+        }
+        else if(pendingBookContentsWrites != null) {
+            pendingBookContentsWrites.add(write);
+        }
+    }
+
+    private void openContext(Context context) {
         switch (context.metadata.type) {
+            case BOOK:
+                pendingBookWrites = new ArrayList<>();
+                break;
+
+            case BOOK_INTRO:
+                pendingBookIntroWrites = new ArrayList<>();
+                break;
+
+            case CHAPTER:
+                if(pendingBookContentsWrites == null) {
+                    pendingBookContentsWrites = new ArrayList<>();
+                }
+                pendingBookContentsWrites.add(w -> {
+                    w.chapter(context.metadata.chapter, context.value);
+                });
+                break;
+
+            case VERSE:
+                pendingBookContentsWrites.add(w -> {
+                    w.verse(context.metadata.verse, context.value);
+                });
+                break;
+
             case FLAT_TEXT:
                 // A FLAT_TEXT is a subsection of a STRUCTURED_TEXT, that can append text (and notes) to the structured text.
                 // (Contrary to other text nodes which are aggregated on parent element close)
                 inFlatText = true;
                 if(justClosedFlatText) {
                     // Successive flat texts are joined by an implicit paragraph break.
-                    return currentWriter.asStructuredTextWriter().paragraph();
+                    addStructuredTextWrite(w -> w.paragraph());
                 }
-                return null;
+                break;
+
             case NOTE:
                 inNote = true;
-                return null;
-
-            case BOOK:
-                return currentWriter.asBibleWriter().book(context.metadata.book);
-            case BOOK_INTRO:
-                return currentWriter.asBookWriter().introduction();
-
-            case CHAPTER:
-                if(!currentWriter.isStructuredTextWriter()) {
-                    // If we're not in a structured text writer yet, it's the first chapter.
-                    // we need to move down from the book to the book contents.
-                    currentWriter = new WriterHolder(currentWriter.asBookWriter().contents());
-                }
-                return currentWriter.asBookContentsWriter().chapter(context.metadata.chapter, context.value);
-            case VERSE:
-                return currentWriter.asBookContentsWriter().verse(context.metadata.verse, context.value);
+                break;
         }
-        return null;
     }
 
-    private Object closeContext(Context context) {
+    private void closeContext(Context context) {
         justClosedFlatText = context.metadata.type == ContextType.FLAT_TEXT;
 
         switch(context.metadata.type) {
+
             // When exiting a flat text, we stop capturing TEXT elements.
             case FLAT_TEXT:
                 inFlatText = false;
-                return null;
+                break;
 
             // The following contexts are written on closure.
             case TEXT:
                 if(inFlatText && !inNote) {
-                    return currentWriter.asStructuredTextWriter().text(context.value);
+                    addStructuredTextWrite(w -> w.text(context.value));
                 }
-                else {
-                    return null;
-                }
+                break;
 
             case PARAGRAPH_BREAK:
-                return currentWriter.asStructuredTextWriter().paragraph();
+                addStructuredTextWrite(w -> w.paragraph());
+                break;
 
             // The following contexts aggregate their text content when closing.
             case BOOK_TITLE:
-                return currentWriter.asBookWriter().title(aggregateContents(context));
+                pendingBookWrites.add(w -> w.title(aggregateContents(context)));
+                break;
             case BOOK_INTRO_TITLE:
-                return currentWriter.asBookIntroWriter().title(aggregateContents(context));
+                pendingBookIntroWrites.add(w -> w.title(aggregateContents(context)));
+                break;
             case CHAPTER_TITLE:
-                return currentWriter.asBookContentsWriter().chapterTitle(aggregateContents(context));
+                pendingBookContentsWrites.add(w -> w.chapterTitle(aggregateContents(context)));
+                break;
             case MAJOR_SECTION_TITLE:
-                return currentWriter.asStructuredTextWriter().majorSection(aggregateContents(context));
+                addStructuredTextWrite(w -> w.majorSection(aggregateContents(context)));
+                break;
             case SECTION_TITLE:
-                return currentWriter.asStructuredTextWriter().section(aggregateContents(context));
+                addStructuredTextWrite(w -> w.section(aggregateContents(context)));
+                break;
             case MINOR_SECTION_TITLE:
-                return currentWriter.asStructuredTextWriter().minorSection(aggregateContents(context));
+                addStructuredTextWrite(w -> w.minorSection(aggregateContents(context)));
+                break;
             case NOTE:
                 inNote = false;
-                return currentWriter.asStructuredTextWriter().note(aggregateContents(context));
+                addStructuredTextWrite(w -> w.note(aggregateContents(context)));
+                break;
 
-            // The following contexts close the current writer.
+
             case BOOK_INTRO:
-                return currentWriter.asBookIntroWriter().closeText();
+                final List<Consumer<? super StructuredTextWriter.BookIntroWriter>> bookIntroWrites = new ArrayList<>(pendingBookIntroWrites);
+                pendingBookWrites.add(w -> {
+                    w.introduction(w2 -> {
+                        for(Consumer<? super StructuredTextWriter.BookIntroWriter> write: bookIntroWrites) {
+                            write.accept(w2);
+                        }
+                    });
+                });
+                pendingBookIntroWrites = null;
+                break;
+
             case BOOK:
-                if(currentWriter.isStructuredTextWriter()) {
-                    // If we're in a structured text writer, we need to move up from the book contents to the book.
-                    currentWriter = new WriterHolder(currentWriter.asBookContentsWriter().closeText());
+                if(pendingBookContentsWrites != null) {
+                    final List<Consumer<? super StructuredTextWriter.BookContentsWriter>> bookContentsWrites = new ArrayList<>(pendingBookContentsWrites);
+                    pendingBookWrites.add(w -> {
+                        w.contents(w2 -> {
+                            for(Consumer<? super StructuredTextWriter.BookContentsWriter> write: bookContentsWrites) {
+                                write.accept(w2);
+                            }
+                        });
+                    });
+                    pendingBookContentsWrites = null;
                 }
-                return currentWriter.asBookWriter().closeBook();
+
+                writer.book(context.metadata.book, w -> {
+                    for(Consumer<BookWriter> write: pendingBookWrites) {
+                        write.accept(w);
+                    }
+                });
+                pendingBookWrites = null;
+                break;
+
             case BIBLE:
-                currentWriter.asBibleWriter().closeBible();
-                return null;
+                try {
+                    writer.close();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                break;
         }
-        return null;
     }
 
     @Override
     public Instruction consume(EventType type, Context context) {
         switch(type) {
             case OPEN:
-                currentWriter = Optional.ofNullable(openContext(context)).map(WriterHolder::new).orElse(currentWriter);
+                openContext(context);
                 justClosedFlatText = false;
                 break;
             case CLOSE:
-                currentWriter = Optional.ofNullable(closeContext(context)).map(WriterHolder::new).orElse(currentWriter);
+                closeContext(context);
                 break;
         }
         return Instruction.CONTINUE;

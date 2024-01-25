@@ -5,24 +5,18 @@ import com.github.unaszole.bible.writing.StructuredTextWriter;
 
 import javax.xml.stream.XMLStreamWriter;
 
-public class OsisBookIntroWriter extends OsisStructuredTextWriter<BookWriter, StructuredTextWriter.BookIntroWriter>
+public class OsisBookIntroWriter extends OsisStructuredTextWriter
         implements StructuredTextWriter.BookIntroWriter {
-    public OsisBookIntroWriter(BookWriter parent, XMLStreamWriter xmlWriter) {
-        super(parent, xmlWriter);
+    public OsisBookIntroWriter(XMLStreamWriter xmlWriter) {
+        super(xmlWriter);
     }
 
     @Override
-    protected OsisBookIntroWriter getThis() {
-        return this;
-    }
-
-    @Override
-    public BookIntroWriter title(String title) {
+    public void title(String title) {
         // <title>
         writeStartElement("title");
         writeCharacters(title);
         writeEndElement();
         // </title>
-        return getThis();
     }
 }

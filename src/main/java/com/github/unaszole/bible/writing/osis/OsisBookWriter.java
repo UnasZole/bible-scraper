@@ -10,20 +10,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.stream.XMLStreamWriter;
+import java.util.function.Consumer;
 
 public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(OsisBookWriter.class);
 
 	private final BibleNames bibleNames = BibleNames.instance();
-	
-	private final BibleWriter parent;
+
 	private final BibleBook book;
 	private boolean introOpened = false;
 	
-	public OsisBookWriter(BibleWriter parent, XMLStreamWriter xmlWriter, BibleBook book) {
+	public OsisBookWriter(XMLStreamWriter xmlWriter, BibleBook book) {
 		super(xmlWriter);
-		this.parent = parent;
 		this.book = book;
 		
 		// <div>
@@ -33,7 +32,7 @@ public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 	}
 
 	@Override
-	public BookWriter title(String title) {
+	public void title(String title) {
 		// <title>
 		writeStartElement("title");
 		writeAttribute("type", "main");
@@ -41,19 +40,21 @@ public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 		writeCharacters(title == null ? bibleNames.getLongName(book) : title);
 		writeEndElement();
 		// </title>
-
-		return this;
 	}
 
 	@Override
-	public StructuredTextWriter.BookIntroWriter introduction() {
+	public void introduction(Consumer<StructuredTextWriter.BookIntroWriter> writes) {
 		// <div>
 		writeStartElement("div");
 		writeAttribute("type", "introduction");
 
 		this.introOpened = true;
-		
-		return new OsisBookIntroWriter(this, xmlWriter);
+
+		try(StructuredTextWriter.BookIntroWriter introWriter = new OsisBookIntroWriter(xmlWriter)) {
+			writes.accept(introWriter);
+		} catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 	}
 
 	private void closeIntroduction() {
@@ -66,20 +67,22 @@ public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 	}
 
 	@Override
-	public StructuredTextWriter.BookContentsWriter contents() {
+	public void contents(Consumer<StructuredTextWriter.BookContentsWriter> writes) {
 		closeIntroduction();
-		return new OsisBookContentsWriter(this, xmlWriter, book);
+
+		try(StructuredTextWriter.BookContentsWriter contentsWriter = new OsisBookContentsWriter(xmlWriter, book)) {
+			writes.accept(contentsWriter);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
-	public BibleWriter closeBook() {
+	public void close() {
 		// In the unlikely case of zero chapter, ensure now that the intro is closed.
 		closeIntroduction();
 		
 		writeEndElement();
 		// </div>
-		
-		// Give back the parent to caller.
-		return parent;
 	}
 }

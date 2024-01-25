@@ -6,7 +6,7 @@ import org.crosswire.jsword.versification.BibleBook;
 
 import javax.xml.stream.XMLStreamWriter;
 
-public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter, StructuredTextWriter.BookContentsWriter>
+public class OsisBookContentsWriter extends OsisStructuredTextWriter
         implements StructuredTextWriter.BookContentsWriter {
 
     private final BibleBook book;
@@ -16,8 +16,8 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
     private String pendingChapterTitle = null;
     private int currentVerse = -1;
 
-    public OsisBookContentsWriter(BookWriter parent, XMLStreamWriter xmlWriter, BibleBook book) {
-        super(parent, xmlWriter);
+    public OsisBookContentsWriter(XMLStreamWriter xmlWriter, BibleBook book) {
+        super(xmlWriter);
         this.book = book;
     }
 
@@ -115,7 +115,7 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
     }
 
     @Override
-    public BookContentsWriter chapter(int chapterNb, String... sourceNb) {
+    public void chapter(int chapterNb, String... sourceNb) {
         // Close the current chapter if any.
         closeCurrentChapter();
 
@@ -124,35 +124,26 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter<BookWriter,
         this.currentChapter = chapterNb;
         this.currentChapterSourceNb = sourceNb;
         this.inActiveChapter = false;
-
-        return getThis();
     }
 
     @Override
-    public BookContentsWriter chapterTitle(String title) {
+    public void chapterTitle(String title) {
         if(inActiveChapter) {
             writeChapterTitle(title);
         }
         else {
             this.pendingChapterTitle = title;
         }
-        return getThis();
     }
 
     @Override
-    public BookContentsWriter verse(int verseNb, String... sourceNb) {
+    public void verse(int verseNb, String... sourceNb) {
         openVerse(verseNb, sourceNb);
-        return getThis();
     }
 
     @Override
-    public BookWriter closeText() {
+    public void close() {
         closeCurrentChapter();
-        return super.closeText();
-    }
-
-    @Override
-    protected BookContentsWriter getThis() {
-        return this;
+        super.close();
     }
 }

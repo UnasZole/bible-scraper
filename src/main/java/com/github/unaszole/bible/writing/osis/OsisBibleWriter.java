@@ -4,6 +4,7 @@ import java.io.OutputStream;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Consumer;
 
 import com.github.unaszole.bible.writing.BibleWriter;
 import com.github.unaszole.bible.writing.BookWriter;
@@ -111,15 +112,19 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 		@return The writer to write the book.
 	*/
 	@Override
-	public BookWriter book(BibleBook book) {
-		return new OsisBookWriter(this, xmlWriter, book);
+	public void book(BibleBook book, Consumer<BookWriter> writes) {
+		try(BookWriter bookWriter = new OsisBookWriter(xmlWriter, book)) {
+			writes.accept(bookWriter);
+		} catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 	}
 	
 	/**
 		Close the book. Must be called exactly once, and no other method called afterwards.
 	*/
 	@Override
-	public void closeBible() {
+	public void close() {
 		
 			writeEndElement();
 			// </osisText>
