@@ -138,7 +138,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 			.collect(Collectors.toList());
 	}
 	
-	private static class ElementParser extends Parser<Element> {
+	private static class ElementParser extends Parser.TerminalParser<Element> {
 		private final static String CHAPTER_TITLE_REGEXP = "^Chapitre (\\d+)\\.?$";
 		private final static String S_CHAPTER_TITLE_CONTAINER = ":is(div,p,h3):matches(" + CHAPTER_TITLE_REGEXP + ")";
 		private final static String S_NONCHAPTER_STRONG_CONTAINER = "div:not(" + S_CHAPTER_TITLE_CONTAINER + "):has(> strong)";
@@ -160,7 +160,11 @@ public class ChouraquiSpiritualLand implements Scraper {
 		
 		private final static Pattern CHAPTER_TITLE_PATTERN = Pattern.compile(CHAPTER_TITLE_REGEXP);
 		private final static Pattern VERSE_START_PATTERN = Pattern.compile(VERSE_START_REGEXP);
-		
+
+		protected ElementParser(Stream<Element> docStream, Context rootContext) {
+			super(docStream.iterator(), rootContext);
+		}
+
 		private static String extract(Pattern pattern, int groupNb, String sourceString) {
 			Matcher matcher = pattern.matcher(sourceString);
 			if(matcher.matches()) {
@@ -278,6 +282,11 @@ public class ChouraquiSpiritualLand implements Scraper {
 		private final static Pattern UNFORMATTED_VERSE_PATTERN = Pattern.compile(UNFORMATTED_VERSE_REGEXP);
 		
 		private static class UnformattedChapterParser extends Parser<MatchResult> {
+
+			protected UnformattedChapterParser(Iterator<MatchResult> positions, Deque<Context> currentContextStack) {
+				super(positions, currentContextStack, false);
+			}
+
 			@Override
 			protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, MatchResult verseMatch) {
 				ContextMetadata parent = ancestors.peekFirst();
@@ -299,15 +308,13 @@ public class ChouraquiSpiritualLand implements Scraper {
 		}
 		
 		@Override
-		protected boolean parseExternally(Element e, Deque<Context> currentContextStack, ContextConsumer consumer) {
+		protected Parser<?> parseExternally(Element e, Deque<Context> currentContextStack) {
 			if(hasAncestorCtx(ContextType.CHAPTER, currentContextStack) && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
 				// If lexeme matches as an unformatted sequence of verses, we parse them and pass them to a dedicated parser.
 				Matcher verseMatcher = UNFORMATTED_VERSE_PATTERN.matcher(e.text());
-				new UnformattedChapterParser().parse(verseMatcher.results(), currentContextStack, consumer);
-				
-				return true;
+				return new UnformattedChapterParser(verseMatcher.results().iterator(), currentContextStack);
 			}
-			return false;
+			return null;
 		}
 	}
 	
@@ -346,10 +353,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 			return null;
 		}
 
-		return new ElementParser().extract(getDocStream(book),
-			new Context(ContextMetadata.forBook(book)),
-			wantedContext
-		);
+		return new ElementParser(getDocStream(book), new Context(ContextMetadata.forBook(book))).extract(wantedContext);
 	}
 
 	@Override

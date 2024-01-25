@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -206,13 +207,18 @@ public class Aelf implements Scraper {
         BOOKS.put(BibleBook.REV, new BookRef("Ap", 22));
     }
 
-    private static class PageParser extends Parser<Element> {
+    private static class PageParser extends Parser.TerminalParser<Element> {
 
         private static final String S_VERSE_NB = "span:is(.verse_number, .text-danger)";
         private static final Evaluator VERSE_SELECTOR = QueryParser.parse("#right-col p:has(> " + S_VERSE_NB + ")");
         private static final Evaluator VERSE_NB_SELECTOR = QueryParser.parse("> " + S_VERSE_NB);
 
         private static final Pattern LETTERED_VERSE_NB_PATTERN = Pattern.compile("^(\\d+)([A-Z])$");
+
+        protected PageParser(Stream<Element> docStream, Context rootContext) {
+            super(docStream.iterator(), rootContext);
+        }
+
         private String fixVerseNb(BibleBook book, int chapter, String parsedNb) {
             if(book == BibleBook.ESTH && chapter == 1) {
                 // Esther book "0" (taken as prefix to book 1) has verses lettered as 1A, 1B.
@@ -260,12 +266,10 @@ public class Aelf implements Scraper {
     public Context fetch(ContextMetadata wantedContext) {
         if(wantedContext.chapter != 0) {
             BookRef book = BOOKS.get(wantedContext.book);
-            return new PageParser().extract(book.getDocStream(downloader, wantedContext.chapter),
-                    new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter),
-                            String.join("-", book.getPages(wantedContext.chapter))
-                    ),
-                    wantedContext
+            Context chapterCtx = new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter),
+                    String.join("-", book.getPages(wantedContext.chapter))
             );
+            return new PageParser(book.getDocStream(downloader, wantedContext.chapter), chapterCtx).extract(wantedContext);
         }
         if(wantedContext.type == ContextType.BOOK) {
             Context bookCtx = new Context(ContextMetadata.forBook(wantedContext.book));

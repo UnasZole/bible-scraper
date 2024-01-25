@@ -12,40 +12,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
-	A parser processes a source document, broken down into a stream of lexemes (ie atomic significative elements),
-	and populates a contextual tree out of it.
-	The parser cannot "guess" what the document is about : a rootContext must always be provided along with the
-	document stream, which describes what the document contains (A full bible ? A book ? A chapter ?).
-	
-	@param <Lexeme> The type of lexeme processed by this parser. For example, if the source document is an HTML page,
-		the lexemes may be the HTML elements in document order.
+ * A parser processes a source document, broken down into a sequence of "positions".
+ * The parser cannot "guess" what the document is about : an initial context stack (containing at least one root
+ * context) must always be provided along with the document data, to describes what the data contains (A full bible ? A book ? A chapter ?).
+ * @param <Position> The type of "position" processed by this parser.
 */
-public abstract class Parser<Lexeme> {
+public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(Parser.class);
-	
-	/**
-		@param ancestorStack The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
-		@param type The type of context to create from this lexeme.
-		@param lexeme The lexeme to analyse.
-		@return A new context extracted from the lexeme, or null if this lexeme does not create a context of the requested type.
-	*/
-	protected abstract Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type, Lexeme lexeme);
-	
-	/**
-		Handle the lexeme using external parsing logic. That's useful if the lexeme is in fact not atomic and may create many contexts.
-		When implemented, this method will usually break the lexeme in smaller sub-lexemes and call the {@link #parse} method of a dedicated parser.
-		
-		@param lexeme The lexeme to parse with an external logic.
-		@param currentContextStack The current context stack when this lexeme was reached. This stack may be modified during the external parsing.
-	 	@param consumer A function that consumes context events in order, and returns instructions to continue or stop parsing.
-		@return True if the lexeme was handled by external parsing (and thus should be ignored by this parser), false otherwise.
-	*/
-	protected boolean parseExternally(Lexeme lexeme, Deque<Context> currentContextStack, ContextConsumer consumer) {
-		// No manual parsing is done by default.
-		// This method should be overridden by implementations if some lexemes require manual parsing.
-		return false;
-	}
 
 	/**
 	 * Utility method for parsers : check if the current context is a descendant of a context of a given type.
@@ -53,15 +27,15 @@ public abstract class Parser<Lexeme> {
 	 * @param ancestors The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
 	 * @return True if an ancestor of the searched type is present, false otherwise.
 	 */
-	protected final boolean hasAncestor(ContextType searchedAncestorType, Deque<ContextMetadata> ancestors) {
+	protected static boolean hasAncestor(ContextType searchedAncestorType, Deque<ContextMetadata> ancestors) {
 		return ancestors.stream().anyMatch(a -> a.type == searchedAncestorType);
 	}
 
-	protected final boolean hasAncestorCtx(ContextType searchedAncestorType, Deque<Context> ancestors) {
+	protected static boolean hasAncestorCtx(ContextType searchedAncestorType, Deque<Context> ancestors) {
 		return ancestors.stream().anyMatch(a -> a.metadata.type == searchedAncestorType);
 	}
 
-	protected final boolean isInVerseText(Deque<ContextMetadata> ancestors) {
+	protected static boolean isInVerseText(Deque<ContextMetadata> ancestors) {
 		return hasAncestor(ContextType.VERSE, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors);
 	}
 	
@@ -187,12 +161,78 @@ public abstract class Parser<Lexeme> {
 	public static Context buildContext(ContextMetadata metadata, Context... descendants) {
 		return buildContext(metadata, null, descendants);
 	}
+	
+	private static void navigateToAppendPoint(Deque<Context> currentContextStack, List<ContextEvent> events) {
+		Context currentContext = currentContextStack.peekFirst();
+
+		// We're navigating to a new active context : consume its opening first.
+		events.add(new ContextEvent(ContextEvent.Type.OPEN, currentContext));
+
+		// Then check its children to navigate deeper.
+		List<Context> children = currentContext.getChildren();
+		if(!children.isEmpty()) {
+			// If there is more than one child, consume recursively all the previous ones.
+			for(int i = 0; i < children.size() - 1; i++) {
+				events.addAll(ContextEvent.fromContext(children.get(i)));
+			}
+			
+			// Navigate to the last child and call recursively.
+			currentContextStack.addFirst(children.get(children.size() - 1));
+			navigateToAppendPoint(currentContextStack, events);
+		}
+	}
+
+	private final Iterator<Position> positions;
+	private final Deque<Context> currentContextStack;
+	private final boolean closeContextStackAtTheEnd;
+	private Parser<?> currentExternalParser;
+
+	/**
+	 *
+	 * @param positions An iterator on the positions in the document to parse.
+	 * @param currentContextStack The context stack to parse against. Must at least contain one context.
+	 *                               (Will be modified by the parsing).
+	 * @param closeContextStackAtTheEnd If true, the parser will close the context stack when no position is left to iterate.
+	 *                                  Should be false only when called from {@link #parseExternally}, to let the
+	 *                                  parent parser handle the rest of the document.
+	 */
+	protected Parser(Iterator<Position> positions, Deque<Context> currentContextStack, boolean closeContextStackAtTheEnd) {
+		assert !currentContextStack.isEmpty();
+		this.positions = positions;
+        this.currentContextStack = currentContextStack;
+		this.closeContextStackAtTheEnd = closeContextStackAtTheEnd;
+		this.currentExternalParser = null;
+    }
+
+	/**
+	 * @param ancestorStack The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
+	 * @param type The type of context to try creating from this position.
+	 * @param position The position to check for a context opening.
+	 * @return A new context built from this position, or null if no context can be created at this position.
+	 */
+	protected abstract Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type, Position position);
+
+	/**
+	 * Handle the position using external parsing logic if needed. That's useful if you are using a lexeme based parser,
+	 * but need to switch to a different type of lexeme or parser to analyse a given position.
+	 * When implemented, this method will usually break the positions in a sequence of smaller sub-positions of
+	 * a different type, and return a dedicated parser working on this sequence.
+	 *
+	 * @param position The position to parse with an external logic.
+	 * @param currentContextStack The current context stack when this position was reached. This stack may be modified during the external parsing.
+	 * @return The external parser to handle the position. If null, then the position will be handled by the current parser.
+	 */
+	protected Parser<?> parseExternally(Position position, Deque<Context> currentContextStack) {
+		// No manual parsing is done by default.
+		// This method should be overridden by implementations if some positions require manual parsing.
+		return null;
+	}
 
 	/**
 	 @param contextStack The current stack of the evaluation, where first element (top of the stack) is the closest existing ancestor.
-	 @param lexeme The lexeme being processed.
+	 @param position The lexeme being processed.
 	 */
-	private Context getNextContextFrom(Deque<Context> contextStack, Lexeme lexeme) {
+	private Context getNextContextFrom(Deque<Context> contextStack, Position position) {
 		Context closestAncestor = contextStack.peekFirst();
 
 		// Look for a context that can be opened by this lexeme via an implicit path.
@@ -202,7 +242,7 @@ public abstract class Parser<Lexeme> {
 				closestAncestor.getAllowedTypesForNextChild(),
 				(stack, type) -> {
 					// Try opening a context of the proposed type in the proposed stack location.
-					Context next = readContext(stack, type, lexeme);
+					Context next = readContext(stack, type, position);
 					if(next != null) {
 						// If successful, save it and validate this implicit path.
 						nextCtx[0] = next;
@@ -218,125 +258,132 @@ public abstract class Parser<Lexeme> {
 		}
 		return nextCtx[0];
 	}
-	
-	private ContextConsumer.Instruction navigateToAppendPoint(Deque<Context> currentContextStack, ContextConsumer consumer) {
-		Context currentContext = currentContextStack.peekFirst();
 
-		// We're navigating to a new active context : consume its opening first.
-		ContextConsumer.Instruction out = consumer.consume(ContextConsumer.EventType.OPEN, currentContext);
-		if(out == ContextConsumer.Instruction.TERMINATE) {
-			return out;
+	/**
+	 *
+	 * @return True if this parser still has some unexplored positions to parse, false otherwise.
+	 */
+	@Override
+	public final boolean hasNext() {
+		if(currentExternalParser != null) {
+			if(currentExternalParser.hasNext()) {
+				// If there is an external parser with pending data, we delegate to it.
+				return true;
+			}
+			else {
+				// If it has no pending data, then we get rid of it, and proceed normally.
+				currentExternalParser = null;
+			}
+		}
+		return positions.hasNext();
+	}
+
+	/**
+	 * Advance the parser to the next meaningful position.
+	 * @return The sequence of events built by the last parsed position. May be empty, if the last parsed position did
+	 * not produce events (eg. if it set up an external parser, or if it reached the end of document).
+	 * Nevertheless, even if an empty list is returned, it does not mean the parsing is complete : always call
+	 * {@link #hasNext()} to know if there is more data to parse.
+	 */
+	@Override
+	public final List<ContextEvent> next() {
+		if(currentExternalParser != null) {
+			// If there is an external parser, we delegate to it.
+			return currentExternalParser.next();
 		}
 
-		// Then check its children to navigate deeper.
-		List<Context> children = currentContext.getChildren();
-		if(children.isEmpty()) {
-			// No child, just continue.
-			return ContextConsumer.Instruction.CONTINUE;
+		while(positions.hasNext()) {
+			Position position = positions.next();
+
+			// Check if we need external parsing logic at this position.
+			this.currentExternalParser = parseExternally(position, currentContextStack);
+			if(currentExternalParser != null) {
+				// We built an external parser.
+				// Return an empty list, and the next iteration will consume it.
+				return List.of();
+			}
+
+			// Check if another context can be created at this position as descendant of the current.
+			LinkedList<Context> nextContextStack = new LinkedList<>(currentContextStack);
+			Context nextCtx = getNextContextFrom(nextContextStack, position);
+			// If not descendant of the current context, and if the current context may be considered complete, try to move up the stack.
+			while(nextContextStack.size() > 1 && !nextContextStack.peekFirst().isIncomplete() && nextCtx == null) {
+				nextContextStack.removeFirst();
+				nextCtx = getNextContextFrom(nextContextStack, position);
+			}
+
+			if(nextCtx != null) {
+				// Another context was created at this position !
+				// Collect related events.
+				List<ContextEvent> events = new ArrayList<>();
+
+				// Move up the current context stack to align with the next context stack.
+				while(currentContextStack.peekFirst() != nextContextStack.peekFirst()) {
+					// Every item from the current stack that is not on the next stack is completed : collect a close event.
+					assert !currentContextStack.peekFirst().isIncomplete() : "Context to close " + currentContextStack.peekFirst() + " must be complete";
+					events.add(new ContextEvent(ContextEvent.Type.CLOSE, currentContextStack.removeFirst()));
+				}
+
+				// Finally, navigate to the current "append point" : this is the last child (of the last child of the last child, recursively),
+				// of the newly added context, ie the place that may be extended by the next lexeme.
+				// Collect events for all newly added contexts on the way.
+				navigateToAppendPoint(currentContextStack, events);
+
+				// Return these events and stop at this position until next call.
+				return events;
+			}
+
+			// No new context could be opened at this position : move to next position.
+		}
+
+		// Reached the last position.
+		if(closeContextStackAtTheEnd) {
+			// If requested, collect close events for the active stack.
+			List<ContextEvent> events = new ArrayList<>();
+			while (!currentContextStack.isEmpty()) {
+				events.add(new ContextEvent(ContextEvent.Type.CLOSE, currentContextStack.removeFirst()));
+			}
+			return events;
 		}
 		else {
-			// If there is more than one child, consume recursively all the previous ones.
-			for(int i = 0; i < children.size() - 1; i++) {
-				out = ContextConsumer.consumeAll(consumer, children.get(i));
-				if(out == ContextConsumer.Instruction.TERMINATE) {
-					return out;
-				}
-			}
-			
-			// Navigate to the last child and call recursively.
-			currentContextStack.addFirst(children.get(children.size() - 1));
-			return navigateToAppendPoint(currentContextStack, consumer);
+			// Else, simply return no event.
+			return List.of();
 		}
 	}
-	
-	/**
-		Parse a stream of lexemes to build a context tree, capturing contexts as they are completed.
-		This method stops when the stream of lexemes is exhausted, and is designed to be called in a chain of parsers
-		(ie by the parseExternally of another parser, hence the same method signature).
-		For direct parsing, prefer one of its finishing alternatives, {@link #fill} or {@link #extract}.
-		
-		@param lexemes The stream of lexemes to parse.
-		@param currentContextStack The stack of contexts we are in when starting the parse. Must contain at least one context.
-			The deepest (last) context in that stack is the root context of the document.
-		@param consumer A function that consumes context events in order, and returns instructions to continue or stop parsing.
-	*/
-	public final void parse(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextConsumer consumer) {
-		Iterator<Lexeme> lexIt = lexemes.iterator();
-		while(lexIt.hasNext()) {
-			Lexeme lexeme = lexIt.next();
-			
-			if(!parseExternally(lexeme, currentContextStack, consumer))
-			{
-				// Check if this lexeme creates another context as descendant of the current.
-				LinkedList<Context> nextContextStack = new LinkedList(currentContextStack);
-				Context nextCtx = getNextContextFrom(nextContextStack, lexeme);
-				// If not descendant of the current context, and if the current context may be considered complete, try to move up the stack.
-				while(nextContextStack.size() > 1 && !nextContextStack.peekFirst().isIncomplete() && nextCtx == null) {
-					nextContextStack.removeFirst();
-					nextCtx = getNextContextFrom(nextContextStack, lexeme);
-				}
-				
-				if(nextCtx != null) {
-					// The lexeme created another context !
-					
-					// Move up the current context stack to align with the next context stack.
-					while(currentContextStack.peekFirst() != nextContextStack.peekFirst()) {
-						// Every item from the current stack that is not on the next stack is completed : send a close event.
-						assert !currentContextStack.peekFirst().isIncomplete() : "Context to close " + currentContextStack.peekFirst() + " must be complete";
-						if(consumer.consume(ContextConsumer.EventType.CLOSE, currentContextStack.removeFirst()) == ContextConsumer.Instruction.TERMINATE) {
-							// If the instruction is to terminate, stop parsing here.
-							return;
-						}
-					}
-					
-					// Finally, navigate to the current "append point" : this is the last child (of the last child of the last child, recursively),
-					// of the newly added context, ie the place that may be extended by the next lexeme.
-					// Consume all these newly added contexts on the way.
-					if(navigateToAppendPoint(currentContextStack, consumer) == ContextConsumer.Instruction.TERMINATE) {
-						// If the instruction is to terminate, stop parsing here.
-						return;
+
+	public static abstract class TerminalParser<Position> extends Parser<Position> {
+
+		/**
+		 * @param positions An iterator on the positions in the document to parse.
+		 * @param rootContext The root context to be filled by this parser.
+		 */
+		protected TerminalParser(Iterator<Position> positions, Context rootContext) {
+			super(positions, new LinkedList<>(List.of(rootContext)), true);
+		}
+
+		/**
+		 * Process the whole document at once and fill the root context that was given at construction time.
+		 */
+		public final void fill() {
+			while(hasNext()) {
+				next();
+			}
+		}
+
+		/**
+		 * Extract a wanted context from the parsed document.
+		 * @param wantedContext The metadata of the context we wish to extract.
+		 * @return The context matching the wantedContext metadata.
+		 */
+		public final Context extract(ContextMetadata wantedContext) {
+			while(hasNext()) {
+				for(ContextEvent event: next()) {
+					if(event.type == ContextEvent.Type.CLOSE && Objects.equals(event.context.metadata, wantedContext)) {
+						return event.context;
 					}
 				}
-				
-				// No new context : lexeme was insignificant.
 			}
+			return null;
 		}
-		
-		// Stream is empty : no more parsing action in the core parsing logic.
-		// Note that the context stack is left as-is, so another parser may take over.
-		// Use parseAll if you want to the parser to close and consume the context stack at the end.
-	}
-	
-	private void parseAll(Stream<Lexeme> lexemes, Deque<Context> currentContextStack, ContextConsumer consumer) {
-		parse(lexemes, currentContextStack, consumer);
-		while(!currentContextStack.isEmpty()) {
-			if(ContextConsumer.Instruction.TERMINATE == consumer.consume(ContextConsumer.EventType.CLOSE, currentContextStack.removeFirst())) {
-				return;
-			}
-		}
-	}
-	
-	/**
-		Fill a root context from a document.
-		@param lexemes The stream of lexemes produced by the document.
-		@param rootContext The root context of the document.
-		@return The given rootContext, filled with all contents retrieved from the document.
-	*/
-	public final Context fill(Stream<Lexeme> lexemes, Context rootContext) {
-		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), ContextConsumer.PARSE_ALL);
-		return rootContext;
-	}
-	
-	/**
-		Extract a wanted context from a document.
-		@param lexemes The stream of lexemes produced by the document.
-		@param rootContext The root context of the document.
-		@param wantedContext The metadata of the context we wish to extract.
-		@return The context matching the wantedContext metadata, containing all its children up to maxDepth.
-	*/
-	public final Context extract(Stream<Lexeme> lexemes, Context rootContext, ContextMetadata wantedContext) {
-		ContextConsumer.Extractor extractor = new ContextConsumer.Extractor(wantedContext);
-		parseAll(lexemes, new LinkedList<>(List.of(rootContext)), extractor);
-		return extractor.getOutput();
 	}
 }

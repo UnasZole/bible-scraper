@@ -18,8 +18,10 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class TheoPlace implements Scraper {
 
@@ -143,7 +145,7 @@ public class TheoPlace implements Scraper {
         BOOKS.put(BibleBook.SIR, new BookRef(73, "ecclesiastique", 51));
     };
 
-    private static class PageParser extends Parser<Element> {
+    private static class PageParser extends Parser.TerminalParser<Element> {
 
         private final static Evaluator DOC_TITLE_SELECTOR = QueryParser.parse("h1.mb-3");
         private final static Evaluator MAJOR_SECTION_TITLE_SELECTOR = QueryParser.parse("#logos > h2");
@@ -153,6 +155,10 @@ public class TheoPlace implements Scraper {
         private final static Evaluator VERSE_START_SELECTOR = QueryParser.parse("#logos > span.verset");
         private final static Evaluator VERSE_TEXT_SELECTOR = QueryParser.parse("#logos > span[data-verset]");
         private final static Evaluator NOTE_SELECTOR = QueryParser.parse("#logos button.footnote");
+
+        protected PageParser(Stream<Element> docStream, Context rootContext) {
+            super(docStream.iterator(), rootContext);
+        }
 
         public static Context parseFlatText(Element e) {
             Context out = new Context(ContextMetadata.forFlatText());
@@ -267,11 +273,7 @@ public class TheoPlace implements Scraper {
 
             Context chapterCtx = new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter),
                     Integer.toString(wantedContext.chapter));
-            return new PageParser().extract(
-                    doc.stream(),
-                    chapterCtx,
-                    wantedContext
-            );
+            return new PageParser(doc.stream(), chapterCtx).extract(wantedContext);
         }
         if(wantedContext.book != null) {
             BookRef book = BOOKS.get(wantedContext.book);
@@ -303,7 +305,7 @@ public class TheoPlace implements Scraper {
                 // Book subcomponents without a specified chapter : parse from intro page.
                 Document doc = book.getBookIntroDocument(downloader, bible);
                 Context bookCtx = new Context(ContextMetadata.forBook(wantedContext.book));
-                return new PageParser().extract(doc.stream(), bookCtx, wantedContext);
+                return new PageParser(doc.stream(), bookCtx).extract(wantedContext);
             }
         }
         if(wantedContext.type == ContextType.BIBLE) {
