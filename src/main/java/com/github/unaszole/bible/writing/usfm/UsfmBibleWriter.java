@@ -45,6 +45,6 @@ public class UsfmBibleWriter implements BibleWriter {
 
     @Override
     public void close() {
-
+        // Do not close the outWriter : it was provided externally, so it's the caller's job to manage it.
     }
 }

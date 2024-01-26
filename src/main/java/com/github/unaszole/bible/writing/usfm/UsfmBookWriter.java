@@ -97,16 +97,24 @@ public class UsfmBookWriter implements BookWriter {
     }
 
     private final PrintWriter out;
+    private final boolean closeOut;
+
+    private UsfmBookWriter(BibleBook book, PrintWriter out, boolean closeOut) {
+        this.out = out;
+        this.closeOut = closeOut;
+
+        out.println("\\id " + OSIS_TO_USFM.get(book));
+    }
 
     public UsfmBookWriter(BibleBook book, PrintWriter out) {
-        this.out = out;
-        out.println("\\id " + OSIS_TO_USFM.get(book));
+        // Do not close the outWriter : it was provided externally, so it's the caller's job to manage it.
+        this(book, out, false);
     }
 
     public UsfmBookWriter(BibleBook book, int bookNb, Path outFolder) throws IOException {
         this(book, new PrintWriter(Files.newBufferedWriter(
                 outFolder.resolve(String.format("%02d", bookNb) + "_" + book.getOSIS() + ".usfm")
-        )));
+        )), true);
     }
 
     @Override
@@ -134,6 +142,8 @@ public class UsfmBookWriter implements BookWriter {
 
     @Override
     public void close() {
-        out.close();
+        if(closeOut) {
+            out.close();
+        }
     }
 }

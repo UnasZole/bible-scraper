@@ -3,12 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.github.unaszole.bible</groupId>
-	<artifactId>osis-builder</artifactId>
+	<artifactId>bible-scraper</artifactId>
 	<version>0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>OSIS bible builder</name>
-	<description>Reads bible from any data source and builds an OSIS XML from it.</description>
+	<name>Bible scraper</name>
+	<description>Reads bible from any data source and builds an OSIS or USFM document from it.</description>
 	
 	<properties>
 		<maven.compiler.source>1.9</maven.compiler.source>
@@ -45,8 +45,12 @@
 			<artifactId>txw2</artifactId>
 			<version>2.2.11</version>
 		</dependency>
+		<dependency>
+			<groupId>info.picocli</groupId>
+			<artifactId>picocli</artifactId>
+			<version>4.7.5</version>
+		</dependency>
 
-		<!-- Logging. Console implementation is specified for tests; other implementations can be provided by library user.-->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -56,7 +60,6 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
 			<version>1.7.25</version>
-			<!--scope>test</scope-->
 		</dependency>
 	</dependencies>
 	
@@ -74,6 +77,29 @@
 						</goals>
 						<configuration>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.6.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<archive>
+								<manifest>
+									<mainClass>com.github.unaszole.bible.ScraperEntrypoint</mainClass>
+								</manifest>
+							</archive>
+							<descriptorRefs>
+								<descriptorRef>jar-with-dependencies</descriptorRef>
+							</descriptorRefs>
 						</configuration>
 					</execution>
 				</executions>

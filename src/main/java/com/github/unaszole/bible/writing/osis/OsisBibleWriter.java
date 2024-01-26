@@ -124,12 +124,14 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 		Close the book. Must be called exactly once, and no other method called afterwards.
 	*/
 	@Override
-	public void close() {
+	public void close() throws Exception {
 		
 			writeEndElement();
 			// </osisText>
 		
 		writeEndOsis();
 		// </osis>
+
+		xmlWriter.close();
 	}
 }
