@@ -1,16 +1,12 @@
 package com.github.unaszole.bible;
 
-import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.scraping.ContextConsumer;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.writing.BibleWriter;
-import com.github.unaszole.bible.writing.WritingConsumer;
+import com.github.unaszole.bible.writing.BookWriter;
 import com.github.unaszole.bible.writing.osis.OsisBibleWriter;
 import org.crosswire.jsword.versification.BibleBook;
-import org.crosswire.jsword.versification.Versification;
 import org.crosswire.jsword.versification.system.SystemCatholic2;
-import org.crosswire.jsword.versification.system.SystemKJV;
 import org.crosswire.jsword.versification.system.Versifications;
 
 import java.nio.file.Files;
@@ -50,11 +46,11 @@ public class Entrypoint {
         /*
         System.out.println(scraper.fetch(wantedMetadata));
         /*/
-        BibleWriter writer = new OsisBibleWriter(System.out,
+        BibleWriter bibleWriter = new OsisBibleWriter(System.out,
                 Versifications.instance().getVersification(SystemCatholic2.V11N_NAME),
                 "plop", "gnu", "fr");
-        WritingConsumer consumer = new WritingConsumer(writer);
-        ContextConsumer.consumeAll(consumer, scraper.fetch(wantedMetadata));
+        ContextStreamWriter streamWriter = new ContextStreamWriter(scraper.stream(wantedMetadata));
+        streamWriter.writeBibleSubset(bibleWriter, wantedMetadata);
         System.out.println();
         //*/
     }

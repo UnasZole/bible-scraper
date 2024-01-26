@@ -32,4 +32,12 @@ public class ContextEvent {
         this.type = type;
         this.context = context;
     }
+
+    @Override
+    public String toString() {
+        return "ContextEvent{" +
+                "type=" + type +
+                ", context=" + context +
+                '}';
+    }
 }

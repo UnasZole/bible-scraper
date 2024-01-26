@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ChouraquiSpiritualLand implements Scraper {
+public class ChouraquiSpiritualLand extends Scraper {
 	
 	private static final String URL_PREFIX = "https://www.spiritualland.org/Les%20Bibles%20Version%20Html/Bible%20-%20Version%20Chouraqui/";
 	
@@ -284,7 +284,7 @@ public class ChouraquiSpiritualLand implements Scraper {
 		private static class UnformattedChapterParser extends Parser<MatchResult> {
 
 			protected UnformattedChapterParser(Iterator<MatchResult> positions, Deque<Context> currentContextStack) {
-				super(positions, currentContextStack, false);
+				super(positions, currentContextStack);
 			}
 
 			@Override
@@ -347,31 +347,24 @@ public class ChouraquiSpiritualLand implements Scraper {
 		
 		return stream;
 	}
-	
-	private Context extractFromBook(BibleBook book, ContextMetadata wantedContext) {
-		if(!BOOKS.containsKey(book)) {
-			return null;
-		}
 
-		return new ElementParser(getDocStream(book), new Context(ContextMetadata.forBook(book))).extract(wantedContext);
+	@Override
+	public ContextStream getContextStreamFor(ContextMetadata rootContextMeta) {
+		switch (rootContextMeta.type) {
+			case BOOK:
+				Context bookCtx = new Context(rootContextMeta);
+				return new ContextStream(bookCtx, new ElementParser(getDocStream(rootContextMeta.book), bookCtx).asEventStream());
+		}
+		return null;
 	}
 
 	@Override
-	public Stream<ContextEvent> stream(ContextMetadata wantedContext) {
-		if(wantedContext.book != null) {
-			// Fetching contents from a specific book.
-			Context bookCtx = new Context(ContextMetadata.forBook(wantedContext.book));
-			return ParsingUtils.extract(new ElementParser(getDocStream(wantedContext.book), bookCtx).asEventStream(), wantedContext);
-		}
-		else if(wantedContext.type == ContextType.BIBLE) {
-			// Fetching all available bible contents.
-			Context bibleCtx = new Context(wantedContext);
-			List<Stream<ContextEvent>> childStreams = new ArrayList<>();
-			for(BibleBook book: BOOKS.keySet()) {
-				childStreams.add(stream(ContextMetadata.forBook(book)));
-			}
-			return ParsingUtils.aggregateContextStream(bibleCtx, childStreams);
-		}
-		return null;
+	protected List<BibleBook> getBooks() {
+		return new ArrayList<>(BOOKS.keySet());
+	}
+
+	@Override
+	protected int getNbChapters(BibleBook book) {
+		return -1;
 	}
 }

@@ -131,6 +131,10 @@ public class ParsingUtils {
         return streams.stream().flatMap(s -> s);
     }
 
+    public static Stream<ContextEvent> aggregateContextStream(Context rootContext, Stream<ContextEvent>... childStreams) {
+        return aggregateContextStream(rootContext, Arrays.asList(childStreams));
+    }
+
     public static Stream<ContextEvent> extract(Stream<ContextEvent> stream, ContextMetadata wantedContext) {
         final boolean[] closed = new boolean[] {false};
         return stream
@@ -141,6 +145,8 @@ public class ParsingUtils {
                     }
                     closed[0] = e.type == ContextEvent.Type.CLOSE && Objects.equals(e.context.metadata, wantedContext);
                     return true;
-                });
+                })
+                //.peek(e -> System.out.println("Extracting context " + wantedContext + " : found event " + e))
+                ;
     }
 }

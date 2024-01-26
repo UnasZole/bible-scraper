@@ -20,7 +20,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class TheoPlace implements Scraper {
+public class TheoPlace extends Scraper {
 
     private static final String CHAPTER_URL = "https://theo.place/bible-{BIBLE}-{BOOK_NB}-{CHAPTER_NB}";
     private static final String BOOK_INTRO_URL = "https://theo.place/intro-livre-{BIBLE}-{BOOK_NB}-{BOOK_NAME}";
@@ -258,53 +258,46 @@ public class TheoPlace implements Scraper {
     }
 
     @Override
-    public Stream<ContextEvent> stream(ContextMetadata wantedContext) {
-        if(wantedContext.chapter != 0) {
-            // If fetching a specific chapter, parse from the corresponding document.
-            BookRef book = BOOKS.get(wantedContext.book);
-
-            Document doc = book.getChapterDocument(downloader, bible, wantedContext.chapter);
-            if(!doc.select("h3:contains(Livre ou chapitre inexistant)").isEmpty()) {
-                return null;
-            }
-
-            Context chapterCtx = new Context(ContextMetadata.forChapter(wantedContext.book, wantedContext.chapter),
-                    Integer.toString(wantedContext.chapter));
-            return ParsingUtils.extract(new PageParser(doc.stream(), chapterCtx).asEventStream(), wantedContext);
-        }
-        if(wantedContext.book != null) {
-            BookRef book = BOOKS.get(wantedContext.book);
-            if(book == null) {
-                return null;
-            }
-
-            if(wantedContext.type == ContextType.BOOK) {
-                // If fetching a full book, build from all subcomponents.
-                Context bookCtx = new Context(wantedContext);
-                List<Stream<ContextEvent>> childStreams = new ArrayList<>();
-                childStreams.add(stream(ContextMetadata.forBookTitle(wantedContext.book)));
-                childStreams.add(stream(ContextMetadata.forBookIntro(wantedContext.book)));
-                for(int i = 1; i <= BOOKS.get(wantedContext.book).nbChapters; i++) {
-                    childStreams.add(stream(ContextMetadata.forChapter(wantedContext.book, i)));
+    public ContextStream getContextStreamFor(ContextMetadata rootContextMeta) {
+        BookRef bookRef;
+        Document doc;
+        List<ContextStream> contextStreams;
+        switch(rootContextMeta.type) {
+            case CHAPTER:
+                bookRef = BOOKS.get(rootContextMeta.book);
+                doc = bookRef.getChapterDocument(downloader, bible, rootContextMeta.chapter);
+                if(!doc.select("h3:contains(Livre ou chapitre inexistant)").isEmpty()) {
+                    return null;
                 }
+                Context chapterCtx = new Context(rootContextMeta, Integer.toString(rootContextMeta.chapter));
+                return new ContextStream(chapterCtx, new PageParser(doc.stream(), chapterCtx).asEventStream());
 
-                return ParsingUtils.aggregateContextStream(bookCtx, childStreams);
-            }
-            else {
-                // Book subcomponents without a specified chapter : parse from intro page.
-                Document doc = book.getBookIntroDocument(downloader, bible);
-                Context bookCtx = new Context(ContextMetadata.forBook(wantedContext.book));
-                return ParsingUtils.extract(new PageParser(doc.stream(), bookCtx).asEventStream(), wantedContext);
-            }
+            case BOOK:
+                bookRef = BOOKS.get(rootContextMeta.book);
+                doc = bookRef.getBookIntroDocument(downloader, bible);
+
+                Context bookCtx = new Context(rootContextMeta);
+                contextStreams = new ArrayList<>();
+                // Start parsing the book from its intro page.
+                contextStreams.add(new ContextStream(bookCtx, new PageParser(doc.stream(), bookCtx).asEventStream()));
+                for(int i = 1; i <= bookRef.nbChapters; i++) {
+                    ContextStream cs = getContextStreamFor(ContextMetadata.forChapter(rootContextMeta.book, i));
+                    if(cs != null) {
+                        contextStreams.add(cs);
+                    }
+                }
+                return ContextStream.fromSequence(bookCtx, contextStreams);
         }
-        if(wantedContext.type == ContextType.BIBLE) {
-            Context bibleCtx = new Context(ContextMetadata.forBible());
-            List<Stream<ContextEvent>> childStreams = new ArrayList<>();
-            for(BibleBook book: BOOKS.keySet()) {
-                childStreams.add(stream(ContextMetadata.forBook(book)));
-            }
-            return ParsingUtils.aggregateContextStream(bibleCtx, childStreams);
-        }
-        return Stream.empty();
+        return null;
+    }
+
+    @Override
+    protected List<BibleBook> getBooks() {
+        return new ArrayList<>(BOOKS.keySet());
+    }
+
+    @Override
+    protected int getNbChapters(BibleBook book) {
+        return BOOKS.get(book).nbChapters;
     }
 }

@@ -162,29 +162,32 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		return buildContext(metadata, null, descendants);
 	}
 	
-	private static void navigateToAppendPoint(Deque<Context> currentContextStack, List<ContextEvent> events) {
+	private static void navigateToAppendPoint(Deque<Context> currentContextStack, Context newContext, List<ContextEvent> events) {
 		Context currentContext = currentContextStack.peekFirst();
-
-		// We're navigating to a new active context : consume its opening first.
-		events.add(new ContextEvent(ContextEvent.Type.OPEN, currentContext));
 
 		// Then check its children to navigate deeper.
 		List<Context> children = currentContext.getChildren();
 		if(!children.isEmpty()) {
-			// If there is more than one child, consume recursively all the previous ones.
-			for(int i = 0; i < children.size() - 1; i++) {
-				events.addAll(ContextEvent.fromContext(children.get(i)));
+			if(newContext == null || newContext == currentContext) {
+				// If we are under the new context, all previous children are also new and need to be collected.
+				for(int i = 0; i < children.size() - 1; i++) {
+					events.addAll(ContextEvent.fromContext(children.get(i)));
+				}
+
+				// Set new context to null for recursive iterations, to let them know we are under the new context.
+				newContext = null;
 			}
-			
-			// Navigate to the last child and call recursively.
-			currentContextStack.addFirst(children.get(children.size() - 1));
-			navigateToAppendPoint(currentContextStack, events);
+
+			// Navigate to the last child (newly created, so build an event) and call recursively.
+			Context lastChild = children.get(children.size() - 1);
+			currentContextStack.addFirst(lastChild);
+			events.add(new ContextEvent(ContextEvent.Type.OPEN, lastChild));
+			navigateToAppendPoint(currentContextStack, newContext, events);
 		}
 	}
 
 	private final Iterator<Position> positions;
 	private final Deque<Context> currentContextStack;
-	private final boolean closeContextStackAtTheEnd;
 	private Parser<?> currentExternalParser;
 
 	/**
@@ -192,15 +195,11 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 	 * @param positions An iterator on the positions in the document to parse.
 	 * @param currentContextStack The context stack to parse against. Must at least contain one context.
 	 *                               (Will be modified by the parsing).
-	 * @param closeContextStackAtTheEnd If true, the parser will close the context stack when no position is left to iterate.
-	 *                                  Should be false only when called from {@link #parseExternally}, to let the
-	 *                                  parent parser handle the rest of the document.
 	 */
-	protected Parser(Iterator<Position> positions, Deque<Context> currentContextStack, boolean closeContextStackAtTheEnd) {
+	protected Parser(Iterator<Position> positions, Deque<Context> currentContextStack) {
 		assert !currentContextStack.isEmpty();
 		this.positions = positions;
         this.currentContextStack = currentContextStack;
-		this.closeContextStackAtTheEnd = closeContextStackAtTheEnd;
 		this.currentExternalParser = null;
     }
 
@@ -226,6 +225,15 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		// No manual parsing is done by default.
 		// This method should be overridden by implementations if some positions require manual parsing.
 		return null;
+	}
+
+	/**
+	 * Generate additional events once the parsing is complete.
+	 * @return The sequence of events to append after the last position has been processed.
+	 */
+	protected List<ContextEvent> close(Deque<Context> currentContextStack) {
+		// No closing is done by default.
+		return List.of();
 	}
 
 	/**
@@ -327,7 +335,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 				// Finally, navigate to the current "append point" : this is the last child (of the last child of the last child, recursively),
 				// of the newly added context, ie the place that may be extended by the next lexeme.
 				// Collect events for all newly added contexts on the way.
-				navigateToAppendPoint(currentContextStack, events);
+				navigateToAppendPoint(currentContextStack, nextCtx, events);
 
 				// Return these events and stop at this position until next call.
 				return events;
@@ -337,18 +345,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		}
 
 		// Reached the last position.
-		if(closeContextStackAtTheEnd) {
-			// If requested, collect close events for the active stack.
-			List<ContextEvent> events = new ArrayList<>();
-			while (!currentContextStack.isEmpty()) {
-				events.add(new ContextEvent(ContextEvent.Type.CLOSE, currentContextStack.removeFirst()));
-			}
-			return events;
-		}
-		else {
-			// Else, simply return no event.
-			return List.of();
-		}
+		return close(currentContextStack);
 	}
 
 	public final Stream<ContextEvent> asEventStream() {
@@ -357,12 +354,26 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 
 	public static abstract class TerminalParser<Position> extends Parser<Position> {
 
+		private final Context rootContext;
+
 		/**
 		 * @param positions An iterator on the positions in the document to parse.
 		 * @param rootContext The root context to be filled by this parser.
 		 */
 		protected TerminalParser(Iterator<Position> positions, Context rootContext) {
-			super(positions, new LinkedList<>(List.of(rootContext)), true);
+			super(positions, new LinkedList<>(List.of(rootContext)));
+			this.rootContext = rootContext;
+		}
+
+		@Override
+		protected List<ContextEvent> close(Deque<Context> currentContextStack) {
+			// Collect close events for the active stack, up until the root context
+			// (excluded, since it was not opened by the parser itself).
+			List<ContextEvent> events = new ArrayList<>();
+			while (!Objects.equals(currentContextStack.peekFirst(), rootContext)) {
+				events.add(new ContextEvent(ContextEvent.Type.CLOSE, currentContextStack.removeFirst()));
+			}
+			return events;
 		}
 
 		/**
