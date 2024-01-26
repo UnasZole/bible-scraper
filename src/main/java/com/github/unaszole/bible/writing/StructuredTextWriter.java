@@ -8,45 +8,43 @@ public interface StructuredTextWriter extends AutoCloseable {
     /**
      * Mark the start of a new major section.
      * @param title The title.
-     * @return This writer, to keep writing.
      */
     void majorSection(String title);
 
     /**
      * Mark the start of a new section.
      * @param title The title.
-     * @return This writer, to keep writing.
      */
     void section(String title);
 
     /**
      * Mark the start of a new minor section.
      * @param title The title.
-     * @return This writer, to keep writing.
      */
     void minorSection(String title);
 
     /**
      * Mark the start of a new paragraph.
-     * @return This writer, to keep writing.
      */
     void paragraph();
 
     /**
      * Write text contents.
      * @param str The text.
-     * @return This writer, to keep writing.
      */
     void text(String str);
 
     /**
      * Write a note.
      * @param str The text of the note.
-     * @return This writer, to keep writing.
      */
     void note(String str);
 
     interface BookIntroWriter extends StructuredTextWriter {
+        /**
+         * Write the introduction title.
+         * @param title The title.
+         */
         void title(String title);
     };
 
@@ -74,14 +72,12 @@ public interface StructuredTextWriter extends AutoCloseable {
          * Mark the start of a new chapter.
          * @param chapterNb The chapter number.
          * @param sourceNb The string representation of the chapter number in the source document.
-         * @return This writer, to keep writing.
          */
         void chapter(int chapterNb, String...sourceNb);
 
         /**
          * Write a chapter title.
          * @param title The title.
-         * @return This writer, to keep writing.
          */
         void chapterTitle(String title);
 
@@ -89,7 +85,6 @@ public interface StructuredTextWriter extends AutoCloseable {
          * Mark the start of a new verse.
          * @param verseNb The verse number.
          * @param sourceNb The string representation of the verse number in the source document.
-         * @return This writer, to keep writing.
          */
         void verse(int verseNb, String...sourceNb);
     };
