@@ -94,6 +94,7 @@ public class UsfmBookWriter implements BookWriter {
         OSIS_TO_USFM.put(BibleBook.BEL, "BEL");
         OSIS_TO_USFM.put(BibleBook.MACC1, "1MA");
         OSIS_TO_USFM.put(BibleBook.MACC2, "2MA");
+        OSIS_TO_USFM.put(BibleBook.ADD_DAN, "DAG");
     }
 
     private final PrintWriter out;
@@ -142,6 +143,7 @@ public class UsfmBookWriter implements BookWriter {
 
     @Override
     public void close() {
+        out.flush();
         if(closeOut) {
             out.close();
         }

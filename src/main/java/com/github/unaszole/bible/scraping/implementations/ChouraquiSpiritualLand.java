@@ -67,11 +67,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 		BOOKS.put(BibleBook.RUTH, List.of("Rout%20%20Routh%20%20Ruth.html"));
 		BOOKS.put(BibleBook.LAM, List.of("Eikha%20%20Lamentations.html"));
 		BOOKS.put(BibleBook.ECCL, List.of("Qohelet%20%20L%20Ecclesiaste.html"));
-		/*
 		BOOKS.put(BibleBook.ESTH, List.of("Ester%20%20Esther.html"));
-		/*/
-		BOOKS.put(BibleBook.ESTH, List.of("Liminaire%20pour%20ester%20grec.html"));
-		//*/
 		BOOKS.put(BibleBook.DAN, List.of("Daniel%20%20Daniel.html"));
 		BOOKS.put(BibleBook.EZRA, List.of("Ezra%20%20Esdras.html"));
 		BOOKS.put(BibleBook.NEH, List.of("Nehemyah%20%20Nehemie.html"));
@@ -87,10 +83,8 @@ public class ChouraquiSpiritualLand extends Scraper {
 		BOOKS.put(BibleBook.SIR, List.of("Liminaire%20pour%20Ben%20Sira.html"));
 		BOOKS.put(BibleBook.BAR, List.of("Liminaire%20pour%20Baroukh.html"));
 		BOOKS.put(BibleBook.EP_JER, List.of("Liminaire%20pour%20la%20lettre%20d%20Irmeyahou.html"));
-		//**/BOOKS.put(BibleBook.ESTH_GR, List.of("Liminaire%20pour%20ester%20grec.html"));
-		//**/BOOKS.put(BibleBook.PR_AZAR, List.of("Liminaire%20pour%20Daniel%20grec.html"));
-		//**/BOOKS.put(BibleBook.SUS, List.of("Liminaire%20pour%20Daniel%20grec.html"));
-		//**/BOOKS.put(BibleBook.BEL, List.of("Liminaire%20pour%20Daniel%20grec.html"));
+		BOOKS.put(BibleBook.ESTH_GR, List.of("Liminaire%20pour%20ester%20grec.html"));
+		BOOKS.put(BibleBook.ADD_DAN, List.of("Liminaire%20pour%20Daniel%20grec.html"));
 
 		// PACTE NEUF
 		BOOKS.put(BibleBook.MATT, List.of("Annonce%20de%20Matyah.html"));
@@ -187,6 +181,19 @@ public class ChouraquiSpiritualLand extends Scraper {
 			}
 			return Integer.parseInt(parsedNb);
 		}
+
+		private static int mapVerseNbToOsisVerseNb(BibleBook book, int chapterNb, String parsedNb) {
+			switch(book) {
+				case ESTH_GR:
+					// Greek book of Esther follows the catholic versification for Esther.
+					return ParsingUtils.CatholicVersifications.mapVerseNbToOsisVerseNb(
+							BibleBook.ESTH, chapterNb, parsedNb);
+
+				default:
+					// Other books have no lettered verses.
+					return Integer.parseInt(parsedNb);
+			}
+		}
 		
 		@Override
 		protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, Element e) {
@@ -230,8 +237,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 						String verseText = extract(VERSE_START_PATTERN, 2, e.text());
 						
 						ContextMetadata verseMeta = ContextMetadata.forVerse(parent.book, parent.chapter,
-								ParsingUtils.CatholicVersifications.mapVerseNbToOsisVerseNb(
-										parent.book, parent.chapter, verseNb));
+								mapVerseNbToOsisVerseNb(parent.book, parent.chapter, verseNb));
 
 						return buildContext(verseMeta, verseNb,
 								new Context(ContextMetadata.forFlatText()),

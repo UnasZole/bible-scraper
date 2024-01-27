@@ -66,8 +66,15 @@ public abstract class Scraper {
 
 	/**
 	 *
-	 * @param rootContextMeta Metadata for a potential root context.
-	 * @return A context stream if the given context can indeed be used as root for a document, null otherwise.
+	 * @param rootContextMeta Metadata for a requested root context.
+	 * @return A context stream for the contents of the requested context, or null.
+	 * If null, the scraper will still be able to fetch the requested context if one of the following is true :
+	 * - If the requested context is the descendant of a root for which a stream is defined, the descendant will
+	 * automatically be extracted from the root.
+	 * - If the requested context is BOOK and {@link #getNbChapters} returns > 0, a default implementation will try to
+	 * generate the book by aggregating all chapters. (In that case, no book intro will be retrieved)
+	 * - If the requested context is BIBLE and {@link #getBooks} returns non-null, a default implementation will try to
+	 * generate the bible by aggregating all books.
 	 */
 	protected abstract ContextStream getContextStreamFor(ContextMetadata rootContextMeta);
 
@@ -80,7 +87,7 @@ public abstract class Scraper {
 	/**
 	 *
 	 * @param book A book present in this bible.
-	 * @return The number of chapters in this book, or null if unknown.
+	 * @return The number of chapters in this book, or -1 if unknown.
 	 */
 	protected abstract int getNbChapters(BibleBook book);
 

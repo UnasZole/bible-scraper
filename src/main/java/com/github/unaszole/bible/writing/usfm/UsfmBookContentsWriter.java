@@ -43,6 +43,9 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
     @Override
     public void verse(int verseNb, String... sourceNb) {
         out.println();
-        out.print("\\v " + verseNb + " \\vp " + sourceNb[0] + "\\vp* ");
+        out.print("\\v " + verseNb + " ");
+        if(!Integer.toString(verseNb).equals(sourceNb[0])) {
+            out.print("\\vp " + sourceNb[0] + "\\vp* ");
+        }
     }
 }

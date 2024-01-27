@@ -29,6 +29,6 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
     @Override
     public void close() {
-
+        out.flush();
     }
 }

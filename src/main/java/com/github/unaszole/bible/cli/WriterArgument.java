@@ -39,7 +39,7 @@ public class WriterArgument {
                 if(outputPath.isPresent()) {
                     return new UsfmBibleWriter(outputPath.get());
                 }
-                return new UsfmBibleWriter(new PrintWriter(System.out, true));
+                return new UsfmBibleWriter(new PrintWriter(System.out));
 
             default:
                 return null;
