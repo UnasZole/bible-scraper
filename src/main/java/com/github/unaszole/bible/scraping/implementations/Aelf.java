@@ -4,7 +4,7 @@ import com.github.unaszole.bible.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.scraping.ContextStream;
+import com.github.unaszole.bible.datamodel.ContextStream;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.scraping.Scraper;

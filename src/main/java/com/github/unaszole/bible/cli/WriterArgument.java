@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public class WriterArgument {
 
-    enum WriterType { DEBUG, OSIS, USFM }
+    enum WriterType { DEBUG_EVENTS, DEBUG_CTX, OSIS, USFM }
 
     @CommandLine.Option(names={"--writer", "-w"}, required = true)
     private WriterType writer;
@@ -23,8 +23,11 @@ public class WriterArgument {
     @CommandLine.Option(names = {"--outputPath", "-o"})
     private Optional<Path> outputPath;
 
-    public boolean isDebug() {
-        return writer == WriterType.DEBUG;
+    public boolean isDebugEvents() {
+        return writer == WriterType.DEBUG_EVENTS;
+    }
+    public boolean isDebugCtx() {
+        return writer == WriterType.DEBUG_CTX;
     }
 
     public BibleWriter get() throws Exception {

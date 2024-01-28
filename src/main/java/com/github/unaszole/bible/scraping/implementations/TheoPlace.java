@@ -3,6 +3,7 @@ package com.github.unaszole.bible.scraping.implementations;
 import com.github.unaszole.bible.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.ContextStream;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.*;
 import org.crosswire.jsword.versification.BibleBook;
@@ -277,16 +278,19 @@ public class TheoPlace extends Scraper {
                 doc = bookRef.getBookIntroDocument(downloader, bible);
 
                 Context bookCtx = new Context(rootContextMeta);
-                contextStreams = new ArrayList<>();
-                // Start parsing the book from its intro page.
-                contextStreams.add(new PageParser(doc.stream(), bookCtx).asContextStream());
+                ContextStream bookStream = new PageParser(doc.stream(), bookCtx).asContextStream();
+
+                List<ContextStream> chapterStreams = new ArrayList<>();
                 for(int i = 1; i <= bookRef.nbChapters; i++) {
                     ContextStream cs = getContextStreamFor(ContextMetadata.forChapter(rootContextMeta.book, i));
                     if(cs != null) {
-                        contextStreams.add(cs);
+                        chapterStreams.add(cs);
                     }
                 }
-                return ContextStream.fromSequence(bookCtx, contextStreams);
+
+                return bookStream.edit().inject(ContextStreamEditor.InjectionPosition.AT_END, rootContextMeta,
+                        chapterStreams.toArray(chapterStreams.toArray(new ContextStream[0]))
+                ).process();
 
             case BIBLE:
                 return autoGetBibleStream(new ArrayList<>(BOOKS.keySet()));

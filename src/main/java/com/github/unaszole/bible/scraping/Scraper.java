@@ -2,13 +2,12 @@ package com.github.unaszole.bible.scraping;
 
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.ContextStream;
 import com.github.unaszole.bible.datamodel.ContextType;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
 
 public abstract class Scraper {
 
@@ -33,7 +32,7 @@ public abstract class Scraper {
 		for(int i = 1; i <= nbChapters; i++) {
 			contextStreams.add(getContextStreamFor(ContextMetadata.forChapter(book, i)));
 		}
-		return ContextStream.fromSequence(bookCtx, contextStreams);
+		return ContextStream.fromContents(bookCtx, contextStreams);
 	}
 
 	/**
@@ -52,7 +51,7 @@ public abstract class Scraper {
 			}
 			contextStreams.add(bookStream);
 		}
-		return ContextStream.fromSequence(bibleCtx, contextStreams);
+		return ContextStream.fromContents(bibleCtx, contextStreams);
 	}
 
 	private static ContextMetadata getAncestor(ContextMetadata meta) {

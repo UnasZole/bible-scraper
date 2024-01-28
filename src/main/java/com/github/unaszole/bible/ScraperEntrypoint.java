@@ -36,7 +36,12 @@ public class ScraperEntrypoint implements Callable<Integer> {
         );
         Files.createDirectories(cachePath);
 
-        if(writer.isDebug()) {
+        if(writer.isDebugEvents()) {
+            scraper.get(cachePath).stream(wantedMetadata.get()).getStream().forEachOrdered(
+                    System.out::println
+            );
+        }
+        else if(writer.isDebugCtx()) {
             System.out.println(scraper.get(cachePath).stream(wantedMetadata.get()).extractContext());
         }
         else {

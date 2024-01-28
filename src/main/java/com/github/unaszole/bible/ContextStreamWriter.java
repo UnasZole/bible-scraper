@@ -1,9 +1,8 @@
 package com.github.unaszole.bible;
 
-import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.scraping.ContextEvent;
+import com.github.unaszole.bible.datamodel.ContextEvent;
 import com.github.unaszole.bible.writing.BibleWriter;
 import com.github.unaszole.bible.writing.BookWriter;
 import com.github.unaszole.bible.writing.StructuredTextWriter;
@@ -11,7 +10,6 @@ import com.github.unaszole.bible.writing.StructuredTextWriter;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.BiPredicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ContextStreamWriter {
@@ -34,34 +32,30 @@ public class ContextStreamWriter {
     }
 
     private static boolean isOpen(ContextType type, ContextEvent event) {
-        return event != null && event.type == ContextEvent.Type.OPEN && event.context.metadata.type == type;
+        return event != null && event.type == ContextEvent.Type.OPEN && event.metadata.type == type;
     }
 
     private static boolean isClose(ContextType type, ContextEvent event) {
-        return event != null && event.type == ContextEvent.Type.CLOSE && event.context.metadata.type == type;
+        return event != null && event.type == ContextEvent.Type.CLOSE && event.metadata.type == type;
     }
 
-    private static String aggregateContents(Context context) {
-        if(context.value != null) {
-            return context.value;
-        }
-        else {
-            return context.children.stream()
-                    .map(ContextStreamWriter::aggregateContents)
-                    .collect(Collectors.joining(" "));
-        }
-    }
+    private String consumeAndAggregateValues(ContextMetadata metadata) {
+        StringBuilder contents = new StringBuilder();
 
-    private String consumeAndAggregate(Context context) {
         while(hasNext()) {
             ContextEvent event = next();
 
-            if(event.type == ContextEvent.Type.CLOSE && Objects.equals(event.context, context)) {
+            if(event.type == ContextEvent.Type.OPEN && event.value != null) {
+                contents.append(event.value);
+            }
+
+            if(event.type == ContextEvent.Type.CLOSE && Objects.equals(event.metadata, metadata)) {
                 // Event closes the context : time to aggregate and return.
-                return aggregateContents(event.context);
+                return contents.toString();
             }
         }
-        return null;
+
+        throw new IllegalStateException("Did not find " + metadata + " closing event.");
     }
 
     private <W extends StructuredTextWriter> void writeStructuredText(W w, BiPredicate<W, ContextEvent> specialisedBehaviour) {
@@ -69,16 +63,16 @@ public class ContextStreamWriter {
             ContextEvent event = next();
 
             if(isOpen(ContextType.MAJOR_SECTION_TITLE, event)) {
-                w.majorSection(consumeAndAggregate(event.context));
+                w.majorSection(consumeAndAggregateValues(event.metadata));
             }
             if(isOpen(ContextType.SECTION_TITLE, event)) {
-                w.section(consumeAndAggregate(event.context));
+                w.section(consumeAndAggregateValues(event.metadata));
             }
             if(isOpen(ContextType.MINOR_SECTION_TITLE, event)) {
-                w.minorSection(consumeAndAggregate(event.context));
+                w.minorSection(consumeAndAggregateValues(event.metadata));
             }
             if(isOpen(ContextType.NOTE, event)) {
-                w.note(consumeAndAggregate(event.context));
+                w.note(consumeAndAggregateValues(event.metadata));
             }
 
             if(isOpen(ContextType.FLAT_TEXT, event) && isClose(ContextType.FLAT_TEXT, getLast())) {
@@ -87,7 +81,7 @@ public class ContextStreamWriter {
             }
 
             if(isClose(ContextType.TEXT, event)) {
-                w.text(event.context.value);
+                w.text(event.value);
             }
             if(isClose(ContextType.PARAGRAPH_BREAK, event)) {
                 w.paragraph();
@@ -102,7 +96,7 @@ public class ContextStreamWriter {
     public void writeBookIntro(StructuredTextWriter.BookIntroWriter writer) {
         writeStructuredText(writer, (w, event) -> {
             if(isOpen(ContextType.BOOK_INTRO_TITLE, event)) {
-                w.title(consumeAndAggregate(event.context));
+                w.title(consumeAndAggregateValues(event.metadata));
             }
 
             return isClose(ContextType.BOOK_INTRO, event);
@@ -111,18 +105,18 @@ public class ContextStreamWriter {
 
     public void writeBookContents(StructuredTextWriter.BookContentsWriter writer) {
         if(isOpen(ContextType.CHAPTER, getLast())) {
-            writer.chapter(getLast().context.metadata.chapter, getLast().context.value);
+            writer.chapter(getLast().metadata.chapter, getLast().value);
         }
 
         writeStructuredText(writer, (w, event) -> {
             if(isOpen(ContextType.CHAPTER, event)) {
-                w.chapter(event.context.metadata.chapter, event.context.value);
+                w.chapter(event.metadata.chapter, event.value);
             }
             if(isOpen(ContextType.CHAPTER_TITLE, event)) {
-                w.chapterTitle(consumeAndAggregate(event.context));
+                w.chapterTitle(consumeAndAggregateValues(event.metadata));
             }
             if(isOpen(ContextType.VERSE, event)) {
-                w.verse(event.context.metadata.verse, event.context.value);
+                w.verse(event.metadata.verse, event.value);
             }
 
             return isClose(ContextType.BOOK, event);
@@ -134,7 +128,7 @@ public class ContextStreamWriter {
             ContextEvent event = next();
 
             if(isOpen(ContextType.BOOK_TITLE, event)) {
-                w.title(consumeAndAggregate(event.context));
+                w.title(consumeAndAggregateValues(event.metadata));
             }
             if(isOpen(ContextType.BOOK_INTRO, event)) {
                 w.introduction(this::writeBookIntro);
@@ -157,7 +151,7 @@ public class ContextStreamWriter {
             ContextEvent event = next();
 
             if(isOpen(ContextType.BOOK, event)) {
-                w.book(event.context.metadata.book, this::writeBook);
+                w.book(event.metadata.book, this::writeBook);
             }
         }
     }

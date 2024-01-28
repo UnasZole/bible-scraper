@@ -1,8 +1,6 @@
 package com.github.unaszole.bible.scraping;
 
-import com.github.unaszole.bible.datamodel.Context;
-import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -377,7 +375,11 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		}
 
 		public ContextStream asContextStream() {
-			return new ContextStream(rootContext, asEventStream());
+			return new ContextStream(rootContext.metadata, Stream.of(
+					Stream.of(new ContextEvent(ContextEvent.Type.OPEN, rootContext)),
+					asEventStream(),
+					Stream.of(new ContextEvent(ContextEvent.Type.CLOSE, rootContext))
+			).flatMap(s -> s));
 		}
 
 		/**
@@ -388,23 +390,5 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 				next();
 			}
 		}
-
-		/**
-		 * Extract a wanted context from the parsed document.
-		 * @param wantedContext The metadata of the context we wish to extract.
-		 * @return The context matching the wantedContext metadata.
-		 */
-		public final Context extract(ContextMetadata wantedContext) {
-			while(hasNext()) {
-				for(ContextEvent event: next()) {
-					if(event.type == ContextEvent.Type.CLOSE && Objects.equals(event.context.metadata, wantedContext)) {
-						return event.context;
-					}
-				}
-			}
-			return null;
-		}
-
-
 	}
 }

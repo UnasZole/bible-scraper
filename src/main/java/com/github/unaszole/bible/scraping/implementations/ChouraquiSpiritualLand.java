@@ -3,6 +3,7 @@ package com.github.unaszole.bible.scraping.implementations;
 import com.github.unaszole.bible.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.ContextStream;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.*;
 import org.crosswire.jsword.versification.BibleBook;
@@ -355,10 +356,9 @@ public class ChouraquiSpiritualLand extends Scraper {
 		return stream;
 	}
 
-	private ContextStreamEditor bookEditor(ContextStream contextStream) {
-		ContextStreamEditor editor = new ContextStreamEditor(contextStream);
+	private ContextStreamEditor editBook(BibleBook book, ContextStreamEditor editor) {
 
-		if(contextStream.rootContext.metadata.book == BibleBook.DAN) {
+		if(book == BibleBook.DAN) {
 			editor.inject(ContextStreamEditor.InjectionPosition.AT_END, ContextMetadata.forBook(BibleBook.DAN),
 					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 13)),
 					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 14))
@@ -373,8 +373,8 @@ public class ChouraquiSpiritualLand extends Scraper {
 		switch (rootContextMeta.type) {
 			case BOOK:
 				Context bookCtx = new Context(rootContextMeta);
-				return new ElementParser(getDocStream(rootContextMeta.book), bookCtx)
-						.asContextStream().edited(this::bookEditor);
+				return editBook(rootContextMeta.book, new ElementParser(getDocStream(rootContextMeta.book), bookCtx)
+						.asContextStream().edit()).process();
 			case BIBLE:
 				return autoGetBibleStream(new ArrayList<>(BOOKS.keySet()));
 		}

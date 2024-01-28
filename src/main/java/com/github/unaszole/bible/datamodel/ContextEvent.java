@@ -1,6 +1,4 @@
-package com.github.unaszole.bible.scraping;
-
-import com.github.unaszole.bible.datamodel.Context;
+package com.github.unaszole.bible.datamodel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,18 +24,21 @@ public class ContextEvent {
     }
 
     public final Type type;
-    public final Context context;
+    public final ContextMetadata metadata;
+    public final String value;
 
     public ContextEvent(Type type, Context context) {
         this.type = type;
-        this.context = context;
+        this.metadata = context.metadata;
+        this.value = context.value;
     }
 
     @Override
     public String toString() {
         return "ContextEvent{" +
                 "type=" + type +
-                ", context=" + context +
+                ", metadata=" + metadata +
+                ", value='" + value + '\'' +
                 '}';
     }
 }
