@@ -14,7 +14,8 @@ import java.util.stream.Stream;
 
 public class ContextStreamWriter {
     private final Iterator<ContextEvent> it;
-    private final ContextEvent[] last = new ContextEvent[]{ null };
+    private ContextEvent last = null;
+    private ContextEvent current = null;
 
     public ContextStreamWriter(Stream<ContextEvent> stream) {
         this.it = stream.iterator();
@@ -24,11 +25,12 @@ public class ContextStreamWriter {
         return it.hasNext();
     }
     private ContextEvent next() {
-        this.last[0] = it.next();
-        return last[0];
+        this.last = current;
+        this.current = it.next();
+        return current;
     }
     private ContextEvent getLast() {
-        return last[0];
+        return last;
     }
 
     private static boolean isOpen(ContextType type, ContextEvent event) {
