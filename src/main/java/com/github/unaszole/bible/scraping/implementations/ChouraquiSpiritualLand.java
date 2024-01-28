@@ -176,7 +176,8 @@ public class ChouraquiSpiritualLand extends Scraper {
 		}
 
 		private static int mapToOsisChapterNb(BibleBook book, String parsedNb) {
-			if(book == BibleBook.ESTH && "0".equals(parsedNb)) {
+			if(book == BibleBook.ESTH_GR && "0".equals(parsedNb)) {
+				// Greek book of Esther starts with a chapter 0 which is actually part of chapter 1.
 				return 1;
 			}
 			return Integer.parseInt(parsedNb);
@@ -354,23 +355,30 @@ public class ChouraquiSpiritualLand extends Scraper {
 		return stream;
 	}
 
+	private ContextStreamEditor bookEditor(ContextStream contextStream) {
+		ContextStreamEditor editor = new ContextStreamEditor(contextStream);
+
+		if(contextStream.rootContext.metadata.book == BibleBook.DAN) {
+			editor.inject(ContextStreamEditor.InjectionPosition.AT_END, ContextMetadata.forBook(BibleBook.DAN),
+					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 13)),
+					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 14))
+			);
+		}
+
+		return editor;
+	}
+
 	@Override
 	public ContextStream getContextStreamFor(ContextMetadata rootContextMeta) {
 		switch (rootContextMeta.type) {
 			case BOOK:
 				Context bookCtx = new Context(rootContextMeta);
-				return new ContextStream(bookCtx, new ElementParser(getDocStream(rootContextMeta.book), bookCtx).asEventStream());
+				return new ElementParser(getDocStream(rootContextMeta.book), bookCtx)
+						.asContextStream().edited(this::bookEditor);
+			case BIBLE:
+				return autoGetBibleStream(new ArrayList<>(BOOKS.keySet()));
 		}
 		return null;
 	}
 
-	@Override
-	protected List<BibleBook> getBooks() {
-		return new ArrayList<>(BOOKS.keySet());
-	}
-
-	@Override
-	protected int getNbChapters(BibleBook book) {
-		return -1;
-	}
 }

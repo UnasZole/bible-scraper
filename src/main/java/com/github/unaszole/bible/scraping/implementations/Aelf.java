@@ -4,6 +4,7 @@ import com.github.unaszole.bible.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.ContextStream;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.scraping.Scraper;
@@ -278,18 +279,12 @@ public class Aelf extends Scraper {
                 Context chapterCtx = new Context(rootContextMeta,
                         String.join("-", bookRef.getPages(rootContextMeta.chapter))
                 );
-                return new ContextStream(chapterCtx, new PageParser(docStream, chapterCtx).asEventStream());
+                return new PageParser(docStream, chapterCtx).asContextStream();
+            case BOOK:
+                return autoGetBookStream(rootContextMeta.book, BOOKS.get(rootContextMeta.book).getNbChapters());
+            case BIBLE:
+                return autoGetBibleStream(new ArrayList<>(BOOKS.keySet()));
         }
         return null;
-    }
-
-    @Override
-    protected List<BibleBook> getBooks() {
-        return new ArrayList<>(BOOKS.keySet());
-    }
-
-    @Override
-    protected int getNbChapters(BibleBook book) {
-        return BOOKS.get(book).getNbChapters();
     }
 }

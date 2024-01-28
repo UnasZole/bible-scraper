@@ -11,7 +11,7 @@ public class Context {
 	
 	public final ContextMetadata metadata;
 	public final String value;
-	private final List<Context> children = new ArrayList<>();
+	public final List<Context> children = new ArrayList<>();
 
 	public Context(ContextMetadata metadata, Context... children) {
 		this(metadata, null, children);
@@ -31,10 +31,6 @@ public class Context {
 		return children.isEmpty() ? Optional.empty() : Optional.of(children.get(children.size() - 1));
 	}
 	
-	public List<Context> getChildren() {
-		return Collections.unmodifiableList(children);
-	}
-	
 	public Set<ContextType> getAllowedTypesForNextChild() {
 		return metadata.type.getAllowedTypesForNextChild(
 			children.stream().map(c -> c.metadata.type).collect(Collectors.toList())
@@ -52,7 +48,7 @@ public class Context {
 			return Optional.of(List.of());
 		}
 		
-		for(Context closerAncestor: ancestor.getChildren()) {
+		for(Context closerAncestor: ancestor.children) {
 			Optional<List<Context>> pathFromCloserAncestor = this.getPathFromAncestor(closerAncestor);
 			
 			if(pathFromCloserAncestor.isPresent()) {

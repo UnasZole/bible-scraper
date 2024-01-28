@@ -5,13 +5,14 @@ import com.github.unaszole.bible.datamodel.ContextMetadata;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class ParsingUtils {
     public static class CatholicVersifications {
-        public static int letterToIntVerseNb(int nbForA, char wantedLetter) {
+        private static int letterToIntVerseNb(int nbForA, char wantedLetter) {
             int shift = 0;
             // Letters J and V are skipped in verse numbering.
             if(wantedLetter > 'J') {
@@ -96,6 +97,15 @@ public class ParsingUtils {
         }
     }
 
+    public static <T> int indexOf(List<T> list, Predicate<? super T> predicate) {
+        for(ListIterator<T> iter = list.listIterator(); iter.hasNext(); ) {
+            if (predicate.test(iter.next())) {
+                return iter.previousIndex();
+            }
+        }
+        return -1;
+    }
+
     public static <T> Iterator<T> toFlatIterator(Iterator<List<T>> listIt) {
         final Deque<T> buffer = new LinkedList<>();
         return new Iterator<T>() {
@@ -114,39 +124,12 @@ public class ParsingUtils {
         };
     }
 
-    public static <T> Stream<T> toStream(Iterator<T> it) {
+    public static <T> Stream<T> toStream(final Iterator<T> it) {
         return Stream.iterate((T)null, p -> {
             if(it.hasNext()) {
                 return it.next();
             }
             return null;
         }).dropWhile(Objects::isNull).takeWhile(Objects::nonNull);
-    }
-
-    public static Stream<ContextEvent> aggregateContextStream(Context rootContext, List<Stream<ContextEvent>> childStreams) {
-        List<Stream<ContextEvent>> streams = new ArrayList<>();
-        streams.add(Stream.of(new ContextEvent(ContextEvent.Type.OPEN, rootContext)));
-        streams.addAll(childStreams);
-        streams.add(Stream.of(new ContextEvent(ContextEvent.Type.CLOSE, rootContext)));
-        return streams.stream().flatMap(s -> s);
-    }
-
-    public static Stream<ContextEvent> aggregateContextStream(Context rootContext, Stream<ContextEvent>... childStreams) {
-        return aggregateContextStream(rootContext, Arrays.asList(childStreams));
-    }
-
-    public static Stream<ContextEvent> extract(Stream<ContextEvent> stream, ContextMetadata wantedContext) {
-        final boolean[] closed = new boolean[] {false};
-        return stream
-                .dropWhile(e -> !(e.type == ContextEvent.Type.OPEN && Objects.equals(e.context.metadata, wantedContext)))
-                .takeWhile(e -> {
-                    if(closed[0]) {
-                        return false;
-                    }
-                    closed[0] = e.type == ContextEvent.Type.CLOSE && Objects.equals(e.context.metadata, wantedContext);
-                    return true;
-                })
-                //.peek(e -> System.out.println("Extracting context " + wantedContext + " : found event " + e))
-                ;
     }
 }

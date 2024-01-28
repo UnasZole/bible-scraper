@@ -3,7 +3,6 @@ package com.github.unaszole.bible.scraping;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.scraping.implementations.TheoPlace;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.ArrayList;
@@ -13,129 +12,47 @@ import java.util.stream.Stream;
 
 public abstract class Scraper {
 
-	public static class ContextStream {
-		public final Context rootContext;
-		private final Stream<ContextEvent> stream;
-
-		/**
-		 *
-		 * @param rootContext The root context.
-		 * @param stream The events contained within that context. (EXCLUDING the open/close of this context itself !)
-		 *               Those will be added automatically.
-		 */
-		public ContextStream(Context rootContext, Stream<ContextEvent> stream) {
-			this.rootContext = rootContext;
-			this.stream = stream;
-		}
-
-		public static ContextStream fromSequence(Context rootContext, List<ContextStream> contextStreams) {
-			List<Stream<ContextEvent>> streams = new ArrayList<>();
-
-			for(final ContextStream contextStream: contextStreams) {
-				if(contextStream.rootContext == rootContext) {
-					// Stream contributes to the same root context directly.
-					streams.add(contextStream.stream);
-				}
-				else {
-					// Stream contributes to a child of the root.
-					// We need to make sure to append the context to the root when we start streaming.
-					// (hence why we add manually, and NOT with the getStream() public method).
-					streams.add(Stream.of(new ContextEvent(ContextEvent.Type.OPEN, contextStream.rootContext)).peek(e -> {
-							rootContext.addChild(contextStream.rootContext);
-					}));
-					streams.add(contextStream.stream);
-					streams.add(Stream.of(new ContextEvent(ContextEvent.Type.CLOSE, contextStream.rootContext)));
-				}
-			}
-
-			return new ContextStream(rootContext, streams.stream().flatMap(s -> s));
-		}
-
-		/**
-		 *
-		 * @return The stream of events for this context, including the OPEN and CLOSE events for this context.
-		 */
-		public Stream<ContextEvent> getStream() {
-			return Stream.of(
-					Stream.of(new ContextEvent(ContextEvent.Type.OPEN, rootContext)),
-					stream,
-					Stream.of(new ContextEvent(ContextEvent.Type.CLOSE, rootContext))
-			).flatMap(s -> s);
-		}
-	}
-
 	/**
 	 *
 	 * @param rootContextMeta Metadata for a requested root context.
 	 * @return A context stream for the contents of the requested context, or null.
-	 * If null, the scraper will still be able to fetch the requested context if one of the following is true :
-	 * - If the requested context is the descendant of a root for which a stream is defined, the descendant will
-	 * automatically be extracted from the root.
-	 * - If the requested context is BOOK and {@link #getNbChapters} returns > 0, a default implementation will try to
-	 * generate the book by aggregating all chapters. (In that case, no book intro will be retrieved)
-	 * - If the requested context is BIBLE and {@link #getBooks} returns non-null, a default implementation will try to
-	 * generate the bible by aggregating all books.
+	 * If null, the scraper will try to fetch a parent context and extract the wanted portion.
 	 */
 	protected abstract ContextStream getContextStreamFor(ContextMetadata rootContextMeta);
 
 	/**
-	 *
-	 * @return The list of books available in the bible exposed by this scraper, or null if unknown.
+	 * Utility method for scrapers to automatically generate a book from its chapters.
+	 * This should be used only if we don't need to fetch a book introduction.
+	 * @param book The book to fetch.
+	 * @param nbChapters The number of chapters in this book.
+	 * @return The context stream for the book containing all these chapters.
 	 */
-	protected abstract List<BibleBook> getBooks();
+	protected ContextStream autoGetBookStream(BibleBook book, int nbChapters) {
+		Context bookCtx = new Context(ContextMetadata.forBook(book));
+		List<ContextStream> contextStreams = new ArrayList<>();
+		for(int i = 1; i <= nbChapters; i++) {
+			contextStreams.add(getContextStreamFor(ContextMetadata.forChapter(book, i)));
+		}
+		return ContextStream.fromSequence(bookCtx, contextStreams);
+	}
 
 	/**
-	 *
-	 * @param book A book present in this bible.
-	 * @return The number of chapters in this book, or -1 if unknown.
+	 * Utility method for scrapers to automatically generate a bible from a sequence of books.
+	 * @param books The list of books to include, in order.
+	 * @return The context stream for a bible containing all these books.
 	 */
-	protected abstract int getNbChapters(BibleBook book);
-
-	private ContextStream getDefaultedContextStreamFor(ContextMetadata rootContextMeta) {
-		ContextStream fromImpl = getContextStreamFor(rootContextMeta);
-		if(fromImpl != null) {
-			return fromImpl;
+	protected ContextStream autoGetBibleStream(List<BibleBook> books) {
+		Context bibleCtx = new Context(ContextMetadata.forBible());
+		List<ContextStream> contextStreams = new ArrayList<>();
+		for(BibleBook book: books) {
+			ContextStream bookStream = getContextStreamFor(ContextMetadata.forBook(book));
+			if(bookStream == null) {
+				// If we failed to build a context for the book, stop here and try at higher level.
+				return null;
+			}
+			contextStreams.add(bookStream);
 		}
-
-		List<ContextStream> contextStreams;
-		switch(rootContextMeta.type) {
-			case BOOK:
-				Context bookCtx = new Context(rootContextMeta);
-				contextStreams = new ArrayList<>();
-				int nbChapters = getNbChapters(rootContextMeta.book);
-				if(nbChapters == -1) {
-					// If we don't know the number of chapters, stop here and try at higher level.
-					return null;
-				}
-				for(int i = 1; i <= nbChapters; i++) {
-					ContextStream chapterStream = getDefaultedContextStreamFor(ContextMetadata.forChapter(rootContextMeta.book, i));
-					if(chapterStream == null) {
-						// If we failed to build a context for the chapter, stop here and try at higher level.
-						return null;
-					}
-					contextStreams.add(chapterStream);
-				}
-				return ContextStream.fromSequence(bookCtx, contextStreams);
-
-			case BIBLE:
-				Context bibleCtx = new Context(rootContextMeta);
-				contextStreams = new ArrayList<>();
-				List<BibleBook> books = getBooks();
-				if(books == null) {
-					// If we don't know the list of books, stop here and try at higher level.
-					return null;
-				}
-				for(BibleBook book: books) {
-					ContextStream bookStream = getDefaultedContextStreamFor(ContextMetadata.forBook(book));
-					if(bookStream == null) {
-						// If we failed to build a context for the book, stop here and try at higher level.
-						return null;
-					}
-					contextStreams.add(bookStream);
-				}
-				return ContextStream.fromSequence(bibleCtx, contextStreams);
-		}
-		return null;
+		return ContextStream.fromSequence(bibleCtx, contextStreams);
 	}
 
 	private static ContextMetadata getAncestor(ContextMetadata meta) {
@@ -158,27 +75,14 @@ public abstract class Scraper {
 	 * @return The stream of context events, starting with the opening of the wanted context and ending with its closure.
 	 * Empty stream if the wanted context was not found.
 	 */
-	public final Stream<ContextEvent> stream(ContextMetadata wantedContext) {
-		ContextStream contextStream = getDefaultedContextStreamFor(wantedContext);
+	public final ContextStream stream(ContextMetadata wantedContext) {
+		ContextStream contextStream = getContextStreamFor(wantedContext);
 		ContextMetadata rootContextMeta = wantedContext;
 		while(contextStream == null && rootContextMeta != null) {
 			rootContextMeta = getAncestor(rootContextMeta);
-			contextStream = getDefaultedContextStreamFor(rootContextMeta);
+			contextStream = getContextStreamFor(rootContextMeta);
 		}
 
-		return ParsingUtils.extract(contextStream.getStream(), wantedContext);
-	}
-
-	/**
-	 * Fetch bible contents from a remote source.
-	 * @return The context with requested metadata, or null if it couldn't be found.
-	 */
-	public final Context fetch(ContextMetadata wantedContext) {
-		return stream(wantedContext)
-				//.peek(e -> System.out.println("####### " + e))
-				.filter(e -> e.type == ContextEvent.Type.CLOSE && Objects.equals(e.context.metadata, wantedContext))
-				.findAny()
-				.map(e -> e.context)
-				.orElse(null);
+		return contextStream.extractStream(wantedContext);
 	}
 }

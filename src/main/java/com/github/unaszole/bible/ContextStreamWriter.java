@@ -46,7 +46,7 @@ public class ContextStreamWriter {
             return context.value;
         }
         else {
-            return context.getChildren().stream()
+            return context.children.stream()
                     .map(ContextStreamWriter::aggregateContents)
                     .collect(Collectors.joining(" "));
         }

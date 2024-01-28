@@ -17,7 +17,7 @@ public class ContextEvent {
         List<ContextEvent> events = new ArrayList<>();
 
         events.add(new ContextEvent(Type.OPEN, context));
-        for(Context child: context.getChildren()) {
+        for(Context child: context.children) {
             events.addAll(fromContext(child));
         }
         events.add(new ContextEvent(Type.CLOSE, context));

@@ -270,7 +270,7 @@ public class TheoPlace extends Scraper {
                     return null;
                 }
                 Context chapterCtx = new Context(rootContextMeta, Integer.toString(rootContextMeta.chapter));
-                return new ContextStream(chapterCtx, new PageParser(doc.stream(), chapterCtx).asEventStream());
+                return new PageParser(doc.stream(), chapterCtx).asContextStream();
 
             case BOOK:
                 bookRef = BOOKS.get(rootContextMeta.book);
@@ -279,7 +279,7 @@ public class TheoPlace extends Scraper {
                 Context bookCtx = new Context(rootContextMeta);
                 contextStreams = new ArrayList<>();
                 // Start parsing the book from its intro page.
-                contextStreams.add(new ContextStream(bookCtx, new PageParser(doc.stream(), bookCtx).asEventStream()));
+                contextStreams.add(new PageParser(doc.stream(), bookCtx).asContextStream());
                 for(int i = 1; i <= bookRef.nbChapters; i++) {
                     ContextStream cs = getContextStreamFor(ContextMetadata.forChapter(rootContextMeta.book, i));
                     if(cs != null) {
@@ -287,17 +287,10 @@ public class TheoPlace extends Scraper {
                     }
                 }
                 return ContextStream.fromSequence(bookCtx, contextStreams);
+
+            case BIBLE:
+                return autoGetBibleStream(new ArrayList<>(BOOKS.keySet()));
         }
         return null;
-    }
-
-    @Override
-    protected List<BibleBook> getBooks() {
-        return new ArrayList<>(BOOKS.keySet());
-    }
-
-    @Override
-    protected int getNbChapters(BibleBook book) {
-        return BOOKS.get(book).nbChapters;
     }
 }

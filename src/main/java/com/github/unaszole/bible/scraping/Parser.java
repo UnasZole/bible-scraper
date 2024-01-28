@@ -166,7 +166,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		Context currentContext = currentContextStack.peekFirst();
 
 		// Then check its children to navigate deeper.
-		List<Context> children = currentContext.getChildren();
+		List<Context> children = currentContext.children;
 		if(!children.isEmpty()) {
 			if(newContext == null || newContext == currentContext) {
 				// If we are under the new context, all previous children are also new and need to be collected.
@@ -376,6 +376,10 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 			return events;
 		}
 
+		public ContextStream asContextStream() {
+			return new ContextStream(rootContext, asEventStream());
+		}
+
 		/**
 		 * Process the whole document at once and fill the root context that was given at construction time.
 		 */
@@ -400,5 +404,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 			}
 			return null;
 		}
+
+
 	}
 }

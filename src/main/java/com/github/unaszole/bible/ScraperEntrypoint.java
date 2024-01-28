@@ -37,11 +37,11 @@ public class ScraperEntrypoint implements Callable<Integer> {
         Files.createDirectories(cachePath);
 
         if(writer.isDebug()) {
-            System.out.println(scraper.get(cachePath).fetch(wantedMetadata.get()));
+            System.out.println(scraper.get(cachePath).stream(wantedMetadata.get()).extractContext());
         }
         else {
             ContextStreamWriter streamWriter = new ContextStreamWriter(
-                    scraper.get(cachePath).stream(wantedMetadata.get())
+                    scraper.get(cachePath).stream(wantedMetadata.get()).getStream()
             );
             try(BibleWriter bibleWriter = writer.get()) {
                 streamWriter.writeBibleSubset(bibleWriter, wantedMetadata.get());
