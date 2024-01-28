@@ -2,7 +2,7 @@ package com.github.unaszole.bible;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.datamodel.ContextEvent;
+import com.github.unaszole.bible.stream.ContextEvent;
 import com.github.unaszole.bible.writing.BibleWriter;
 import com.github.unaszole.bible.writing.BookWriter;
 import com.github.unaszole.bible.writing.StructuredTextWriter;
@@ -27,6 +27,9 @@ public class ContextStreamWriter {
     private ContextEvent next() {
         this.last = current;
         this.current = it.next();
+        return current;
+    }
+    private ContextEvent getCurrent() {
         return current;
     }
     private ContextEvent getLast() {
@@ -106,8 +109,8 @@ public class ContextStreamWriter {
     }
 
     public void writeBookContents(StructuredTextWriter.BookContentsWriter writer) {
-        if(isOpen(ContextType.CHAPTER, getLast())) {
-            writer.chapter(getLast().metadata.chapter, getLast().value);
+        if(isOpen(ContextType.CHAPTER, getCurrent())) {
+            writer.chapter(getCurrent().metadata.chapter, getCurrent().value);
         }
 
         writeStructuredText(writer, (w, event) -> {

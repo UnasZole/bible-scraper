@@ -1,6 +1,8 @@
 package com.github.unaszole.bible.scraping;
 
 import com.github.unaszole.bible.datamodel.*;
+import com.github.unaszole.bible.stream.ContextEvent;
+import com.github.unaszole.bible.stream.ContextStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -374,8 +376,8 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 			return events;
 		}
 
-		public ContextStream asContextStream() {
-			return new ContextStream(rootContext.metadata, Stream.of(
+		public ContextStream.Single asContextStream() {
+			return new ContextStream.Single(rootContext.metadata, Stream.of(
 					Stream.of(new ContextEvent(ContextEvent.Type.OPEN, rootContext)),
 					asEventStream(),
 					Stream.of(new ContextEvent(ContextEvent.Type.CLOSE, rootContext))

@@ -1,27 +1,26 @@
-package com.github.unaszole.bible.scraping;
+package com.github.unaszole.bible.stream;
 
-import com.github.unaszole.bible.datamodel.ContextEvent;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.ContextStream;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class ContextStreamEditor {
+public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
 
-    private final ContextMetadata rootContext;
+    private final StreamType originalStream;
     private Stream<ContextEvent> stream;
 
-    public ContextStreamEditor(ContextStream originalStream) {
-        this.rootContext = originalStream.rootContext;
+    public ContextStreamEditor(StreamType originalStream) {
+        this.originalStream = originalStream;
         this.stream = originalStream.getStream();
     }
 
     private enum TaskStatus {BeforeTarget, InTarget, AfterTarget, Complete}
 
-    public ContextStreamEditor hide(final ContextMetadata metadata) {
+    public ContextStreamEditor<StreamType> hide(final ContextMetadata metadata) {
         final TaskStatus[] status = { TaskStatus.BeforeTarget };
 
         this.stream = stream.filter(e -> {
@@ -69,8 +68,8 @@ public class ContextStreamEditor {
         }
     }
 
-    public ContextStreamEditor inject(final InjectionPosition pos,
-                                      final ContextMetadata metadata, final ContextStream... contextStreams) {
+    public ContextStreamEditor<StreamType> inject(final InjectionPosition pos,
+                                      final ContextMetadata metadata, final List<? extends ContextStream<?>> contextStreams) {
         final TaskStatus[] status = { TaskStatus.BeforeTarget };
 
         this.stream = stream.flatMap(e -> {
@@ -78,7 +77,7 @@ public class ContextStreamEditor {
                 case BeforeTarget:
                     if(e.type == pos.injectionEventType && Objects.equals(e.metadata, metadata)) {
                         List<Stream<ContextEvent>> streams = new ArrayList<>();
-                        for(ContextStream cs: contextStreams) {
+                        for(ContextStream<?> cs: contextStreams) {
                             streams.add(cs.getStream());
                         }
                         streams.add(pos.injectBeforeEvent ? streams.size() : 0, Stream.of(e));
@@ -100,7 +99,12 @@ public class ContextStreamEditor {
         return this;
     }
 
-    public ContextStream process() {
-        return new ContextStream(rootContext, stream);
+    public ContextStreamEditor<StreamType> inject(final InjectionPosition pos,
+                                      final ContextMetadata metadata, final ContextStream<?>... contextStreams) {
+        return inject(pos, metadata, Arrays.asList(contextStreams));
+    }
+
+    public StreamType process() {
+        return originalStream.build(originalStream.firstRoot, originalStream.lastRoot, stream);
     }
 }

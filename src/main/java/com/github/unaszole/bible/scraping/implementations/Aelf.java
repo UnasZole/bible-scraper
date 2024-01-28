@@ -4,7 +4,7 @@ import com.github.unaszole.bible.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.datamodel.ContextStream;
+import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.scraping.Scraper;
@@ -269,7 +269,7 @@ public class Aelf extends Scraper {
     }
 
     @Override
-    public ContextStream getContextStreamFor(ContextMetadata rootContextMeta) {
+    public ContextStream.Single getContextStreamFor(ContextMetadata rootContextMeta) {
         BookRef bookRef;
         Stream<Element> docStream;
         switch (rootContextMeta.type) {

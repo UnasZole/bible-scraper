@@ -2,7 +2,7 @@ package com.github.unaszole.bible.scraping;
 
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.ContextStream;
+import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.datamodel.ContextType;
 import org.crosswire.jsword.versification.BibleBook;
 
@@ -17,7 +17,7 @@ public abstract class Scraper {
 	 * @return A context stream for the contents of the requested context, or null.
 	 * If null, the scraper will try to fetch a parent context and extract the wanted portion.
 	 */
-	protected abstract ContextStream getContextStreamFor(ContextMetadata rootContextMeta);
+	protected abstract ContextStream.Single getContextStreamFor(ContextMetadata rootContextMeta);
 
 	/**
 	 * Utility method for scrapers to automatically generate a book from its chapters.
@@ -26,9 +26,9 @@ public abstract class Scraper {
 	 * @param nbChapters The number of chapters in this book.
 	 * @return The context stream for the book containing all these chapters.
 	 */
-	protected ContextStream autoGetBookStream(BibleBook book, int nbChapters) {
+	protected ContextStream.Single autoGetBookStream(BibleBook book, int nbChapters) {
 		Context bookCtx = new Context(ContextMetadata.forBook(book));
-		List<ContextStream> contextStreams = new ArrayList<>();
+		List<ContextStream.Single> contextStreams = new ArrayList<>();
 		for(int i = 1; i <= nbChapters; i++) {
 			contextStreams.add(getContextStreamFor(ContextMetadata.forChapter(book, i)));
 		}
@@ -40,11 +40,11 @@ public abstract class Scraper {
 	 * @param books The list of books to include, in order.
 	 * @return The context stream for a bible containing all these books.
 	 */
-	protected ContextStream autoGetBibleStream(List<BibleBook> books) {
+	protected ContextStream.Single autoGetBibleStream(List<BibleBook> books) {
 		Context bibleCtx = new Context(ContextMetadata.forBible());
-		List<ContextStream> contextStreams = new ArrayList<>();
+		List<ContextStream.Single> contextStreams = new ArrayList<>();
 		for(BibleBook book: books) {
-			ContextStream bookStream = getContextStreamFor(ContextMetadata.forBook(book));
+			ContextStream.Single bookStream = getContextStreamFor(ContextMetadata.forBook(book));
 			if(bookStream == null) {
 				// If we failed to build a context for the book, stop here and try at higher level.
 				return null;
@@ -74,7 +74,7 @@ public abstract class Scraper {
 	 * @return The stream of context events, starting with the opening of the wanted context and ending with its closure.
 	 * Empty stream if the wanted context was not found.
 	 */
-	public final ContextStream stream(ContextMetadata wantedContext) {
+	public final ContextStream.Single stream(ContextMetadata wantedContext) {
 		ContextStream contextStream = getContextStreamFor(wantedContext);
 		ContextMetadata rootContextMeta = wantedContext;
 		while(contextStream == null && rootContextMeta != null) {

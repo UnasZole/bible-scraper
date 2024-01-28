@@ -1,4 +1,7 @@
-package com.github.unaszole.bible.datamodel;
+package com.github.unaszole.bible.stream;
+
+import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.datamodel.ContextMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
