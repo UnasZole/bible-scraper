@@ -359,17 +359,37 @@ public class ChouraquiSpiritualLand extends Scraper {
 
 	private ContextStreamEditor<ContextStream.Single> editBook(BibleBook book, ContextStreamEditor<ContextStream.Single> editor) {
 
+		// Book of Daniel
 		if(book == BibleBook.DAN) {
+			// Chapter 3 : Inject deuterocanonical additions after verse 23, updating the OSIS book reference.
 			editor.inject(ContextStreamEditor.InjectionPosition.AFTER, ContextMetadata.forVerse(BibleBook.DAN, 3, 23),
-					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 3)).extractStream(
-							ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 24),
-							ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 90)
-					)
+					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 3))
+							.extractStream(
+									ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 24),
+									ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 90)
+							).edit().updateVersificationUntilTheEnd(
+									new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
+							).process()
 			);
-
-			editor.inject(ContextStreamEditor.InjectionPosition.AT_END, ContextMetadata.forBook(BibleBook.DAN),
-					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 13)),
+			// Chapter 3 : all verses after the deuterocanonical additions are shifted by 67.
+			editor.updateVersification(
+					ContextMetadata.forVerse(BibleBook.DAN, 3, 24),
+					ContextMetadata.forVerse(BibleBook.DAN, 3, 33),
+					new ContextStreamEditor.VersificationUpdater()
+							.verseNb(m -> m.verse + 67)
+							.verseValue(m -> Integer.toString(m.verse + 67))
+			);
+			// Chapters 13 and 14 from deuterocanonical additions are appended, updating the OSIS book reference.
+			editor.inject(
+					ContextStreamEditor.InjectionPosition.AT_END, ContextMetadata.forBook(BibleBook.DAN),
+					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 13))
+							.edit().updateVersificationUntilTheEnd(
+									new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
+							).process(),
 					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 14))
+							.edit().updateVersificationUntilTheEnd(
+									new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
+							).process()
 			);
 		}
 

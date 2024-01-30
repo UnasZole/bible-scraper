@@ -288,8 +288,8 @@ public class TheoPlace extends Scraper {
                     }
                 }
 
-                return bookStream.edit().inject(ContextStreamEditor.InjectionPosition.AT_END, rootContextMeta,
-                        chapterStreams
+                return bookStream.edit().inject(
+                        ContextStreamEditor.InjectionPosition.AT_END, rootContextMeta, chapterStreams
                 ).process();
 
             case BIBLE:

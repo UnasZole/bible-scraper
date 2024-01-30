@@ -30,10 +30,14 @@ public class ContextEvent {
     public final ContextMetadata metadata;
     public final String value;
 
-    public ContextEvent(Type type, Context context) {
+    public ContextEvent(Type type, ContextMetadata metadata, String value) {
         this.type = type;
-        this.metadata = context.metadata;
-        this.value = context.value;
+        this.metadata = metadata;
+        this.value = value;
+    }
+
+    public ContextEvent(Type type, Context context) {
+        this(type, context.metadata, context.value);
     }
 
     @Override
