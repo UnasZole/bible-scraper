@@ -8,10 +8,6 @@ import java.util.List;
 
 public class ContextEvent {
 
-    /**
-     * OPEN means the given context was just opened. Only its metadata and direct content is relevant, all its children are missing.
-     * CLOSE means the given context is complete : all of its children are included.
-     */
     public enum Type {OPEN, CLOSE};
 
     public static List<ContextEvent> fromContext(Context context) {

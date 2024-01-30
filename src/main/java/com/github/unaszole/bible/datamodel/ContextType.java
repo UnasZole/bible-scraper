@@ -42,7 +42,7 @@ public enum ContextType {
 	 * A verse.
 	 * Has a context value : the string representation of the verse number in the source document.
 	 */
-	VERSE(false, one(STRUCTURED_TEXT)),
+	VERSE(false, atLeastOne(STRUCTURED_TEXT)),
 	
 	// Chapter must be built from a lexeme that provides a chapter number.
 	// The chapter title can be derived implicitly.

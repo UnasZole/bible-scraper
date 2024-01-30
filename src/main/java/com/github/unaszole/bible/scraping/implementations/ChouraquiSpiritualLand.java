@@ -328,9 +328,16 @@ public class ChouraquiSpiritualLand extends Scraper {
 	}
 	
 	private final CachedDownloader downloader;
+	private final Variant variant;
 	
 	public ChouraquiSpiritualLand(Path cachePath, String[] flags) throws IOException {
 		this.downloader = new CachedDownloader(cachePath.resolve("ChouraquiSpiritualLand"));
+		if(flags.length >= 1 && Objects.equals(flags[0], "Catholic")) {
+			this.variant = new CatholicVariant();
+		}
+		else {
+			this.variant = new DefaultVariant();
+		}
 	}
 	
 	private List<Document> getDocs(BibleBook book) {
@@ -357,54 +364,137 @@ public class ChouraquiSpiritualLand extends Scraper {
 		return stream;
 	}
 
-	private ContextStreamEditor<ContextStream.Single> editBook(BibleBook book, ContextStreamEditor<ContextStream.Single> editor) {
+	private interface Variant {
+		BibleBook getMappedBook(BibleBook books);
+		ContextStreamEditor<ContextStream.Single> editBook(BibleBook book, ContextStreamEditor<ContextStream.Single> editor);
+	}
 
-		// Book of Daniel
-		if(book == BibleBook.DAN) {
-			// Chapter 3 : Inject deuterocanonical additions after verse 23, updating the OSIS book reference.
-			editor.inject(ContextStreamEditor.InjectionPosition.AFTER, ContextMetadata.forVerse(BibleBook.DAN, 3, 23),
-					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 3))
-							.extractStream(
-									ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 24),
-									ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 90)
-							).edit().updateVersificationUntilTheEnd(
-									new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
-							).process()
-			);
-			// Chapter 3 : all verses after the deuterocanonical additions are shifted by 67.
-			editor.updateVersification(
-					ContextMetadata.forVerse(BibleBook.DAN, 3, 24),
-					ContextMetadata.forVerse(BibleBook.DAN, 3, 33),
-					new ContextStreamEditor.VersificationUpdater()
-							.verseNb(m -> m.verse + 67)
-							.verseValue(m -> Integer.toString(m.verse + 67))
-			);
-			// Chapters 13 and 14 from deuterocanonical additions are appended, updating the OSIS book reference.
-			editor.inject(
-					ContextStreamEditor.InjectionPosition.AT_END, ContextMetadata.forBook(BibleBook.DAN),
-					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 13))
-							.edit().updateVersificationUntilTheEnd(
-									new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
-							).process(),
-					stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 14))
-							.edit().updateVersificationUntilTheEnd(
-									new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
-							).process()
-			);
+	private static class DefaultVariant implements Variant {
+		@Override
+		public BibleBook getMappedBook(BibleBook book) {
+			// Keep all books as-is.
+			return book;
 		}
 
-		return editor;
+		@Override
+		public ContextStreamEditor<ContextStream.Single> editBook(BibleBook book, ContextStreamEditor<ContextStream.Single> editor) {
+			// No change.
+			return editor;
+		}
+	}
+
+	private class CatholicVariant implements Variant {
+		@Override
+		public BibleBook getMappedBook(BibleBook book) {
+			switch(book) {
+				// Book of Esther is replaced by the Greek version.
+				case ESTH:
+					return BibleBook.ESTH_GR;
+				// Greek Esther and Daniel are removed (Daniel additions are included in the main book)
+				case ESTH_GR:
+				case ADD_DAN:
+					return null;
+				// Other books are included.
+				default:
+					return book;
+			}
+		}
+
+		@Override
+		public ContextStreamEditor<ContextStream.Single> editBook(BibleBook book, ContextStreamEditor<ContextStream.Single> editor) {
+			// Book of Daniel
+			if(book == BibleBook.DAN) {
+				// Chapter 3 : Inject deuterocanonical additions after verse 23, updating the OSIS book reference.
+				editor.inject(ContextStreamEditor.InjectionPosition.AFTER, ContextMetadata.forVerse(BibleBook.DAN, 3, 23),
+						stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 3))
+								.extractStream(
+										ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 24),
+										ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 91)
+								).edit().mergeSiblings(
+										ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 90),
+										ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 91)
+								).process()
+								.edit().updateVersificationUntilTheEnd(
+										new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
+								).process()
+				);
+				// Chapter 3 : all verses after the deuterocanonical additions are shifted by 67.
+				editor.updateVersification(
+						ContextMetadata.forVerse(BibleBook.DAN, 3, 24),
+						ContextMetadata.forVerse(BibleBook.DAN, 3, 33),
+						new ContextStreamEditor.VersificationUpdater()
+								.verseNb(m -> m.verse + 67)
+								.verseValue(m -> Integer.toString(m.verse + 67))
+				);
+				// Chapters 13 and 14 from deuterocanonical additions are appended, updating the OSIS book reference.
+				editor.inject(
+						ContextStreamEditor.InjectionPosition.AT_END, ContextMetadata.forBook(BibleBook.DAN),
+						stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 13))
+								.edit().updateVersificationUntilTheEnd(
+										new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
+								).process(),
+						stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 14))
+								.edit().updateVersificationUntilTheEnd(
+										new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
+								).process()
+				);
+			}
+			else if(book == BibleBook.ESTH_GR) {
+				// Merge chapter "0" with chapter 1.
+				editor.mergeSiblings(
+						ContextMetadata.forChapter(BibleBook.ESTH_GR, 1),
+						ContextMetadata.forChapter(BibleBook.ESTH_GR, 1)
+				);
+
+				// Move to chapter 5, verse 2B. Remove the second part of verse 2B, and verse 2C, which should not be
+				// in the Greek version of Esther.
+				editor.doNothingUntil(ContextStreamEditor.InjectionPosition.AT_START,
+						(m, v) -> m.type == ContextType.VERSE && m.chapter == 5 && Objects.equals(v, "2B")
+				);
+				editor.remove(
+						(m, v) -> m.type == ContextType.TEXT && v.startsWith(" Èstér revêt"),
+						(m, v) -> m.type == ContextType.TEXT && v.endsWith("la maison.")
+				);
+				editor.remove((m, v) -> m.type == ContextType.VERSE && m.chapter == 5 && Objects.equals(v, "2C"));
+			}
+
+			return editor;
+		}
+	}
+
+	public List<BibleBook> getBookList() {
+		return new ArrayList<>(BOOKS.keySet());
+	}
+
+	private ContextStream.Single getBookStream(BibleBook book) {
+		Context bookCtx = new Context(ContextMetadata.forBook(book));
+		return variant.editBook(book,
+				new ElementParser(getDocStream(book), bookCtx).asContextStream().edit()
+		).process();
 	}
 
 	@Override
 	public ContextStream.Single getContextStreamFor(ContextMetadata rootContextMeta) {
 		switch (rootContextMeta.type) {
 			case BOOK:
-				Context bookCtx = new Context(rootContextMeta);
-				return editBook(rootContextMeta.book, new ElementParser(getDocStream(rootContextMeta.book), bookCtx)
-						.asContextStream().edit()).process();
+				BibleBook mappedBook = variant.getMappedBook(rootContextMeta.book);
+				if(mappedBook == null) {
+					// Book is removed from the variant. Return an empty stream
+					return new ContextStream.Single(rootContextMeta, Stream.of());
+				}
+				else {
+					if(mappedBook != rootContextMeta.book) {
+						// Book is remapped : update versification of its contents.
+						return getBookStream(mappedBook).edit().updateVersificationUntilTheEnd(
+								new ContextStreamEditor.VersificationUpdater().book(b-> rootContextMeta.book)
+						).process();
+					}
+					else {
+						return getBookStream(rootContextMeta.book);
+					}
+				}
 			case BIBLE:
-				return autoGetBibleStream(new ArrayList<>(BOOKS.keySet()));
+				return autoGetBibleStream(getBookList());
 		}
 		return null;
 	}

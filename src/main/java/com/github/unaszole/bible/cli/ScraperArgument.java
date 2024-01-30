@@ -11,7 +11,7 @@ public class ScraperArgument {
     private String className;
 
     @CommandLine.Option(names = {"--scraperFlags", "-f"})
-    private String[] flags;
+    private String[] flags = {};
 
     public Scraper get(Path cachePath) throws Exception {
         Class<? extends Scraper> scraperClass = (Class<? extends Scraper>) Class.forName(className.contains(".")

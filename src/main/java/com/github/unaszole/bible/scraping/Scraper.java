@@ -45,11 +45,9 @@ public abstract class Scraper {
 		List<ContextStream.Single> contextStreams = new ArrayList<>();
 		for(BibleBook book: books) {
 			ContextStream.Single bookStream = getContextStreamFor(ContextMetadata.forBook(book));
-			if(bookStream == null) {
-				// If we failed to build a context for the book, stop here and try at higher level.
-				return null;
+			if(bookStream != null) {
+				contextStreams.add(bookStream);
 			}
-			contextStreams.add(bookStream);
 		}
 		return ContextStream.fromContents(bibleCtx, contextStreams);
 	}

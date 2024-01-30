@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
@@ -66,32 +67,46 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         this.stream = originalStream.getStream();
     }
 
-    public ContextStreamEditor<StreamType> replace(final ContextMetadata from, final ContextMetadata until,
+    public ContextStreamEditor<StreamType> replace(final BiPredicate<ContextMetadata, String> from,
+                                                   final BiPredicate<ContextMetadata, String> until,
                                                    final List<? extends ContextStream<?>> by) {
         // Start deleting all events from the OPEN of first element, included.
         actions.add(new Action(
-                e -> e.type == ContextEvent.Type.OPEN && Objects.equals(e.metadata, from), true,
-                e -> e.type == ContextEvent.Type.CLOSE && Objects.equals(e.metadata, until), false,
+                e -> e.type == ContextEvent.Type.OPEN && from.test(e.metadata, e.value), true,
+                e -> e.type == ContextEvent.Type.CLOSE && until.test(e.metadata, e.value), false,
                 e -> Stream.of()
         ));
         // Replace the CLOSE event of the last element by the given streams.
         actions.add(Action.singleEvent(
-                e -> e.type == ContextEvent.Type.CLOSE && Objects.equals(e.metadata, until),
+                e -> e.type == ContextEvent.Type.CLOSE && until.test(e.metadata, e.value),
                 e -> by.stream().flatMap(ContextStream::getStream)
         ));
         return this;
     }
 
-    public ContextStreamEditor<StreamType> replace(ContextMetadata from, ContextMetadata until,
+    public ContextStreamEditor<StreamType> replace(BiPredicate<ContextMetadata, String> from,
+                                                   BiPredicate<ContextMetadata, String> until,
                                                    ContextStream<?>... by) {
         return replace(from, until, Arrays.asList(by));
     }
 
-    public ContextStreamEditor<StreamType> remove( ContextMetadata from, ContextMetadata until) {
+    public ContextStreamEditor<StreamType> remove(BiPredicate<ContextMetadata, String> from,
+                                                  BiPredicate<ContextMetadata, String> until) {
         return replace(from, until);
     }
 
-    public ContextStreamEditor<StreamType> remove(final ContextMetadata elt) {
+    public ContextStreamEditor<StreamType> remove(final ContextMetadata from, final ContextMetadata until) {
+        return remove(
+                (m, v) -> Objects.equals(m, from),
+                (m, v) -> Objects.equals(m, until)
+        );
+    }
+
+    public ContextStreamEditor<StreamType> remove(BiPredicate<ContextMetadata, String> elt) {
+        return remove(elt, elt);
+    }
+
+    public ContextStreamEditor<StreamType> remove(ContextMetadata elt) {
         return remove(elt, elt);
     }
 
@@ -117,10 +132,11 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         }
     }
 
-    public ContextStreamEditor<StreamType> inject(final InjectionPosition pos, final ContextMetadata metadata,
-                                  final List<? extends ContextStream<?>> contextStreams) {
+    public ContextStreamEditor<StreamType> inject(final InjectionPosition pos,
+                                                  final BiPredicate<ContextMetadata, String> target,
+                                                  final List<? extends ContextStream<?>> contextStreams) {
         actions.add(Action.singleEvent(
-                        e -> e.type == pos.injectionEventType && Objects.equals(e.metadata, metadata),
+                        e -> e.type == pos.injectionEventType && target.test(e.metadata, e.value),
                         e -> {
                             List<Stream<ContextEvent>> streams = new ArrayList<>();
                             for(ContextStream<?> cs: contextStreams) {
@@ -135,9 +151,28 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         return this;
     }
 
-    public ContextStreamEditor<StreamType> inject(InjectionPosition pos,
-                                  ContextMetadata metadata, ContextStream<?>... contextStreams) {
-        return inject(pos, metadata, Arrays.asList(contextStreams));
+    public ContextStreamEditor<StreamType> inject(InjectionPosition pos, final ContextMetadata target,
+                                                  List<? extends ContextStream<?>> contextStreams) {
+        return inject(pos, (m, v) -> Objects.equals(m, target), contextStreams);
+    }
+
+    public ContextStreamEditor<StreamType> inject(InjectionPosition pos, BiPredicate<ContextMetadata, String> target,
+                                                  ContextStream<?>... contextStreams) {
+        return inject(pos, target, Arrays.asList(contextStreams));
+    }
+
+    public ContextStreamEditor<StreamType> inject(InjectionPosition pos, ContextMetadata target,
+                                                  ContextStream<?>... contextStreams) {
+        return inject(pos, target, Arrays.asList(contextStreams));
+    }
+
+    public ContextStreamEditor<StreamType> doNothingUntil(InjectionPosition pos,
+                                                          BiPredicate<ContextMetadata, String> target) {
+        return inject(pos, target);
+    }
+
+    public ContextStreamEditor<StreamType> doNothingUntil(InjectionPosition pos, ContextMetadata target) {
+        return inject(pos, target);
     }
 
     public static class VersificationUpdater {
@@ -217,6 +252,29 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
                 e -> false,
                 true,
                 e -> Stream.of(updater.apply(e))
+        ));
+        return this;
+    }
+
+    public ContextStreamEditor<StreamType> mergeSiblings(final ContextMetadata firstMeta, final ContextMetadata secondMeta) {
+        final ContextEvent[] fistItemClosing = { null };
+        // When encountering the first item's close event, save it and remove it from the stream.
+        actions.add(Action.singleEvent(
+                e -> e.type == ContextEvent.Type.CLOSE && Objects.equals(e.metadata, firstMeta),
+                e -> {
+                    fistItemClosing[0] = e;
+                    return Stream.of();
+                }
+        ));
+        // When encountering the second item's open event, remove it from the stream.
+        actions.add(Action.singleEvent(
+                e -> e.type == ContextEvent.Type.OPEN && Objects.equals(e.metadata, secondMeta),
+                e -> Stream.of()
+        ));
+        // When encountering the second item's close event, replace it by the first.
+        actions.add(Action.singleEvent(
+                e -> e.type == ContextEvent.Type.CLOSE && Objects.equals(e.metadata, secondMeta),
+                e -> Stream.of(fistItemClosing[0])
         ));
         return this;
     }
