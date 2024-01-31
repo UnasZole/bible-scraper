@@ -19,7 +19,7 @@ public abstract class ContextStream<StreamType extends ContextStream<StreamType>
         }
         streams.add(Stream.of(new ContextEvent(ContextEvent.Type.CLOSE, rootContext)));
 
-        return new ContextStream.Single(rootContext.metadata, streams.stream().flatMap(s -> s));
+        return new ContextStream.Single(rootContext.metadata, StreamUtils.concatStreams(streams));
     }
 
     public final ContextMetadata firstRoot;

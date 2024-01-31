@@ -1,13 +1,14 @@
 package com.github.unaszole.bible.scraping.implementations;
 
-import com.github.unaszole.bible.CachedDownloader;
+import com.github.unaszole.bible.scraping.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.scraping.Scraper;
+import com.github.unaszole.bible.stream.ContextStream;
+import com.github.unaszole.bible.stream.StreamUtils;
 import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -21,6 +22,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Aelf extends Scraper {
@@ -113,12 +115,14 @@ public class Aelf extends Scraper {
             }
         }
 
-        public Stream<Element> getDocStream(CachedDownloader downloader, int chapterNb) {
-            Stream<Element> stream = Stream.empty();
-            for(String page: getPages(chapterNb)) {
-                stream = Stream.concat(stream, getChapterDocument(downloader, page).stream());
-            }
-            return stream;
+        public Stream<Element> getDocStream(final CachedDownloader downloader, int chapterNb) {
+            return StreamUtils.concatStreams(
+                    Arrays.stream(getPages(chapterNb))
+                            .map(page -> StreamUtils.deferredStream(
+                                    () -> getChapterDocument(downloader, page).stream()
+                            ))
+                            .collect(Collectors.toList())
+            );
         }
     }
 

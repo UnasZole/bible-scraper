@@ -1,12 +1,13 @@
 package com.github.unaszole.bible.scraping.implementations;
 
-import com.github.unaszole.bible.CachedDownloader;
+import com.github.unaszole.bible.scraping.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.*;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
+import com.github.unaszole.bible.stream.StreamUtils;
 import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -340,13 +341,9 @@ public class ChouraquiSpiritualLand extends Scraper {
 		}
 	}
 	
-	private List<Document> getDocs(BibleBook book) {
+	private Document getDoc(URL url) {
 		try {
-			List<Document> docs = new ArrayList<>();
-			for(URL pageUrl: getPageUrls(book)) {
-				docs.add(Jsoup.parse(downloader.getFile(pageUrl).toFile()));
-			}
-			return docs;
+			return Jsoup.parse(downloader.getFile(url).toFile());
 		}
 		catch(IOException e) {
 			throw new RuntimeException(e);
@@ -354,14 +351,12 @@ public class ChouraquiSpiritualLand extends Scraper {
 	}
 	
 	private Stream<Element> getDocStream(BibleBook book) {
-		Deque<Document> docs = new LinkedList<>(getDocs(book));
-		Stream<Element> stream = docs.removeFirst().stream();
-		
-		while(!docs.isEmpty()) {
-			stream = Stream.concat(stream, docs.removeFirst().stream());
-		}
-		
-		return stream;
+		return StreamUtils.concatStreams(getPageUrls(book).stream()
+				.map(url -> StreamUtils.deferredStream(
+						() -> getDoc(url).stream()
+				))
+				.collect(Collectors.toList())
+		);
 	}
 
 	private interface Variant {
@@ -498,5 +493,4 @@ public class ChouraquiSpiritualLand extends Scraper {
 		}
 		return null;
 	}
-
 }

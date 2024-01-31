@@ -12,6 +12,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
@@ -79,7 +80,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         // Replace the CLOSE event of the last element by the given streams.
         actions.add(Action.singleEvent(
                 e -> e.type == ContextEvent.Type.CLOSE && until.test(e.metadata, e.value),
-                e -> by.stream().flatMap(ContextStream::getStream)
+                e -> StreamUtils.concatStreams(by.stream().map(ContextStream::getStream).collect(Collectors.toList()))
         ));
         return this;
     }
@@ -144,7 +145,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
                             }
                             streams.add(pos.injectBeforeEvent ? streams.size() : 0, Stream.of(e));
 
-                            return streams.stream().flatMap(s-> s);
+                            return StreamUtils.concatStreams(streams);
                         }
                 )
         );

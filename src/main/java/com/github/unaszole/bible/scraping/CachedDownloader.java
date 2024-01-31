@@ -1,4 +1,7 @@
-package com.github.unaszole.bible;
+package com.github.unaszole.bible.scraping;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
@@ -13,6 +16,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Formatter;
 
 public class CachedDownloader {
+
+	private static final Logger LOG = LoggerFactory.getLogger(CachedDownloader.class);
 	
 	private static MessageDigest getMessageDigest() {
 		try {
@@ -42,12 +47,14 @@ public class CachedDownloader {
 	public Path getFile(URL url) throws IOException {
 		String hash = getHash(url);
 		Path targetPath = cacheDirectory.resolve(hash);
-		
+
 		if(Files.exists(targetPath)) {
 			// File is already present, return it.
 			return targetPath;
 		}
-		
+
+		LOG.debug("Downloading from {}", url);
+
 		// File is missing, download it.
 		ReadableByteChannel inChannel = Channels.newChannel(url.openStream());
 		FileChannel outChannel = FileChannel.open(targetPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE);

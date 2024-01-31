@@ -1,12 +1,14 @@
 package com.github.unaszole.bible.scraping.implementations;
 
-import com.github.unaszole.bible.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.scraping.*;
+import com.github.unaszole.bible.scraping.CachedDownloader;
+import com.github.unaszole.bible.scraping.Parser;
+import com.github.unaszole.bible.scraping.Scraper;
+import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
+import com.github.unaszole.bible.stream.StreamUtils;
 import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -38,32 +40,18 @@ public class TheoPlace extends Scraper {
             this.nbChapters = nbChapters;
         }
 
-        public Document getBookIntroDocument(CachedDownloader downloader, String bible) {
-            String url = BOOK_INTRO_URL
+        public String getBookIntroUrl(String bible) {
+            return BOOK_INTRO_URL
                     .replace("{BIBLE}", bible)
                     .replace("{BOOK_NB}", Integer.toString(bookNb))
                     .replace("{BOOK_NAME}", bookName);
-
-            try {
-                return Jsoup.parse(downloader.getFile(new URL(url)).toFile());
-            } catch (IOException e) {
-                // TODO log
-                return null;
-            }
         }
 
-        public Document getChapterDocument(CachedDownloader downloader, String bible, int chapterNb) {
-            String url = CHAPTER_URL
+        public String getChapterUrl(String bible, int chapterNb) {
+            return CHAPTER_URL
                     .replace("{BIBLE}", bible)
                     .replace("{BOOK_NB}", Integer.toString(bookNb))
                     .replace("{CHAPTER_NB}", Integer.toString(chapterNb));
-
-            try {
-                return Jsoup.parse(downloader.getFile(new URL(url)).toFile());
-            } catch (IOException e) {
-                // TODO log
-                return null;
-            }
         }
     }
 
@@ -259,27 +247,39 @@ public class TheoPlace extends Scraper {
         this.downloader = new CachedDownloader(cachePath.resolve("TheoPlace").resolve(bible));
     }
 
+    private ContextStream.Single getContextStream(final CachedDownloader downloader, final String url,
+                                                  final Context rootContext) {
+        // We can't just call the parser's asContextStream method here, because we first need to check if the
+        // context exists for the specific bible requested. If not, we don't throw an error, just return an empty
+        // context stream.
+        return new ContextStream.Single(rootContext.metadata, StreamUtils.deferredStream(() -> {
+            try {
+                Document doc = Jsoup.parse(downloader.getFile(new URL(url)).toFile());
+                if(!doc.select("h3:contains(Livre ou chapitre inexistant)").isEmpty()) {
+                    return Stream.of();
+                }
+                return new PageParser(doc.stream(), rootContext).asContextStream().getStream();
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }));
+    }
+
     @Override
     public ContextStream.Single getContextStreamFor(ContextMetadata rootContextMeta) {
         BookRef bookRef;
-        Document doc;
         switch(rootContextMeta.type) {
             case CHAPTER:
                 bookRef = BOOKS.get(rootContextMeta.book);
-                doc = bookRef.getChapterDocument(downloader, bible, rootContextMeta.chapter);
-                if(!doc.select("h3:contains(Livre ou chapitre inexistant)").isEmpty()) {
-                    return null;
-                }
                 Context chapterCtx = new Context(rootContextMeta, Integer.toString(rootContextMeta.chapter));
-                return new PageParser(doc.stream(), chapterCtx).asContextStream();
+                return getContextStream(downloader, bookRef.getChapterUrl(bible, rootContextMeta.chapter), chapterCtx);
 
             case BOOK:
                 bookRef = BOOKS.get(rootContextMeta.book);
-                doc = bookRef.getBookIntroDocument(downloader, bible);
-
                 Context bookCtx = new Context(rootContextMeta);
-                ContextStream.Single bookStream = new PageParser(doc.stream(), bookCtx).asContextStream();
 
+                ContextStream.Single bookStream = getContextStream(downloader, bookRef.getBookIntroUrl(bible), bookCtx);
                 List<ContextStream.Single> chapterStreams = new ArrayList<>();
                 for(int i = 1; i <= bookRef.nbChapters; i++) {
                     ContextStream.Single cs = getContextStreamFor(ContextMetadata.forChapter(rootContextMeta.book, i));
@@ -287,7 +287,6 @@ public class TheoPlace extends Scraper {
                         chapterStreams.add(cs);
                     }
                 }
-
                 return bookStream.edit().inject(
                         ContextStreamEditor.InjectionPosition.AT_END, rootContextMeta, chapterStreams
                 ).process();

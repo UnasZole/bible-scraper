@@ -1,14 +1,16 @@
 package com.github.unaszole.bible.scraping;
 
-import com.github.unaszole.bible.datamodel.Context;
-import com.github.unaszole.bible.datamodel.ContextMetadata;
 import org.crosswire.jsword.versification.BibleBook;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 public class ParsingUtils {
     public static class CatholicVersifications {
@@ -104,32 +106,5 @@ public class ParsingUtils {
             }
         }
         return -1;
-    }
-
-    public static <T> Iterator<T> toFlatIterator(Iterator<List<T>> listIt) {
-        final Deque<T> buffer = new LinkedList<>();
-        return new Iterator<T>() {
-            @Override
-            public boolean hasNext() {
-                while(buffer.isEmpty() && listIt.hasNext()) {
-                    buffer.addAll(listIt.next());
-                }
-                return !buffer.isEmpty();
-            }
-
-            @Override
-            public T next() {
-                return buffer.removeFirst();
-            }
-        };
-    }
-
-    public static <T> Stream<T> toStream(final Iterator<T> it) {
-        return Stream.iterate((T)null, p -> {
-            if(it.hasNext()) {
-                return it.next();
-            }
-            return null;
-        }).dropWhile(Objects::isNull).takeWhile(Objects::nonNull);
     }
 }

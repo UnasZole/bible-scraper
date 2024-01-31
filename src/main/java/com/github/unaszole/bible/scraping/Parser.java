@@ -3,6 +3,7 @@ package com.github.unaszole.bible.scraping;
 import com.github.unaszole.bible.datamodel.*;
 import com.github.unaszole.bible.stream.ContextEvent;
 import com.github.unaszole.bible.stream.ContextStream;
+import com.github.unaszole.bible.stream.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -349,7 +350,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 	}
 
 	public final Stream<ContextEvent> asEventStream() {
-		return ParsingUtils.toStream(ParsingUtils.toFlatIterator(this));
+		return StreamUtils.toStream(StreamUtils.toFlatIterator(this));
 	}
 
 	public static abstract class TerminalParser<Position> extends Parser<Position> {
@@ -377,11 +378,11 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		}
 
 		public ContextStream.Single asContextStream() {
-			return new ContextStream.Single(rootContext.metadata, Stream.of(
+			return new ContextStream.Single(rootContext.metadata, StreamUtils.concatStreams(
 					Stream.of(new ContextEvent(ContextEvent.Type.OPEN, rootContext)),
 					asEventStream(),
 					Stream.of(new ContextEvent(ContextEvent.Type.CLOSE, rootContext))
-			).flatMap(s -> s));
+			));
 		}
 
 		/**
