@@ -401,7 +401,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 			if(book == BibleBook.DAN) {
 				// Chapter 3 : Inject deuterocanonical additions after verse 23, updating the OSIS book reference.
 				editor.inject(ContextStreamEditor.InjectionPosition.AFTER, ContextMetadata.forVerse(BibleBook.DAN, 3, 23),
-						stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 3))
+						getBookStream(BibleBook.ADD_DAN)
 								.extractStream(
 										ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 24),
 										ContextMetadata.forVerse(BibleBook.ADD_DAN, 3, 91)
@@ -424,11 +424,11 @@ public class ChouraquiSpiritualLand extends Scraper {
 				// Chapters 13 and 14 from deuterocanonical additions are appended, updating the OSIS book reference.
 				editor.inject(
 						ContextStreamEditor.InjectionPosition.AT_END, ContextMetadata.forBook(BibleBook.DAN),
-						stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 13))
+						getBookStream(BibleBook.ADD_DAN).extractStream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 13))
 								.edit().updateVersificationUntilTheEnd(
 										new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
 								).process(),
-						stream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 14))
+						getBookStream(BibleBook.ADD_DAN).extractStream(ContextMetadata.forChapter(BibleBook.ADD_DAN, 14))
 								.edit().updateVersificationUntilTheEnd(
 										new ContextStreamEditor.VersificationUpdater().book(m -> BibleBook.DAN)
 								).process()
