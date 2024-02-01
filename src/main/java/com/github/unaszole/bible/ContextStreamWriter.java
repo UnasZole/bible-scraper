@@ -140,12 +140,12 @@ public class ContextStreamWriter {
             }
             if(isOpen(ContextType.CHAPTER, event)) {
                 w.contents(this::writeBookContents);
-                if(isClose(ContextType.BOOK, getLast())) {
+                if(isClose(ContextType.BOOK, getCurrent())) {
                     return;
                 }
             }
 
-            if(isClose(ContextType.BOOK, event)) {
+            if(isClose(ContextType.BOOK, getCurrent())) {
                 return;
             }
         }

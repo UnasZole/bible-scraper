@@ -45,7 +45,9 @@ public class UsfmBibleWriter implements BibleWriter {
 
     @Override
     public void close() {
-        outWriter.flush();
-        // Do not close the outWriter : it was provided externally, so it's the caller's job to manage it.
+        if(outWriter != null) {
+            outWriter.flush();
+            // Do not close the outWriter : it was provided externally, so it's the caller's job to manage it.
+        }
     }
 }
