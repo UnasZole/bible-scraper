@@ -36,6 +36,14 @@ public class Context {
 			children.stream().map(c -> c.metadata.type).collect(Collectors.toList())
 		);
 	}
+
+	public ContextMetadata getLastChildOfTypeMeta(final ContextType type) {
+		return children.stream()
+				.map(c -> c.metadata)
+				.filter(m -> m.type == type)
+				.reduce((first, second) -> second)
+				.orElse(null);
+	}
 	
 	public boolean isIncomplete() {
 		return metadata.type.isIncomplete(

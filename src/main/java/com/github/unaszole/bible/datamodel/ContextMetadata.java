@@ -2,6 +2,9 @@ package com.github.unaszole.bible.datamodel;
 
 import org.crosswire.jsword.versification.BibleBook;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class ContextMetadata {
 	public final ContextType type;
 	public final BibleBook book;
@@ -13,103 +16,125 @@ public class ContextMetadata {
 	 */
 	public final int chapter;
 	/**
-	 * The verse number in standardised OSIS-compatible form, ie. the position of the verse within the book,
+	 * The verse numbers in standardised OSIS-compatible form, ie. the position of the verses within the book,
 	 * starting at 1.
-	 * (Since verse number 0 is reserved for pre-verse titles in OSIS, this field may be set to zero for contexts
-	 * which don't need to carry a verse number).
+	 * In most cases, this should only contain one verse number, as one VERSE context should usually contain a single
+	 * verse. However, in some rare cases, translators merge several verses into one in order to reorder the words into
+	 * something more natural in the target language : in these cases, one single VERSE context may actually correspond
+	 * to several actual verses. All the corresponding verse numbers must then be listed here.
 	 */
-	public final int verse;
+	public final int[] verses;
 	
-	public ContextMetadata(ContextType type, BibleBook book, int chapter, int verse) {
+	public ContextMetadata(ContextType type, BibleBook book, int chapter, int[] verses) {
 		this.type = type;
 		this.book = book;
 		this.chapter = chapter;
-		this.verse = verse;
+		this.verses = verses;
+	}
+
+	public ContextMetadata(ContextType type, BibleBook book, int chapter, int verse) {
+		this(type, book, chapter, new int[] { verse });
+	}
+
+	public ContextMetadata(ContextType type, BibleBook book, int chapter) {
+		this(type, book, chapter, null);
+	}
+
+	public ContextMetadata(ContextType type, BibleBook book) {
+		this(type, book, 0);
+	}
+
+	public ContextMetadata(ContextType type) {
+		this(type, null);
 	}
 	
 	public static ContextMetadata forBible() {
-		return new ContextMetadata(ContextType.BIBLE, null, 0, 0);
+		return new ContextMetadata(ContextType.BIBLE);
 	}
 	
 	public static ContextMetadata forBook(BibleBook book) {
-		return new ContextMetadata(ContextType.BOOK, book, 0, 0);
+		return new ContextMetadata(ContextType.BOOK, book);
 	}
 	
 	public static ContextMetadata forBookTitle(BibleBook book) {
-		return new ContextMetadata(ContextType.BOOK_TITLE, book, 0, 0);
+		return new ContextMetadata(ContextType.BOOK_TITLE, book);
 	}
 	
 	public static ContextMetadata forBookIntro(BibleBook book) {
-		return new ContextMetadata(ContextType.BOOK_INTRO, book, 0, 0);
+		return new ContextMetadata(ContextType.BOOK_INTRO, book);
 	}
 
 	public static ContextMetadata forBookIntroTitle(BibleBook book) {
-		return new ContextMetadata(ContextType.BOOK_INTRO_TITLE, book, 0, 0);
+		return new ContextMetadata(ContextType.BOOK_INTRO_TITLE, book);
 	}
 	
 	public static ContextMetadata forChapter(BibleBook book, int chapter) {
-		return new ContextMetadata(ContextType.CHAPTER, book, chapter, 0);
+		return new ContextMetadata(ContextType.CHAPTER, book, chapter);
 	}
 	
 	public static ContextMetadata forChapterTitle(BibleBook book, int chapter) {
-		return new ContextMetadata(ContextType.CHAPTER_TITLE, book, chapter, 0);
+		return new ContextMetadata(ContextType.CHAPTER_TITLE, book, chapter);
 	}
 	
 	public static ContextMetadata forVerse(BibleBook book, int chapter, int verse) {
 		return new ContextMetadata(ContextType.VERSE, book, chapter, verse);
 	}
 
+	public static ContextMetadata forMergedVerses(BibleBook book, int chapter, int[] verses) {
+		return new ContextMetadata(ContextType.VERSE, book, chapter, verses);
+	}
+
 	public static ContextMetadata forStructuredText() {
-		return new ContextMetadata(ContextType.STRUCTURED_TEXT, null, 0, 0);
+		return new ContextMetadata(ContextType.STRUCTURED_TEXT);
 	}
 
 	public static ContextMetadata forMajorSectionTitle() {
-		return new ContextMetadata(ContextType.MAJOR_SECTION_TITLE, null, 0, 0);
+		return new ContextMetadata(ContextType.MAJOR_SECTION_TITLE);
 	}
 
 	public static ContextMetadata forSectionTitle() {
-		return new ContextMetadata(ContextType.SECTION_TITLE, null, 0, 0);
+		return new ContextMetadata(ContextType.SECTION_TITLE);
 	}
 
 	public static ContextMetadata forMinorSectionTitle() {
-		return new ContextMetadata(ContextType.MINOR_SECTION_TITLE, null, 0, 0);
+		return new ContextMetadata(ContextType.MINOR_SECTION_TITLE);
 	}
 
 	public static ContextMetadata forParagraphBreak() {
-		return new ContextMetadata(ContextType.PARAGRAPH_BREAK, null, 0, 0);
+		return new ContextMetadata(ContextType.PARAGRAPH_BREAK);
 	}
 
 	public static ContextMetadata forFlatText() {
-		return new ContextMetadata(ContextType.FLAT_TEXT, null, 0, 0);
+		return new ContextMetadata(ContextType.FLAT_TEXT);
 	}
 
 	public static ContextMetadata forNote() {
-		return new ContextMetadata(ContextType.NOTE, null, 0, 0);
+		return new ContextMetadata(ContextType.NOTE);
 	}
 
 	public static ContextMetadata forText() {
-		return new ContextMetadata(ContextType.TEXT, null, 0, 0);
+		return new ContextMetadata(ContextType.TEXT);
 	}
-
-
-
-
 	
 	public static ContextMetadata fromParent(ContextType type, ContextMetadata parent) {
-		return new ContextMetadata(type, parent.book, parent.chapter, parent.verse);
+		return new ContextMetadata(type, parent.book, parent.chapter, parent.verses);
 	}
 	
 	@Override
 	public boolean equals(Object other) {
-		return other != null &&
+		return other != null && other.getClass() == this.getClass() &&
 			((ContextMetadata) other).type == this.type &&
 			((ContextMetadata) other).book == this.book &&
 			((ContextMetadata) other).chapter == this.chapter &&
-			((ContextMetadata) other).verse == this.verse;
+			Arrays.equals(((ContextMetadata) other).verses, this.verses);
 	}
 	
 	@Override
 	public String toString() {
-		return type + (book == null ? "" : "=" + book + (chapter == 0 ? "" : "_" + chapter + (verse == 0 ? "" : ":" + verse)));
+		return type +
+				(book == null ? "" : "=" + book +
+						(chapter == 0 ? "" : "_" + chapter +
+								(verses.length == 0 ? "" : ":" + Arrays.stream(verses)
+										.mapToObj(Integer::toString).collect(Collectors.joining(",")))));
 	}
 }

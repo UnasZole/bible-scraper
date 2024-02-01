@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,19 +52,25 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		currentAncestor.addChild(newContext);
 	}
 
+	public interface TriPredicate<A, B, C> {
+		boolean test(A a, B b, C c);
+	}
+
 	/**
 	 *
 	 * @param contextStack The current stack of the evaluation, with possible implicit contexts appended.
 	 *                     First element (top of the stack) is the direct parent of the element being checked.
 	 * @param allowedEltTypes The type of elements allowed at this point in the stack.
+	 * @param getPreviousOfType Function returning the metadata of the previous sibling of the same type, or null if there is none.
 	 * @param isTypeOkForNext Returns true if an element at the given stack position and of the given type is accepted as end of the path.
 	 * @return The list of implicit contexts built to reach the accepted element type (not including this accepted element type).
 	 */
 	private static List<ContextMetadata> getImplicitPathToNext(Deque<ContextMetadata> contextStack,
-													  Set<ContextType> allowedEltTypes,
-													  BiPredicate<Deque<ContextMetadata>, ContextType> isTypeOkForNext) {
+															   Set<ContextType> allowedEltTypes,
+															   Function<ContextType, ContextMetadata> getPreviousOfType,
+															   TriPredicate<Deque<ContextMetadata>, ContextType, ContextMetadata> isTypeOkForNext) {
 		for(ContextType eltType: allowedEltTypes) {
-			if(isTypeOkForNext.test(contextStack, eltType)) {
+			if(isTypeOkForNext.test(contextStack, eltType, getPreviousOfType.apply(eltType))) {
 				// If this element type is accepted at the current stack location, return an empty list.
 				// (No additional implicit element needed.)
 				return List.of();
@@ -80,8 +87,9 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 				contextStackWithElt.addFirst(eltMeta);
 
 				// Recursively search for an implicit path from this element's children.
+				// If building implicit element, there will be no previous element of this type.
 				List<ContextMetadata> implicitFromThisElt = getImplicitPathToNext(contextStackWithElt,
-						eltType.getAllowedTypesForFirstChild(), isTypeOkForNext);
+						eltType.getAllowedTypesForFirstChild(), t -> null, isTypeOkForNext);
 
 				if(implicitFromThisElt != null) {
 					// If any found, then return the path with this implicit element and the found path from it.
@@ -97,7 +105,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		return null;
 	}
 
-	public static boolean addDescendant(Context rootContext, Context descendant) {
+	public static boolean addDescendant(Context rootContext, final Context descendant) {
 		Set<ContextType> allowedTypes = rootContext.getAllowedTypesForNextChild();
 
 		if(allowedTypes.contains(descendant.metadata.type)) {
@@ -118,8 +126,8 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		// Build a "fake" context stack from this root, as the stack is not used by the predicate anyway.
 		Deque<ContextMetadata> stack = new LinkedList<>();
 		stack.addFirst(rootContext.metadata);
-		List<ContextMetadata> implicitPath = getImplicitPathToNext(stack, allowedTypes,
-				(s, type) -> type == descendant.metadata.type);
+		List<ContextMetadata> implicitPath = getImplicitPathToNext(stack, allowedTypes, t -> null,
+				(s, type, previousMeta) -> type == descendant.metadata.type);
 
 		if(implicitPath != null) {
 			// If an implicit path is possible, integrate the descendant to the root via this path.
@@ -207,10 +215,12 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 	/**
 	 * @param ancestorStack The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
 	 * @param type The type of context to try creating from this position.
+	 * @param previousOfType Metadata of the previous sibling of the same type, or null if there is none.
 	 * @param position The position to check for a context opening.
 	 * @return A new context built from this position, or null if no context can be created at this position.
 	 */
-	protected abstract Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type, Position position);
+	protected abstract Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
+										   ContextMetadata previousOfType, Position position);
 
 	/**
 	 * Handle the position using external parsing logic if needed. That's useful if you are using a lexeme based parser,
@@ -242,16 +252,17 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 	 @param position The lexeme being processed.
 	 */
 	private Context getNextContextFrom(Deque<Context> contextStack, Position position) {
-		Context closestAncestor = contextStack.peekFirst();
+		final Context closestAncestor = contextStack.peekFirst();
 
 		// Look for a context that can be opened by this lexeme via an implicit path.
 		final Context[] nextCtx = new Context[] { null };
 		List<ContextMetadata> implicitPath = getImplicitPathToNext(
 				contextStack.stream().map(c -> c.metadata).collect(Collectors.toCollection(LinkedList::new)),
 				closestAncestor.getAllowedTypesForNextChild(),
-				(stack, type) -> {
+				type -> closestAncestor.getLastChildOfTypeMeta(type),
+				(stack, type, previousOfType) -> {
 					// Try opening a context of the proposed type in the proposed stack location.
-					Context next = readContext(stack, type, position);
+					Context next = readContext(stack, type, previousOfType, position);
 					if(next != null) {
 						// If successful, save it and validate this implicit path.
 						nextCtx[0] = next;

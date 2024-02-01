@@ -83,9 +83,10 @@ public interface StructuredTextWriter extends AutoCloseable {
 
         /**
          * Mark the start of a new verse.
-         * @param verseNb The verse number.
+         * @param verseNbs The verse numbers. Should usually be just one, but several verses may be combined in some
+         *                 translations.
          * @param sourceNb The string representation of the verse number in the source document.
          */
-        void verse(int verseNb, String...sourceNb);
+        void verse(int[] verseNbs, String...sourceNb);
     };
 }

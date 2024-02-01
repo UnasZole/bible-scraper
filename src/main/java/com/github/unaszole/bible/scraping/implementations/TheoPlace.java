@@ -181,7 +181,8 @@ public class TheoPlace extends Scraper {
         }
 
         @Override
-        protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, Element e) {
+        protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type,
+                                      ContextMetadata previousOfType, Element e) {
             ContextMetadata parent = ancestors.peekFirst();
 
             switch(type) {

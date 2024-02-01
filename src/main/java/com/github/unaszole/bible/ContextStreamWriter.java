@@ -121,7 +121,7 @@ public class ContextStreamWriter {
                 w.chapterTitle(consumeAndAggregateValues(event.metadata));
             }
             if(isOpen(ContextType.VERSE, event)) {
-                w.verse(event.metadata.verse, event.value);
+                w.verse(event.metadata.verses, event.value);
             }
 
             return isClose(ContextType.BOOK, event);

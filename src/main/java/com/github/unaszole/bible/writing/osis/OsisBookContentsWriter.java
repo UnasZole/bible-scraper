@@ -1,10 +1,12 @@
 package com.github.unaszole.bible.writing.osis;
 
-import com.github.unaszole.bible.writing.BookWriter;
 import com.github.unaszole.bible.writing.StructuredTextWriter;
 import org.crosswire.jsword.versification.BibleBook;
 
 import javax.xml.stream.XMLStreamWriter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class OsisBookContentsWriter extends OsisStructuredTextWriter
         implements StructuredTextWriter.BookContentsWriter {
@@ -14,7 +16,7 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     private String[] currentChapterSourceNb = null;
     private boolean inActiveChapter = false;
     private String pendingChapterTitle = null;
-    private int currentVerse = -1;
+    private int[] currentVerse = null;
 
     public OsisBookContentsWriter(XMLStreamWriter xmlWriter, BibleBook book) {
         super(xmlWriter);
@@ -24,15 +26,20 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     private String getCurrentChapterOsisId() {
         return book.getOSIS() + "." + currentChapter;
     }
-    private String getCurrentChapterMilestoneID() {
+    private String getCurrentChapterMilestoneId() {
         return getCurrentChapterOsisId() + (currentChapterSourceNb.length > 0 ?
                 "-aka-" + String.join("-", currentChapterSourceNb)
                 : ""
         );
     }
 
-    private String getCurrentVerseOsisId() {
-        return getCurrentChapterOsisId() + "." + currentVerse;
+    private List<String> getCurrentVerseOsisIds() {
+        return Arrays.stream(currentVerse)
+                .mapToObj(v -> getCurrentChapterOsisId() + "." + v)
+                .collect(Collectors.toList());
+    }
+    private String getCurrentVerseMilestoneId() {
+        return getCurrentVerseOsisIds().get(0);
     }
 
     private void writeChapterTitle(String title) {
@@ -47,7 +54,7 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     private void openChapter() {
         // <chapter sID>
         writeEmptyElement("chapter");
-        writeAttribute("sID", getCurrentChapterMilestoneID());
+        writeAttribute("sID", getCurrentChapterMilestoneId());
         writeAttribute("osisID", getCurrentChapterOsisId());
         if(currentChapterSourceNb.length > 0) {
             writeAttribute("n", currentChapterSourceNb[0]);
@@ -68,11 +75,11 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
         }
     }
 
-    private void openVerse(int verseNb, String... sourceNb) {
+    private void openVerse(int[] verseNbs, String... sourceNb) {
         // Close the current verse if any.
         closeCurrentVerse();
 
-        this.currentVerse = verseNb;
+        this.currentVerse = verseNbs;
 
         // Make sure we're in an active paragraph and chapter for the verse start.
         ensureInActiveParagraph();
@@ -80,8 +87,8 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
 
         // <verse sID>
         writeEmptyElement("verse");
-        writeAttribute("sID", getCurrentVerseOsisId());
-        writeAttribute("osisID", getCurrentVerseOsisId());
+        writeAttribute("sID", getCurrentVerseMilestoneId());
+        writeAttribute("osisID", String.join(" ", getCurrentVerseOsisIds()));
         if(sourceNb.length > 0) {
             writeAttribute("n", sourceNb[0]);
         }
@@ -89,13 +96,13 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     }
 
     private void closeCurrentVerse() {
-        if(currentVerse >= 0) {
+        if(currentVerse != null) {
             // <verse eID>
             writeEmptyElement("verse");
-            writeAttribute("eID", getCurrentVerseOsisId());
+            writeAttribute("eID", getCurrentVerseMilestoneId());
             // </verse>
 
-            this.currentVerse = -1;
+            this.currentVerse = null;
         }
     }
 
@@ -106,7 +113,7 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
         if(currentChapter >= 0) {
             // <chapter eID>
             writeEmptyElement("chapter");
-            writeAttribute("eID", getCurrentChapterMilestoneID());
+            writeAttribute("eID", getCurrentChapterMilestoneId());
             // </chapter>
 
             this.currentChapter = -1;
@@ -137,8 +144,8 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     }
 
     @Override
-    public void verse(int verseNb, String... sourceNb) {
-        openVerse(verseNb, sourceNb);
+    public void verse(int[] verseNbs, String... sourceNb) {
+        openVerse(verseNbs, sourceNb);
     }
 
     @Override

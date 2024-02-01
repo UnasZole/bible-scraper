@@ -3,6 +3,8 @@ package com.github.unaszole.bible.writing.usfm;
 import com.github.unaszole.bible.writing.StructuredTextWriter;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements StructuredTextWriter.BookContentsWriter {
     public UsfmBookContentsWriter(PrintWriter out) {
@@ -41,10 +43,12 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
     }
 
     @Override
-    public void verse(int verseNb, String... sourceNb) {
+    public void verse(int[] verseNbs, String... sourceNb) {
         out.println();
-        out.print("\\v " + verseNb + " ");
-        if(!Integer.toString(verseNb).equals(sourceNb[0])) {
+        String verseNbsStr = Arrays.stream(verseNbs)
+                .mapToObj(Integer::toString).collect(Collectors.joining("-"));
+        out.print("\\v " + verseNbsStr + " ");
+        if(!verseNbsStr.equals(sourceNb[0])) {
             out.print("\\vp " + sourceNb[0] + "\\vp* ");
         }
     }

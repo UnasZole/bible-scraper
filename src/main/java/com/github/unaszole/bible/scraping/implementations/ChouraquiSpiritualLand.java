@@ -177,30 +177,10 @@ public class ChouraquiSpiritualLand extends Scraper {
 		private static boolean isBookGroupTitle(String title) {
 			return title.contains("TORA") || title.contains("Premiers Inspirés") || title.contains("Écrits");
 		}
-
-		private static int mapToOsisChapterNb(BibleBook book, String parsedNb) {
-			if(book == BibleBook.ESTH_GR && "0".equals(parsedNb)) {
-				// Greek book of Esther starts with a chapter 0 which is actually part of chapter 1.
-				return 1;
-			}
-			return Integer.parseInt(parsedNb);
-		}
-
-		private static int mapVerseNbToOsisVerseNb(BibleBook book, int chapterNb, String parsedNb) {
-			switch(book) {
-				case ESTH_GR:
-					// Greek book of Esther follows the catholic versification for Esther.
-					return ParsingUtils.CatholicVersifications.mapVerseNbToOsisVerseNb(
-							BibleBook.ESTH, chapterNb, parsedNb);
-
-				default:
-					// Other books have no lettered verses.
-					return Integer.parseInt(parsedNb);
-			}
-		}
 		
 		@Override
-		protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, Element e) {
+		protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type,
+									  ContextMetadata previousOfType, Element e) {
 			ContextMetadata parent = ancestors.peekFirst();
 			
 			switch(type) {
@@ -218,12 +198,23 @@ public class ChouraquiSpiritualLand extends Scraper {
 
 				case CHAPTER:
 					if(e.is(CHAPTER_TITLE_SELECTOR)) {
-						String chapterNb = extract(CHAPTER_TITLE_PATTERN, 1, e.text());
+						String chapterNbStr = extract(CHAPTER_TITLE_PATTERN, 1, e.text());
+						int chapterNb = Integer.valueOf(chapterNbStr);
 
-						ContextMetadata chapterMeta = ContextMetadata.forChapter(parent.book,
-								mapToOsisChapterNb(parent.book, chapterNb));
+						if(parent.book == BibleBook.ESTH_GR && chapterNb == 0) {
+							// The first chapter parsed for Esther greek is chapter 0.
+							// That's impossible in OSIS : consider it prefix of chapter 1.
+							chapterNb = 1;
+							chapterNbStr = "0-1";
+						}
+						if(previousOfType != null && chapterNb == previousOfType.chapter) {
+							// If chapter is the same as previous, ignore.
+							return null;
+						}
 
-						return buildContext(chapterMeta, chapterNb /*,
+						ContextMetadata chapterMeta = ContextMetadata.forChapter(parent.book, chapterNb);
+
+						return buildContext(chapterMeta, chapterNbStr /*,
 								new Context(ContextMetadata.forChapterTitle(parent.book, chapterNb)),
 								new Context(ContextMetadata.forText(), e.text())
 						*/);
@@ -240,8 +231,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 						String verseNb = extract(VERSE_START_PATTERN, 1, e.text());
 						String verseText = extract(VERSE_START_PATTERN, 2, e.text());
 						
-						ContextMetadata verseMeta = ContextMetadata.forVerse(parent.book, parent.chapter,
-								mapVerseNbToOsisVerseNb(parent.book, parent.chapter, verseNb));
+						ContextMetadata verseMeta = ParsingUtils.getVerseMetadata(parent, previousOfType, verseNb);
 
 						return buildContext(verseMeta, verseNb,
 								new Context(ContextMetadata.forFlatText()),
@@ -298,7 +288,8 @@ public class ChouraquiSpiritualLand extends Scraper {
 			}
 
 			@Override
-			protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, MatchResult verseMatch) {
+			protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type,
+										  ContextMetadata previousOfType, MatchResult verseMatch) {
 				ContextMetadata parent = ancestors.peekFirst();
 				switch(type) {
 					case VERSE:
@@ -418,8 +409,8 @@ public class ChouraquiSpiritualLand extends Scraper {
 						ContextMetadata.forVerse(BibleBook.DAN, 3, 24),
 						ContextMetadata.forVerse(BibleBook.DAN, 3, 33),
 						new ContextStreamEditor.VersificationUpdater()
-								.verseNb(m -> m.verse + 67)
-								.verseValue(m -> Integer.toString(m.verse + 67))
+								.verseNbs(m -> Arrays.stream(m.verses).map(v -> v + 67).toArray())
+								.verseValue(m -> Arrays.stream(m.verses).map(v -> v + 67).mapToObj(Integer::toString).collect(Collectors.joining("-")))
 				);
 				// Chapters 13 and 14 from deuterocanonical additions are appended, updating the OSIS book reference.
 				editor.inject(
@@ -435,12 +426,6 @@ public class ChouraquiSpiritualLand extends Scraper {
 				);
 			}
 			else if(book == BibleBook.ESTH_GR) {
-				// Merge chapter "0" with chapter 1.
-				editor.mergeSiblings(
-						ContextMetadata.forChapter(BibleBook.ESTH_GR, 1),
-						ContextMetadata.forChapter(BibleBook.ESTH_GR, 1)
-				);
-
 				// Move to chapter 5, verse 2B. Remove the second part of verse 2B, and verse 2C, which should not be
 				// in the Greek version of Esther.
 				editor.doNothingUntil(ContextStreamEditor.InjectionPosition.AT_START,

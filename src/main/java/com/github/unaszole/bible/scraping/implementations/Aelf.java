@@ -243,15 +243,24 @@ public class Aelf extends Scraper {
             return parsedNb;
         }
 
+        private ContextMetadata fixVerseMeta(BibleBook book, int chapter, ContextMetadata verseMeta) {
+            if(book == BibleBook.ESTH && chapter == 1) {
+                return ContextMetadata.forVerse(book, chapter,
+                        verseMeta.verses[0] == 12 ? verseMeta.verses[0] + 7 : verseMeta.verses[0]);
+            }
+            return verseMeta;
+        }
+
         @Override
-        protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type, Element e) {
+        protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type,
+                                      ContextMetadata previousOfType, Element e) {
             ContextMetadata parent = ancestors.peekFirst();
             switch(type) {
                 case VERSE:
                     if(e.is(VERSE_SELECTOR)) {
                         String verseNb = fixVerseNb(parent.book, parent.chapter, e.selectFirst(VERSE_NB_SELECTOR).text());
-                        ContextMetadata verseMeta = ContextMetadata.forVerse(parent.book, parent.chapter,
-                                ParsingUtils.CatholicVersifications.mapVerseNbToOsisVerseNb(parent.book, parent.chapter, verseNb));
+                        ContextMetadata verseMeta = fixVerseMeta(parent.book, parent.chapter,
+                                ParsingUtils.getVerseMetadata(parent, previousOfType, verseNb));
 
                         String verseText = e.ownText();
 

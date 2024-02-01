@@ -66,7 +66,8 @@ public abstract class ContextStream<StreamType extends ContextStream<StreamType>
         Context extractedContext = new Context(wantedMetadata);
         new Parser.TerminalParser<ContextEvent>(it, extractedContext) {
             @Override
-            protected Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type, ContextEvent event) {
+            protected Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
+                                          ContextMetadata previousOfType, ContextEvent event) {
                 if(event.type == ContextEvent.Type.OPEN && event.metadata.type == type) {
                     return new Context(event.metadata, event.value);
                 }

@@ -180,7 +180,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         private Function<ContextMetadata, BibleBook> bookUpdater = null;
         private ToIntFunction<ContextMetadata> chapterNbUpdater = null;
         private Function<ContextMetadata, String> chapterValueUpdater = null;
-        private ToIntFunction<ContextMetadata> verseNbUpdater = null;
+        private Function<ContextMetadata, int[]> verseNbsUpdater = null;
         private Function<ContextMetadata, String> verseValueUpdater = null;
 
         public VersificationUpdater book(Function<ContextMetadata, BibleBook> bookUpdater) {
@@ -198,8 +198,8 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
             return this;
         }
 
-        public VersificationUpdater verseNb(ToIntFunction<ContextMetadata> verseNbUpdater) {
-            this.verseNbUpdater = verseNbUpdater;
+        public VersificationUpdater verseNbs(Function<ContextMetadata, int[]> verseNbsUpdater) {
+            this.verseNbsUpdater = verseNbsUpdater;
             return this;
         }
 
@@ -215,9 +215,9 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
             int newChapterNb = chapterNbUpdater != null && e.metadata.chapter > 0
                     ? chapterNbUpdater.applyAsInt(e.metadata)
                     : e.metadata.chapter;
-            int newVerseNb = verseNbUpdater != null && e.metadata.verse > 0
-                    ? verseNbUpdater.applyAsInt(e.metadata)
-                    : e.metadata.verse;
+            int[] newVerseNbs = verseNbsUpdater != null && e.metadata.verses != null
+                    ? verseNbsUpdater.apply(e.metadata)
+                    : e.metadata.verses;
 
             String newValue = e.value;
             if(chapterValueUpdater != null && e.metadata.type == ContextType.CHAPTER) {
@@ -228,7 +228,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
             }
 
             return new ContextEvent(e.type,
-                    new ContextMetadata(e.metadata.type, newBook, newChapterNb, newVerseNb),
+                    new ContextMetadata(e.metadata.type, newBook, newChapterNb, newVerseNbs),
                     newValue
             );
         }
