@@ -1,4 +1,4 @@
-package com.github.unaszole.bible.writing;
+package com.github.unaszole.bible.writing.interfaces;
 
 import java.util.function.Consumer;
 

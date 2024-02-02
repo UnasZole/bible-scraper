@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.writing.osis;
 
-import com.github.unaszole.bible.writing.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import org.crosswire.jsword.versification.BibleBook;
 
 import javax.xml.stream.XMLStreamWriter;

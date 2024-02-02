@@ -6,8 +6,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
-import com.github.unaszole.bible.writing.BibleWriter;
-import com.github.unaszole.bible.writing.BookWriter;
+import com.github.unaszole.bible.writing.interfaces.BibleWriter;
+import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import org.crosswire.jsword.versification.BibleBook;
 import org.crosswire.jsword.versification.Versification;

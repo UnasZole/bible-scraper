@@ -1,7 +1,7 @@
 package com.github.unaszole.bible.writing.usfm;
 
-import com.github.unaszole.bible.writing.BibleWriter;
-import com.github.unaszole.bible.writing.BookWriter;
+import com.github.unaszole.bible.writing.interfaces.BibleWriter;
+import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.io.IOException;

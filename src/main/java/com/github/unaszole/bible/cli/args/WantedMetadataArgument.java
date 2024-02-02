@@ -1,4 +1,4 @@
-package com.github.unaszole.bible.cli;
+package com.github.unaszole.bible.cli.args;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import org.crosswire.jsword.versification.BibleBook;

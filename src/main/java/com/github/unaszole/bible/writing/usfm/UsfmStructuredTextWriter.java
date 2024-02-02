@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.writing.usfm;
 
-import com.github.unaszole.bible.writing.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 
 import java.io.PrintWriter;
 
@@ -11,14 +11,26 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
         this.out = out;
     }
 
+    private boolean inParagraph = false;
+    protected void closeParagraph() {
+        inParagraph = false;
+    }
+    protected void ensureInParagraph() {
+        if(!inParagraph) {
+            out.println();
+            out.print("\\p ");
+            inParagraph = true;
+        }
+    }
+
     @Override
     public void paragraph() {
-        out.println();
-        out.print("\\p ");
+        closeParagraph();
     }
 
     @Override
     public void text(String str) {
+        ensureInParagraph();
         out.print(str);
     }
 

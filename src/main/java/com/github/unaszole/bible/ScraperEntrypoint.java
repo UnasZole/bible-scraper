@@ -1,9 +1,12 @@
 package com.github.unaszole.bible;
 
-import com.github.unaszole.bible.cli.ScraperArgument;
-import com.github.unaszole.bible.cli.WantedMetadataArgument;
-import com.github.unaszole.bible.cli.WriterArgument;
-import com.github.unaszole.bible.writing.BibleWriter;
+import com.github.unaszole.bible.cli.args.ScraperArgument;
+import com.github.unaszole.bible.cli.args.WantedMetadataArgument;
+import com.github.unaszole.bible.cli.args.WriterArgument;
+import com.github.unaszole.bible.cli.commands.ScrapeCommand;
+import com.github.unaszole.bible.writing.ContextStreamWriter;
+import com.github.unaszole.bible.writing.Typography;
+import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import picocli.CommandLine;
 
 import java.nio.file.FileSystems;
@@ -12,50 +15,18 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command()
-public class ScraperEntrypoint implements Callable<Integer> {
+@CommandLine.Command(subcommands = {ScrapeCommand.class })
+public class ScraperEntrypoint {
 
     @CommandLine.Option(names="--cachePath")
-    Optional<Path> cachePath;
+    public Optional<Path> cachePath;
 
-    @CommandLine.ArgGroup(exclusive = false, multiplicity = "1")
-    WantedMetadataArgument wantedMetadata;
-
-    @CommandLine.ArgGroup(exclusive = false, multiplicity = "1")
-    ScraperArgument scraper;
-
-    @CommandLine.ArgGroup(exclusive = false, multiplicity = "1")
-    WriterArgument writer;
-
-    @Override
-    public Integer call() throws Exception {
-        Path cachePath = this.cachePath.orElseGet(
+    public Path getCachePath() {
+        return cachePath.orElseGet(
                 () -> FileSystems.getDefault()
                         .getPath(System.getProperty("java.io.tmpdir"))
                         .resolve("bible-scraper")
         );
-        Files.createDirectories(cachePath);
-
-        if(writer.isDebugEvents()) {
-            scraper.get(cachePath).stream(wantedMetadata.get()).getStream().forEachOrdered(
-                    System.out::println
-            );
-        }
-        else if(writer.isDebugCtx()) {
-            System.out.println(scraper.get(cachePath).stream(wantedMetadata.get()).extractContext());
-        }
-        else {
-            ContextStreamWriter streamWriter = new ContextStreamWriter(
-                    scraper.get(cachePath).stream(wantedMetadata.get()).getStream()
-            );
-            try(BibleWriter bibleWriter = writer.get()) {
-                streamWriter.writeBibleSubset(bibleWriter, wantedMetadata.get());
-            }
-        }
-
-        System.out.println();
-
-        return 0;
     }
 
     public static void main(String[] args) throws Exception {

@@ -1,24 +1,31 @@
-package com.github.unaszole.bible;
+package com.github.unaszole.bible.writing;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.stream.ContextEvent;
-import com.github.unaszole.bible.writing.BibleWriter;
-import com.github.unaszole.bible.writing.BookWriter;
-import com.github.unaszole.bible.writing.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.BibleWriter;
+import com.github.unaszole.bible.writing.interfaces.BookWriter;
+import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 public class ContextStreamWriter {
+    private final UnaryOperator<String> textTransformer;
     private final Iterator<ContextEvent> it;
     private ContextEvent last = null;
     private ContextEvent current = null;
 
-    public ContextStreamWriter(Stream<ContextEvent> stream) {
+    public ContextStreamWriter(Stream<ContextEvent> stream, UnaryOperator<String> textTransformer) {
         this.it = stream.iterator();
+        this.textTransformer = textTransformer;
+    }
+
+    public ContextStreamWriter(Stream<ContextEvent> stream) {
+        this(stream, s -> s);
     }
 
     private boolean hasNext() {
@@ -56,7 +63,7 @@ public class ContextStreamWriter {
 
             if(event.type == ContextEvent.Type.CLOSE && Objects.equals(event.metadata, metadata)) {
                 // Event closes the context : time to aggregate and return.
-                return contents.toString();
+                return textTransformer.apply(contents.toString());
             }
         }
 
@@ -86,7 +93,7 @@ public class ContextStreamWriter {
             }
 
             if(isClose(ContextType.TEXT, event)) {
-                w.text(event.value);
+                w.text(textTransformer.apply(event.value));
             }
             if(isClose(ContextType.PARAGRAPH_BREAK, event)) {
                 w.paragraph();

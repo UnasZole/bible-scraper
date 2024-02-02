@@ -1,8 +1,7 @@
 package com.github.unaszole.bible.writing.osis;
 
-import com.github.unaszole.bible.writing.BibleWriter;
-import com.github.unaszole.bible.writing.BookWriter;
-import com.github.unaszole.bible.writing.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.BookWriter;
+import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import org.crosswire.jsword.versification.BibleBook;
 import org.crosswire.jsword.versification.BibleNames;
 

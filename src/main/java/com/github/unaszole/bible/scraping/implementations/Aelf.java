@@ -1,9 +1,9 @@
 package com.github.unaszole.bible.scraping.implementations;
 
-import com.github.unaszole.bible.scraping.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.CachedDownloader;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.scraping.Scraper;
@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -223,24 +221,12 @@ public class Aelf extends Scraper {
         private static final Evaluator VERSE_SELECTOR = QueryParser.parse("#right-col p:has(> " + S_VERSE_NB + ")");
         private static final Evaluator VERSE_NB_SELECTOR = QueryParser.parse("> " + S_VERSE_NB);
 
-        private static final Pattern LETTERED_VERSE_NB_PATTERN = Pattern.compile("^(\\d+)([A-Z])$");
-
         protected PageParser(Stream<Element> docStream, Context rootContext) {
             super(docStream.iterator(), rootContext);
         }
 
-        private String fixVerseNb(BibleBook book, int chapter, String parsedNb) {
-            if(book == BibleBook.ESTH && chapter == 1) {
-                // Esther book "0" (taken as prefix to book 1) has verses lettered as 1A, 1B.
-                // Left as-is, they would be understood as coming after verse 1.
-                // Replace them with just the letter, to be before verse 0 as expected.
-                Matcher matcher = LETTERED_VERSE_NB_PATTERN.matcher(parsedNb);
-                if(matcher.matches() && Integer.parseInt(matcher.group(1)) == 1) {
-                    return matcher.group(2);
-                }
-            }
-
-            return parsedNb;
+        private static String stripLeadingZeroes(String parsedNb) {
+            return parsedNb.length() == 1 ? parsedNb : parsedNb.replaceAll("^0*", "");
         }
 
         private ContextMetadata fixVerseMeta(BibleBook book, int chapter, ContextMetadata verseMeta) {
@@ -258,7 +244,7 @@ public class Aelf extends Scraper {
             switch(type) {
                 case VERSE:
                     if(e.is(VERSE_SELECTOR)) {
-                        String verseNb = fixVerseNb(parent.book, parent.chapter, e.selectFirst(VERSE_NB_SELECTOR).text());
+                        String verseNb = stripLeadingZeroes(e.selectFirst(VERSE_NB_SELECTOR).text());
                         ContextMetadata verseMeta = fixVerseMeta(parent.book, parent.chapter,
                                 ParsingUtils.getVerseMetadata(parent, previousOfType, verseNb));
 

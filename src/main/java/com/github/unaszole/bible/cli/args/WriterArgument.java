@@ -1,6 +1,7 @@
-package com.github.unaszole.bible.cli;
+package com.github.unaszole.bible.cli.args;
 
-import com.github.unaszole.bible.writing.BibleWriter;
+import com.github.unaszole.bible.writing.Typography;
+import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import com.github.unaszole.bible.writing.osis.OsisBibleWriter;
 import com.github.unaszole.bible.writing.usfm.UsfmBibleWriter;
 import org.crosswire.jsword.versification.system.SystemCatholic2;
@@ -12,6 +13,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 public class WriterArgument {
 
@@ -23,11 +25,18 @@ public class WriterArgument {
     @CommandLine.Option(names = {"--outputPath", "-o"})
     private Optional<Path> outputPath;
 
+    @CommandLine.Option(names = {"--typographyFixer"})
+    private Typography.Fixer typographyFixer = Typography.Fixer.NONE;
+
     public boolean isDebugEvents() {
         return writer == WriterType.DEBUG_EVENTS;
     }
     public boolean isDebugCtx() {
         return writer == WriterType.DEBUG_CTX;
+    }
+
+    public UnaryOperator<String> getTypographyFixer() {
+        return Typography.getFixer(typographyFixer);
     }
 
     public BibleWriter get() throws Exception {

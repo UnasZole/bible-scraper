@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.writing.usfm;
 
-import com.github.unaszole.bible.writing.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
@@ -13,24 +13,28 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
 
     @Override
     public void majorSection(String title) {
+        closeParagraph();
         out.println();
         out.println("\\ms1 " + title);
     }
 
     @Override
     public void section(String title) {
+        closeParagraph();
         out.println();
         out.println("\\s1 " + title);
     }
 
     @Override
     public void minorSection(String title) {
+        closeParagraph();
         out.println();
         out.println("\\s2 " + title);
     }
 
     @Override
     public void chapter(int chapterNb, String... sourceNb) {
+        closeParagraph();
         out.println();
         out.println("\\c " + chapterNb);
         out.println("\\cp " + sourceNb[0]);
@@ -38,12 +42,14 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
 
     @Override
     public void chapterTitle(String title) {
+        closeParagraph();
         out.println();
         out.println("\\cd " + title);
     }
 
     @Override
     public void verse(int[] verseNbs, String... sourceNb) {
+        ensureInParagraph();
         out.println();
         String verseNbsStr = Arrays.stream(verseNbs)
                 .mapToObj(Integer::toString).collect(Collectors.joining("-"));
