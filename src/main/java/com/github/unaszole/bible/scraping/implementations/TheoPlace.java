@@ -5,6 +5,7 @@ import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.CachedDownloader;
 import com.github.unaszole.bible.scraping.Parser;
+import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
@@ -205,7 +206,7 @@ public class TheoPlace extends Scraper {
 
                 case VERSE:
                     return e.is(VERSE_START_SELECTOR) ? new Context(
-                            ContextMetadata.forVerse(parent.book, parent.chapter, Integer.valueOf(e.text())), e.text()
+                            ParsingUtils.getVerseMetadata(parent, previousOfType, e.text()), e.text()
                     ) : null;
 
                 case MAJOR_SECTION_TITLE:

@@ -436,6 +436,15 @@ public class ChouraquiSpiritualLand extends Scraper {
 						(m, v) -> m.type == ContextType.TEXT && v.endsWith("la maison.")
 				);
 				editor.remove((m, v) -> m.type == ContextType.VERSE && m.chapter == 5 && Objects.equals(v, "2C"));
+
+				// Shift chapter 9 verses 20 to 32 by 1, but not touching the values.
+				// (In catholic bibles, a verse 19A is present, which is missing here.)
+				editor.updateVersification(
+						ContextMetadata.forVerse(BibleBook.ESTH_GR, 9, 20),
+						ContextMetadata.forVerse(BibleBook.ESTH_GR, 9, 32),
+						new ContextStreamEditor.VersificationUpdater()
+								.verseNbs(m -> Arrays.stream(m.verses).map(v -> v + 1).toArray())
+				);
 			}
 
 			return editor;
