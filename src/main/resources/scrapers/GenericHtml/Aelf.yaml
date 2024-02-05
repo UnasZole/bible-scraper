@@ -1,0 +1,326 @@
+sourceVars:
+  chapterUrl: "https://www.aelf.org/bible/{BOOK}/{CHAPTER}"
+  chapterPublishedNumber: "{CHAPTER}"
+
+books:
+  - osis: Gen
+    args: { BOOK: Gn }
+    chapters: [ { from: 1, to: 50, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Exod
+    args: { BOOK: Ex }
+    chapters: [ { from: 1, to: 40, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Lev
+    args: { BOOK: Lv }
+    chapters: [ { from: 1, to: 27, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Num
+    args: { BOOK: Nb }
+    chapters: [ { from: 1, to: 36, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Deut
+    args: { BOOK: Dt }
+    chapters: [ { from: 1, to: 34, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Josh
+    args: { BOOK: Jos }
+    chapters: [ { from: 1, to: 24, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Judg
+    args: { BOOK: Jg }
+    chapters: [ { from: 1, to: 21, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Ruth
+    args: { BOOK: Rt }
+    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 1Sam
+    args: { BOOK: 1S }
+    chapters: [ { from: 1, to: 31, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 2Sam
+    args: { BOOK: 2S }
+    chapters: [ { from: 1, to: 24, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 1Kgs
+    args: { BOOK: 1R }
+    chapters: [ { from: 1, to: 22, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 2Kgs
+    args: { BOOK: 2R }
+    chapters: [ { from: 1, to: 25, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 1Chr
+    args: { BOOK: 1Ch }
+    chapters: [ { from: 1, to: 29, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 2Chr
+    args: { BOOK: 2Ch }
+    chapters: [ { from: 1, to: 36, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Ezra
+    args: { BOOK: Esd }
+    chapters: [ { from: 1, to: 10, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Neh
+    args: { BOOK: Ne }
+    chapters: [ { from: 1, to: 13, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Tob
+    args: { BOOK: Tb }
+    chapters: [ { from: 1, to: 14, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Jdt
+    args: { BOOK: Jdt }
+    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Esth
+    args: { BOOK: Est }
+    chapters: [ 
+      { at: 1, args: [ { CHAPTER: 0 }, { CHAPTER: 1 } ] },
+      { from: 2, to: 10, args: [ { CHAPTER: = $i } ] } 
+    ]
+
+  - osis: 1Macc
+    args: { BOOK: 1M }
+    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 2Macc
+    args: { BOOK: 2M }
+    chapters: [ { from: 1, to: 15, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Job
+    args: { BOOK: Jb }
+    chapters: [ { from: 1, to: 42, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Prov
+    args: { BOOK: Pr }
+    chapters: [ { from: 1, to: 31, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Eccl
+    args: { BOOK: Qo }
+    chapters: [ { from: 1, to: 12, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Song
+    args: { BOOK: Ct }
+    chapters: [ { from: 1, to: 8, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Wis
+    args: { BOOK: Sg }
+    chapters: [ { from: 1, to: 19, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Sir
+    args: { BOOK: Si }
+    chapters: [ { from: 0, to: 51, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Isa
+    args: { BOOK: Is }
+    chapters: [ { from: 1, to: 66, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Jer
+    args: { BOOK: Jr }
+    chapters: [ { from: 1, to: 52, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Lam
+    args: { BOOK: Lm }
+    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Bar
+    args: { BOOK: Ba }
+    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: EpJer
+    args: { BOOK: XXX }
+    chapters: [ { at: 1, args: [ { CHAPTER: 0 } ] } ]
+
+  - osis: Ezek
+    args: { BOOK: Ez }
+    chapters: [ { from: 1, to: 48, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Dan
+    args: { BOOK: Dn }
+    chapters: [ { from: 1, to: 14, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Hos
+    args: { BOOK: Os }
+    chapters: [ { from: 1, to: 14, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Joel
+    args: { BOOK: Jl }
+    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Amos
+    args: { BOOK: Am }
+    chapters: [ { from: 1, to: 9, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Obad
+    args: { BOOK: Ab }
+    chapters: [ { at: 1, args: [ { CHAPTER: 0 } ] } ]
+
+  - osis: Jonah
+    args: { BOOK: Jon }
+    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Mic
+    args: { BOOK: Mi }
+    chapters: [ { from: 1, to: 7, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Nah
+    args: { BOOK: Na }
+    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Hab
+    args: { BOOK: Ha }
+    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Zeph
+    args: { BOOK: So }
+    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Hag
+    args: { BOOK: Ag }
+    chapters: [ { from: 1, to: 2, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Zech
+    args: { BOOK: Za }
+    chapters: [ { from: 1, to: 14, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Mal
+    args: { BOOK: Ml }
+    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Ps
+    args: { BOOK: Ps }
+    chapters: [
+      { from: 1, to: 8, args: [ { CHAPTER: = $i } ] },
+      { at: 9, args: [ { CHAPTER: 9A } ] },
+      { at: 10, args: [ { CHAPTER: 9B } ] },
+      { from: 11, to: 113, args: [ { CHAPTER: = $i - 1 } ] },
+      { at: 114, args: [ { CHAPTER: 113A } ] },
+      { at: 115, args: [ { CHAPTER: 113B } ] },
+      { at: 116, args: [ { CHAPTER: 114 }, { CHAPTER: 115 } ] },
+      { from: 117, to: 146, args: [ { CHAPTER: = $i - 1 } ] },
+      { at: 147, args: [ { CHAPTER: 146 }, { CHAPTER: 147 } ] },
+      { from: 148, to: 150, args: [ { CHAPTER: = $i } ] }
+    ]
+
+  - osis: Matt
+    args: { BOOK: Mt }
+    chapters: [ { from: 1, to: 28, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Mark
+    args: { BOOK: Mc }
+    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Luke
+    args: { BOOK: Lc }
+    chapters: [ { from: 1, to: 24, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: John
+    args: { BOOK: Jn }
+    chapters: [ { from: 1, to: 21, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Acts
+    args: { BOOK: Ac }
+    chapters: [ { from: 1, to: 28, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Rom
+    args: { BOOK: Rm }
+    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 1Cor
+    args: { BOOK: 1Co }
+    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 2Cor
+    args: { BOOK: 2Co }
+    chapters: [ { from: 1, to: 13, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Gal
+    args: { BOOK: Ga }
+    chapters: [ { from: 1, to: 6, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Eph
+    args: { BOOK: Ep }
+    chapters: [ { from: 1, to: 6, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Phil
+    args: { BOOK: Ph }
+    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Col
+    args: { BOOK: Col }
+    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 1Thess
+    args: { BOOK: 1Th }
+    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 2Thess
+    args: { BOOK: 2Th }
+    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 1Tim
+    args: { BOOK: 1Tm }
+    chapters: [ { from: 1, to: 6, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 2Tim
+    args: { BOOK: 2Tm }
+    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Titus
+    args: { BOOK: Tt }
+    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Phlm
+    args: { BOOK: Phm }
+    chapters: [ { at: 1, args: [ { CHAPTER: 1 } ] } ]
+
+  - osis: Heb
+    args: { BOOK: He }
+    chapters: [ { from: 1, to: 13, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: Jas
+    args: { BOOK: Jc }
+    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 1Pet
+    args: { BOOK: 1P }
+    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 2Pet
+    args: { BOOK: 2P }
+    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 1John
+    args: { BOOK: 1Jn }
+    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+
+  - osis: 2John
+    args: { BOOK: 2Jn }
+    chapters: [ { at: 1, args: [ { CHAPTER: 1 } ] } ]
+
+  - osis: 3John
+    args: { BOOK: 3Jn }
+    chapters: [ { at: 1, args: [ { CHAPTER: 1 } ] } ]
+
+  - osis: Jude
+    args: { BOOK: Jude }
+    chapters: [ { at: 1, args: [ { CHAPTER: 1 } ] } ]
+
+  - osis: Rev
+    args: { BOOK: Ap }
+    chapters: [ { from: 1, to: 22, args: [ { CHAPTER: = $i } ] } ]
+
+parser:
+  - type: VERSE
+    selector: "#right-col p:has(> span:is(.verse_number, .text-danger))"
+    valueExtractor:
+      selector: "> span:is(.verse_number, .text-danger)"
+      op: text
+    descendantExtractors:
+      - type: TEXT
+        valueExtractor:
+          op: ownText
+

@@ -134,7 +134,7 @@ public class ContextMetadata {
 		return type +
 				(book == null ? "" : "=" + book +
 						(chapter == 0 ? "" : "_" + chapter +
-								(verses.length == 0 ? "" : ":" + Arrays.stream(verses)
+								(verses == null || verses.length == 0 ? "" : ":" + Arrays.stream(verses)
 										.mapToObj(Integer::toString).collect(Collectors.joining(",")))));
 	}
 }
