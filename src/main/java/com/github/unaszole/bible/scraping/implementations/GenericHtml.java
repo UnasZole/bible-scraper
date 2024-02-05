@@ -124,6 +124,52 @@ public class GenericHtml extends Scraper {
         }
     }
 
+    private static class StreamEditorConfig {
+        public static class Metadata {
+            public ContextType type;
+            public BibleBook book;
+            public Integer chapter;
+            public Integer verse;
+
+            public ContextMetadata get(BibleBook defaultBook, int defaultChapter) {
+                return new ContextMetadata(type,
+                        book != null ? book : defaultBook,
+                        chapter != null ? chapter : defaultChapter,
+                        verse
+                );
+            }
+        }
+
+        public static class VersificationUpdate {
+            public Integer shiftChapter;
+            public Integer shiftVerse;
+
+            public ContextStreamEditor.VersificationUpdater getUpdater() {
+                ContextStreamEditor.VersificationUpdater updater = new ContextStreamEditor.VersificationUpdater();
+                if(shiftChapter != null) {
+                    updater.chapterNb(m -> m.chapter + shiftChapter);
+                }
+                if(shiftVerse != null) {
+                    updater.verseNbs(m -> Arrays.stream(m.verses).map(v -> v + shiftVerse).toArray());
+                }
+                return updater;
+            }
+        }
+
+        public Metadata from;
+        public Metadata to;
+        public VersificationUpdate updateVersification;
+
+        public <T extends ContextStream<T>> ContextStreamEditor<T> configureEditor(ContextStreamEditor<T> editor, BibleBook defaultBook, int defaultChapter) {
+            ContextMetadata fromMeta = from.get(defaultBook, defaultChapter);
+            ContextMetadata toMeta = to.get(defaultBook, defaultChapter);
+            if(updateVersification != null) {
+                editor.updateVersification(fromMeta, toMeta, updateVersification.getUpdater());
+            }
+            return editor;
+        }
+    }
+
     /**
      * Specifies the contents of a book to retrieve from the source.
      */
@@ -160,6 +206,10 @@ public class GenericHtml extends Scraper {
              * "= $i + 1" or "= $i - 2", where $i is the OSIS number of the chapter.
              */
             public List<Map<String, String>> args;
+            /**
+             * Configuration for a stream editor.
+             */
+            public List<StreamEditorConfig> edit;
 
             private static final Pattern CHAPTER_EXPR = Pattern.compile("^=\\s*([^\\s]+)\\s*(([+-])\\s*([^\\s]+)\\s*)?$");
             private int eval(String str, int chapterNb) {
@@ -241,6 +291,10 @@ public class GenericHtml extends Scraper {
          * Description of this book's contents as a sequence of chapters.
          */
         public List<ChapterSeq> chapters;
+        /**
+         * Configuration for a stream editor.
+         */
+        public List<StreamEditorConfig> edit;
 
         public ChapterSeq getChapterSeq(int chapterNb) {
             for(ChapterSeq seq: chapters) {
@@ -509,10 +563,20 @@ public class GenericHtml extends Scraper {
                             .map(pageArgs -> substituteArgs(sourceVars.apply(v -> v.chapterUrl), pageArgs))
                             .collect(Collectors.toList());
 
-                    // Run parser
+                    // Prepare parser
                     Context chapterCtx = new Context(rootContextMeta, chapterValue);
-                    return new ConfiguredHtmlParser(config.parser, getDocStream(downloader, chapterUrls),
+                    ContextStream.Single chapterStream = new ConfiguredHtmlParser(config.parser, getDocStream(downloader, chapterUrls),
                             chapterCtx).asContextStream();
+
+                    // Configure editor if provided.
+                    if(seq.edit != null) {
+                        ContextStreamEditor<ContextStream.Single> editor = chapterStream.edit();
+                        for(StreamEditorConfig cfg: seq.edit) {
+                            cfg.configureEditor(editor, rootContextMeta.book, rootContextMeta.chapter);
+                        }
+                        chapterStream = editor.process();
+                    }
+                    return chapterStream;
                 }
 
                 // No page to retrieve for the chapter : no context to return.
@@ -544,23 +608,31 @@ public class GenericHtml extends Scraper {
 
                 // Build the book stream.
                 Context bookCtx = new Context(rootContextMeta);
+                ContextStream.Single bookStream = null;
                 if(sourceVars.apply(s -> s.bookUrl) != null) {
                     // If we have a book URL pattern, we parse it, and then append the chapters.
                     String bookUrl = substituteArgs(sourceVars.apply(s -> s.bookUrl), args);
-                    ContextStream.Single bookStream = new ConfiguredHtmlParser(config.parser,
+                    bookStream = new ConfiguredHtmlParser(config.parser,
                             getDocStream(downloader, List.of(bookUrl)), bookCtx
-                    ).asContextStream();
-                    return bookStream.edit().inject(
+                    ).asContextStream().edit().inject(
                             ContextStreamEditor.InjectionPosition.AT_END, rootContextMeta, chapterStreams
                     ).process();
                 }
                 else if(!chapterStreams.isEmpty()) {
                     // If we don't have a book page but we have chapter contents, just aggregate them.
-                    return ContextStream.fromContents(bookCtx, chapterStreams);
+                    bookStream = ContextStream.fromContents(bookCtx, chapterStreams);
                 }
 
-                // No book and no chapter : nothing to return.
-                return null;
+                // Configure editor if provided and we have a book to return.
+                if(bookStream != null && book.edit != null) {
+                    ContextStreamEditor<ContextStream.Single> editor = bookStream.edit();
+                    for(StreamEditorConfig cfg: book.edit) {
+                        cfg.configureEditor(editor, rootContextMeta.book, 0);
+                    }
+                    bookStream = editor.process();
+                }
+
+                return bookStream;
 
             case BIBLE:
                 return autoGetBibleStream(getBooks());

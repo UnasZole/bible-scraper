@@ -77,10 +77,18 @@ books:
 
   - osis: Esth
     args: { BOOK: Est }
-    chapters: [ 
-      { at: 1, args: [ { CHAPTER: 0 }, { CHAPTER: 1 } ] },
-      { from: 2, to: 10, args: [ { CHAPTER: = $i } ] } 
-    ]
+    chapters:
+      - at: 1
+        args: [ { CHAPTER: 0 }, { CHAPTER: 1 } ]
+        edit:
+          - from: { type: VERSE, verse: 12 }
+            to: { type: VERSE, verse: 33 }
+            updateVersification:
+              shiftVerse: 7
+      - from: 2
+        to: 10
+        args: [ { CHAPTER: = $i } ]
+
 
   - osis: 1Macc
     args: { BOOK: 1M }
