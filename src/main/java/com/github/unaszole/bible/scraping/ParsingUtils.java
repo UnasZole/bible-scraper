@@ -35,8 +35,8 @@ public class ParsingUtils {
                     // If the number we parsed is above the previous verse number, trust it.
                     previousVerseNb = nb;
                 }
-                else {
-                    // Else, we just increment the previous verse number.
+                else if(nb != 0 || previousVerseNb != 0) {
+                    // Else, we just increment the previous verse number (except for verse 0 at start of a chapter).
                     previousVerseNb++;
                 }
                 actualVerseNbs[i] = previousVerseNb;
