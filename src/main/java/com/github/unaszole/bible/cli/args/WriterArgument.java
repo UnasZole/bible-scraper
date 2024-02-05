@@ -19,13 +19,13 @@ public class WriterArgument {
 
     enum WriterType { DEBUG_EVENTS, DEBUG_CTX, OSIS, USFM }
 
-    @CommandLine.Option(names={"--writer", "-w"}, required = true)
+    @CommandLine.Option(names={"--writer", "-w"}, required = true, description = "Output format to write the extracted Bible. One of : ${COMPLETION-CANDIDATES}")
     private WriterType writer;
 
-    @CommandLine.Option(names = {"--outputPath", "-o"})
+    @CommandLine.Option(names = {"--outputPath", "-o"}, description = "File or folder (depending on the selected writer) for output. If unset, will print on stdout.")
     private Optional<Path> outputPath;
 
-    @CommandLine.Option(names = {"--typographyFixer"})
+    @CommandLine.Option(names = {"--typographyFixer"}, description = "Apply typography fixes while outputting. One of : ${COMPLETION-CANDIDATES}")
     private Typography.Fixer typographyFixer = Typography.Fixer.NONE;
 
     public boolean isDebugEvents() {

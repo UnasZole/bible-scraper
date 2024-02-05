@@ -8,13 +8,13 @@ import java.util.Optional;
 
 public class WantedMetadataArgument {
 
-    @CommandLine.Option(names={"--fullBible"}, defaultValue = "false")
+    @CommandLine.Option(names={"--fullBible"}, defaultValue = "false", description = "Extract the full Bible.")
     private boolean fullBible;
 
-    @CommandLine.Option(names={"--book", "-b"})
+    @CommandLine.Option(names={"--book", "-b"}, description = "Extract from a specific book by specifying its OSIS ID.")
     private Optional<String> book;
 
-    @CommandLine.Option(names={"--chapter", "-c"})
+    @CommandLine.Option(names={"--chapter", "-c"}, description = "Extract from a specific chapter in the book.")
     private Optional<Integer> chapter;
 
     public ContextMetadata get() {

@@ -16,16 +16,19 @@ import java.util.concurrent.Callable;
 @CommandLine.Command(name = "scrape")
 public class ScrapeCommand implements Callable<Integer> {
 
+    @CommandLine.Option(names = {"-h", "--help"}, usageHelp = true, description = "Show this help message and exit.")
+    boolean usageHelpRequested;
+
     @CommandLine.ParentCommand
     ScraperEntrypoint entrypoint;
 
-    @CommandLine.ArgGroup(exclusive = false, multiplicity = "1")
+    @CommandLine.ArgGroup(exclusive = false, multiplicity = "1", heading = "\n== Which portion of the Bible to extract?\n")
     WantedMetadataArgument wantedMetadata;
 
-    @CommandLine.ArgGroup(exclusive = false, multiplicity = "1")
+    @CommandLine.ArgGroup(exclusive = false, multiplicity = "1", heading = "\n== Where to fetch the Bible from?\n")
     ScraperArgument scraper;
 
-    @CommandLine.ArgGroup(exclusive = false, multiplicity = "1")
+    @CommandLine.ArgGroup(exclusive = false, multiplicity = "1", heading = "\n== How to export the Bible?\n")
     WriterArgument writer;
 
     @Override

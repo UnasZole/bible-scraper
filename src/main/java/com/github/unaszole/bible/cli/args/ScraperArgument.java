@@ -7,10 +7,10 @@ import java.nio.file.Path;
 
 public class ScraperArgument {
 
-    @CommandLine.Option(names = {"--scraper", "-s"}, required = true)
+    @CommandLine.Option(names = {"--scraper", "-s"}, required = true, description = "Class name (or FQN) of the scraper to use.")
     private String className;
 
-    @CommandLine.Option(names = {"--scraperFlags", "-f"})
+    @CommandLine.Option(names = {"--scraperFlags", "-f"}, description = "Options to pass to the scraper.")
     private String[] flags = {};
 
     public Scraper get(Path cachePath) throws Exception {

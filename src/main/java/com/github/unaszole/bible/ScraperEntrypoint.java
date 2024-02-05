@@ -18,6 +18,9 @@ import java.util.concurrent.Callable;
 @CommandLine.Command(subcommands = {ScrapeCommand.class })
 public class ScraperEntrypoint {
 
+    @CommandLine.Option(names = {"-h", "--help"}, usageHelp = true, description = "Show this help message and exit.")
+    boolean usageHelpRequested;
+
     @CommandLine.Option(names="--cachePath")
     public Optional<Path> cachePath;
 
