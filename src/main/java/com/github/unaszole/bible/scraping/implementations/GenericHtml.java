@@ -363,6 +363,10 @@ public class GenericHtml extends Scraper {
          */
         public ContextType type;
         /**
+         * A required ancestor type for this extractor to trigger. Only relevant for a root extractor.
+         */
+        public ContextType withAncestor;
+        /**
          * A selector that selects only HTML elements that this extractor can build a context from.
          * For an extractor at the root of the parser, MUST always be provided : checks if the incoming element can open
          * this context.
@@ -440,6 +444,7 @@ public class GenericHtml extends Scraper {
 
     private static class Config {
         public SourceVars sourceVars;
+        public List<String> flags;
         public List<Book> books;
         public List<ContextExtractor> parser;
 
@@ -450,8 +455,21 @@ public class GenericHtml extends Scraper {
                     .orElse(null);
         }
 
-        public Accessor<Map<String, String>> getArgsAccessor() {
-            return getter -> getter.apply(Collections.emptyMap()); // TODO : add root level arguments, for runtime flags
+        public Accessor<Map<String, String>> getArgsAccessor(List<String> flagValues) {
+            int nbExpectedFlags = flags == null ? 0 : flags.size();
+            int nbGivenFlags = flagValues.size();
+            if(nbGivenFlags != nbExpectedFlags) {
+                throw new IllegalArgumentException("Provided " + nbGivenFlags
+                        + " flags, but expecting " + nbExpectedFlags
+                );
+            }
+
+            final Map<String, String> rootArgs = new HashMap<>();
+            for(int i = 0; i < flagValues.size(); i++) {
+                rootArgs.put(flags.get(i), flagValues.get(i));
+            }
+
+            return getter -> getter.apply(rootArgs);
         }
 
         @Override
@@ -466,9 +484,11 @@ public class GenericHtml extends Scraper {
 
     private final CachedDownloader downloader;
     private final Config config;
+    private final List<String> flags;
 
     public GenericHtml(Path cachePath, String[] flags) throws IOException {
         File configFile = new File(flags[0]);
+        this.flags = Arrays.stream(flags).skip(1).collect(Collectors.toList());
         this.config = MAPPER.readValue(configFile, Config.class);
         this.downloader = new CachedDownloader(cachePath.resolve("GenericHtml").resolve(configFile.getName()));
     }
@@ -497,21 +517,24 @@ public class GenericHtml extends Scraper {
 
     private static class ConfiguredHtmlParser extends Parser.TerminalParser<Element> {
 
-        private final Map<ContextType, ContextExtractor> parserConfig;
+        private final List<ContextExtractor> parserConfig;
 
         private ConfiguredHtmlParser(List<ContextExtractor> parserConfig,
                                      Stream<Element> docStream, Context rootContext) {
             super(docStream.iterator(), rootContext);
-            this.parserConfig = parserConfig.stream().collect(Collectors.toMap(e -> e.type, e -> e));
+            this.parserConfig = parserConfig;
         }
 
         @Override
         protected Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
                                       ContextMetadata previousOfType, Element e) {
-            ContextMetadata parent = ancestorStack.peekFirst();
-            ContextExtractor extractor = parserConfig.get(type);
+            ContextExtractor extractor = parserConfig.stream()
+                    .filter(ex -> ex.type == type && (ex.withAncestor == null
+                            || ancestorStack.stream().anyMatch(a -> a.type == ex.withAncestor)))
+                    .findFirst()
+                    .orElse(null);
             if(extractor != null) {
-                return extractor.extractRootContext(e, parent, previousOfType);
+                return extractor.extractRootContext(e, ancestorStack.peekFirst(), previousOfType);
             }
             return null;
         }
@@ -545,7 +568,7 @@ public class GenericHtml extends Scraper {
                 sourceVars = config.sourceVars.getAccessor()
                         .overriddenBy(book.sourceVars)
                         .overriddenBy(seq.sourceVars);
-                List<Accessor<Map<String, String>>> listArgs = config.getArgsAccessor()
+                List<Accessor<Map<String, String>>> listArgs = config.getArgsAccessor(flags)
                         .overriddenBy(book.args)
                         .overriddenByList(seq.evaluateChapterArgs(rootContextMeta.chapter));
 
@@ -590,7 +613,7 @@ public class GenericHtml extends Scraper {
                 }
                 sourceVars = config.sourceVars.getAccessor()
                         .overriddenBy(book.sourceVars);
-                Accessor<Map<String, String>> args = config.getArgsAccessor().overriddenBy(book.args);
+                Accessor<Map<String, String>> args = config.getArgsAccessor(flags).overriddenBy(book.args);
 
                 // Build the list of context streams for all chapters, to append to the book page stream.
                 List<ContextStream.Single> chapterStreams;
