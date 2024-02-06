@@ -26,6 +26,7 @@ import org.jsoup.select.QueryParser;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
@@ -478,39 +479,6 @@ public class GenericHtml extends Scraper {
         }
     }
 
-    private final CachedDownloader downloader;
-    private final Config config;
-    private final List<String> flags;
-
-    public GenericHtml(Path cachePath, String[] flags) throws IOException {
-        File configFile = new File(flags[0]);
-        this.flags = Arrays.stream(flags).skip(1).collect(Collectors.toList());
-        this.config = MAPPER.readValue(configFile, Config.class);
-        this.downloader = new CachedDownloader(cachePath.resolve("GenericHtml").resolve(configFile.getName()));
-    }
-
-    private List<BibleBook> getBooks() {
-        return config.books.stream().map(b -> b.osis).collect(Collectors.toList());
-    }
-
-    private Document downloadAndParse(final CachedDownloader downloader, String url) {
-        try {
-            return Jsoup.parse(downloader.getFile(new URL(url)).toFile());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Stream<Element> getDocStream(final CachedDownloader downloader, List<String> urls) {
-        return StreamUtils.concatStreams(
-                urls.stream()
-                        .map(pageUrl -> StreamUtils.deferredStream(
-                                () -> downloadAndParse(downloader, pageUrl).stream()
-                        ))
-                        .collect(Collectors.toList())
-        );
-    }
-
     private static class ConfiguredHtmlParser extends Parser.TerminalParser<Element> {
 
         private final List<ContextExtractor> parserConfig;
@@ -534,6 +502,69 @@ public class GenericHtml extends Scraper {
             }
             return null;
         }
+    }
+
+    private static Config getConfig(String flag) throws IOException {
+        // If the flag is the path to an existing file, use it.
+        File configFile = new File(flag);
+        if(configFile.exists()) {
+            return MAPPER.readValue(configFile, Config.class);
+        }
+
+        // Else, try to load one from the embedded resources.
+        try(InputStream is = GenericHtml.class.getResourceAsStream("/scrapers/GenericHtml/" + flag + ".yaml")) {
+            return MAPPER.readValue(is, Config.class);
+        }
+    }
+
+    private static Path getCacheSubPath(Path cachePath, String[] flags) {
+        Path outPath = cachePath.resolve("GenericHtml");
+        
+        File configFile = new File(flags[0]);
+        if(configFile.exists()) {
+            outPath = outPath.resolve(configFile.getName());
+        }
+        else {
+            outPath = outPath.resolve(flags[0]);
+        }
+
+        for(int i = 1; i < flags.length; i++) {
+            outPath = outPath.resolve(flags[i]);
+        }
+
+        return outPath;
+    }
+
+    private final CachedDownloader downloader;
+    private final Config config;
+    private final List<String> flags;
+
+    public GenericHtml(Path cachePath, String[] flags) throws IOException {
+        this.config = getConfig(flags[0]);
+        this.flags = Arrays.stream(flags).skip(1).collect(Collectors.toList());
+        this.downloader = new CachedDownloader(getCacheSubPath(cachePath, flags));
+    }
+
+    private List<BibleBook> getBooks() {
+        return config.books.stream().map(b -> b.osis).collect(Collectors.toList());
+    }
+
+    private Document downloadAndParse(final CachedDownloader downloader, String url) {
+        try {
+            return Jsoup.parse(downloader.getFile(new URL(url)).toFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Stream<Element> getDocStream(final CachedDownloader downloader, List<String> urls) {
+        return StreamUtils.concatStreams(
+                urls.stream()
+                        .map(pageUrl -> StreamUtils.deferredStream(
+                                () -> downloadAndParse(downloader, pageUrl).stream()
+                        ))
+                        .collect(Collectors.toList())
+        );
     }
 
     private static final Pattern ARG_REFERENCE = Pattern.compile("\\{([A-Z0-9_]+)}");
