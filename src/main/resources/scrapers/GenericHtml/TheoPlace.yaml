@@ -1,311 +1,320 @@
 # This "Generic HTML" scraper for TheoPlace is provided as an example, both of the power of generic scrapers and their
 # limitations.
 # In particular, the limitations of this generic scraper are the following :
+# - In some bibles, major and normal sections will be messed up because the website's formatting on those is inconsistent.
+#   The generic parser cannot include complex logic based on sibling comparisons to cope with such inconsistencies.
 # - Notes are always pushed to the end of a verse, because a generic parser iterates through HTML elements, not nodes
-#   inside these elements. Therefore it cannot track how elements are positioned in the middle of text.
+#   inside these elements. Therefore, it cannot track how elements are positioned in the middle of text.
 # - Chapters and books that are missing in some bibles will actually be included as empty, because generic parsers do
 #   not provide a mechanism to ignore pages after parsing them.
 # For these reasons, when extracting bibles for actual use, the native TheoPlace scraper should be used instead !
 
-sourceVars:
+patterns:
+  # By using the default name "bookUrl" and leaving the pagePattern unset, this pattern will be implicitly used at book level.
   bookUrl: "https://theo.place/intro-livre-{BIBLE}-{BOOK_NB}-{BOOK_NAME}"
+  # By using the default name "chapterUrl" and leaving the pagePattern unset, this pattern will be implicitly used at chapter level.
   chapterUrl: "https://theo.place/bible-{BIBLE}-{BOOK_NB}-{CHAPTER}"
+  # By using the default name "chapterPublishedNumber" and leaving the pagePattern unset, this pattern will be implicitly used at chapter level.
   chapterPublishedNumber: "{CHAPTER}"
+
+args:
+  # By default, the CHAPTER argument should be evaluated only within chapter sequence, and default to $i, the OSIS chapter number.
+  CHAPTER: = $i
 
 flags: [ BIBLE ]
 
 books:
   - osis: Gen
     args: { BOOK_NB: 1, BOOK_NAME: genese }
-    chapters: [ { from: 1, to: 50, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 50 } ]
 
   - osis: Exod
     args: { BOOK_NB: 2, BOOK_NAME: exode }
-    chapters: [ { from: 1, to: 40, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 40 } ]
 
   - osis: Lev
     args: { BOOK_NB: 3, BOOK_NAME: levitique }
-    chapters: [ { from: 1, to: 27, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 27 } ]
 
   - osis: Num
     args: { BOOK_NB: 4, BOOK_NAME: nombres }
-    chapters: [ { from: 1, to: 36, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 36 } ]
 
   - osis: Deut
     args: { BOOK_NB: 5, BOOK_NAME: deuteronome }
-    chapters: [ { from: 1, to: 34, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 34 } ]
 
   - osis: Josh
     args: { BOOK_NB: 6, BOOK_NAME: josue }
-    chapters: [ { from: 1, to: 24, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 24 } ]
 
   - osis: Judg
     args: { BOOK_NB: 7, BOOK_NAME: juges }
-    chapters: [ { from: 1, to: 21, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 21 } ]
 
   - osis: Ruth
     args: { BOOK_NB: 8, BOOK_NAME: ruth }
-    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 4 } ]
 
   - osis: 1Sam
     args: { BOOK_NB: 9, BOOK_NAME: 1samuel }
-    chapters: [ { from: 1, to: 31, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 31 } ]
 
   - osis: 2Sam
     args: { BOOK_NB: 10, BOOK_NAME: 2samuel }
-    chapters: [ { from: 1, to: 24, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 24 } ]
 
   - osis: 1Kgs
     args: { BOOK_NB: 11, BOOK_NAME: 1rois }
-    chapters: [ { from: 1, to: 22, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 22 } ]
 
   - osis: 2Kgs
     args: { BOOK_NB: 12, BOOK_NAME: 2rois }
-    chapters: [ { from: 1, to: 25, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 25 } ]
 
   - osis: 1Chr
     args: { BOOK_NB: 13, BOOK_NAME: 1chroniques }
-    chapters: [ { from: 1, to: 29, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 29 } ]
 
   - osis: 2Chr
     args: { BOOK_NB: 14, BOOK_NAME: 2chroniques }
-    chapters: [ { from: 1, to: 36, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 36 } ]
 
   - osis: Ezra
     args: { BOOK_NB: 15, BOOK_NAME: esdras }
-    chapters: [ { from: 1, to: 10, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 10 } ]
 
   - osis: Neh
     args: { BOOK_NB: 16, BOOK_NAME: nehemie }
-    chapters: [ { from: 1, to: 13, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 13 } ]
 
   - osis: Esth
     args: { BOOK_NB: 17, BOOK_NAME: esther }
-    chapters: [ { from: 1, to: 10, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 10 } ]
 
   - osis: Job
     args: { BOOK_NB: 18, BOOK_NAME: job }
-    chapters: [ { from: 1, to: 42, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 42 } ]
 
   - osis: Ps
     args: { BOOK_NB: 19, BOOK_NAME: psaumes }
-    chapters: [ { from: 1, to: 150, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 150 } ]
 
   - osis: Prov
     args: { BOOK_NB: 20, BOOK_NAME: proverbes }
-    chapters: [ { from: 1, to: 31, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 31 } ]
 
   - osis: Eccl
     args: { BOOK_NB: 21, BOOK_NAME: ecclesiaste }
-    chapters: [ { from: 1, to: 12, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 12 } ]
 
   - osis: Song
     args: { BOOK_NB: 22, BOOK_NAME: cantique }
-    chapters: [ { from: 1, to: 8, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 8 } ]
 
   - osis: Isa
     args: { BOOK_NB: 23, BOOK_NAME: esaie }
-    chapters: [ { from: 1, to: 66, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 66 } ]
 
   - osis: Jer
     args: { BOOK_NB: 24, BOOK_NAME: jeremie }
-    chapters: [ { from: 1, to: 52, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 52 } ]
 
   - osis: Lam
     args: { BOOK_NB: 25, BOOK_NAME: lamentations }
-    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 5 } ]
 
   - osis: Ezek
     args: { BOOK_NB: 26, BOOK_NAME: ezechiel }
-    chapters: [ { from: 1, to: 48, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 48 } ]
 
   - osis: Dan
     args: { BOOK_NB: 27, BOOK_NAME: daniel }
-    chapters: [ { from: 1, to: 14, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 14 } ]
 
   - osis: Hos
     args: { BOOK_NB: 28, BOOK_NAME: osee }
-    chapters: [ { from: 1, to: 14, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 14 } ]
 
   - osis: Joel
     args: { BOOK_NB: 29, BOOK_NAME: jo%C3%ABl }
-    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 4 } ]
 
   - osis: Amos
     args: { BOOK_NB: 30, BOOK_NAME: amos }
-    chapters: [ { from: 1, to: 9, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 9 } ]
 
   - osis: Obad
     args: { BOOK_NB: 31, BOOK_NAME: abdias }
-    chapters: [ { at: 1, args: [ { CHAPTER: 0 } ] } ]
+    chapters: [ { at: 1 } ]
 
   - osis: Jonah
     args: { BOOK_NB: 32, BOOK_NAME: jonas }
-    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 4 } ]
 
   - osis: Mic
     args: { BOOK_NB: 33, BOOK_NAME: michee }
-    chapters: [ { from: 1, to: 7, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 7 } ]
 
   - osis: Nah
     args: { BOOK_NB: 34, BOOK_NAME: nahum }
-    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 3 } ]
 
   - osis: Hab
     args: { BOOK_NB: 35, BOOK_NAME: habakuk }
-    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 3 } ]
 
   - osis: Zeph
     args: { BOOK_NB: 36, BOOK_NAME: sophonie }
-    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 3 } ]
 
   - osis: Hag
     args: { BOOK_NB: 37, BOOK_NAME: aggee }
-    chapters: [ { from: 1, to: 2, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 2 } ]
 
   - osis: Zech
     args: { BOOK_NB: 38, BOOK_NAME: zacharie }
-    chapters: [ { from: 1, to: 14, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 14 } ]
 
   - osis: Mal
     args: { BOOK_NB: 39, BOOK_NAME: malachie }
-    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 4 } ]
 
   - osis: Matt
     args: { BOOK_NB: 40, BOOK_NAME: matthieu }
-    chapters: [ { from: 1, to: 28, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 28 } ]
 
   - osis: Mark
     args: { BOOK_NB: 41, BOOK_NAME: marc }
-    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 16 } ]
 
   - osis: Luke
     args: { BOOK_NB: 42, BOOK_NAME: luc }
-    chapters: [ { from: 1, to: 24, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 24 } ]
 
   - osis: John
     args: { BOOK_NB: 43, BOOK_NAME: jean }
-    chapters: [ { from: 1, to: 21, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 21 } ]
 
   - osis: Acts
     args: { BOOK_NB: 44, BOOK_NAME: actes }
-    chapters: [ { from: 1, to: 28, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 28 } ]
 
   - osis: Rom
     args: { BOOK_NB: 45, BOOK_NAME: romains }
-    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 16 } ]
 
   - osis: 1Cor
     args: { BOOK_NB: 46, BOOK_NAME: 1corinthiens }
-    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 16 } ]
 
   - osis: 2Cor
     args: { BOOK_NB: 47, BOOK_NAME: 2corinthiens }
-    chapters: [ { from: 1, to: 13, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 13 } ]
 
   - osis: Gal
     args: { BOOK_NB: 48, BOOK_NAME: galates }
-    chapters: [ { from: 1, to: 6, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 6 } ]
 
   - osis: Eph
     args: { BOOK_NB: 49, BOOK_NAME: ephesiens }
-    chapters: [ { from: 1, to: 6, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 6 } ]
 
   - osis: Phil
     args: { BOOK_NB: 50, BOOK_NAME: philippiens }
-    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 4 } ]
 
   - osis: Col
     args: { BOOK_NB: 51, BOOK_NAME: colossiens }
-    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 4 } ]
 
   - osis: 1Thess
     args: { BOOK_NB: 52, BOOK_NAME: 1thessaloniciens }
-    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 5 } ]
 
   - osis: 2Thess
     args: { BOOK_NB: 53, BOOK_NAME: 2thessaloniciens }
-    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 3 } ]
 
   - osis: 1Tim
     args: { BOOK_NB: 54, BOOK_NAME: 1timothee }
-    chapters: [ { from: 1, to: 6, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 6 } ]
 
   - osis: 2Tim
     args: { BOOK_NB: 55, BOOK_NAME: 2timothee }
-    chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 4 } ]
 
   - osis: Titus
     args: { BOOK_NB: 56, BOOK_NAME: tite }
-    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 3 } ]
 
   - osis: Phlm
     args: { BOOK_NB: 57, BOOK_NAME: philemon }
-    chapters: [ { at: 1, args: [ { CHAPTER: 1 } ] } ]
+    chapters: [ { at: 1 } ]
 
   - osis: Heb
     args: { BOOK_NB: 58, BOOK_NAME: hebreux }
-    chapters: [ { from: 1, to: 13, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 13 } ]
 
   - osis: Jas
     args: { BOOK_NB: 59, BOOK_NAME: jacques }
-    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 5 } ]
 
   - osis: 1Pet
     args: { BOOK_NB: 60, BOOK_NAME: 1pierre }
-    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 5 } ]
 
   - osis: 2Pet
     args: { BOOK_NB: 61, BOOK_NAME: 2pierre }
-    chapters: [ { from: 1, to: 3, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 3 } ]
 
   - osis: 1John
     args: { BOOK_NB: 62, BOOK_NAME: 1jean }
-    chapters: [ { from: 1, to: 5, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 5 } ]
 
   - osis: 2John
     args: { BOOK_NB: 63, BOOK_NAME: 2jean }
-    chapters: [ { at: 1, args: [ { CHAPTER: 1 } ] } ]
+    chapters: [ { at: 1 } ]
 
   - osis: 3John
     args: { BOOK_NB: 64, BOOK_NAME: 3jean }
-    chapters: [ { at: 1, args: [ { CHAPTER: 1 } ] } ]
+    chapters: [ { at: 1 } ]
 
   - osis: Jude
     args: { BOOK_NB: 65, BOOK_NAME: jude }
-    chapters: [ { at: 1, args: [ { CHAPTER: 1 } ] } ]
+    chapters: [ { at: 1 } ]
 
   - osis: Rev
     args: { BOOK_NB: 66, BOOK_NAME: apocalypse }
-    chapters: [ { from: 1, to: 22, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 22 } ]
 
   - osis: Bar
     args: { BOOK_NB: 67, BOOK_NAME: baruch }
-    chapters: [ { from: 1, to: 6, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 6 } ]
 
   - osis: Tob
     args: { BOOK_NB: 68, BOOK_NAME: tobie }
-    chapters: [ { from: 1, to: 14, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 14 } ]
 
   - osis: Jdt
     args: { BOOK_NB: 69, BOOK_NAME: judith }
-    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 16 } ]
 
   - osis: 1Macc
     args: { BOOK_NB: 70, BOOK_NAME: 1maccabees }
-    chapters: [ { from: 1, to: 16, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 16 } ]
 
   - osis: 2Macc
     args: { BOOK_NB: 71, BOOK_NAME: 2maccabees }
-    chapters: [ { from: 1, to: 15, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 15 } ]
 
   - osis: Wis
     args: { BOOK_NB: 72, BOOK_NAME: sagesse }
-    chapters: [ { from: 1, to: 19, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 1, to: 19 } ]
 
   - osis: Sir
     args: { BOOK_NB: 73, BOOK_NAME: ecclesiastique }
-    chapters: [ { from: 0, to: 51, args: [ { CHAPTER: = $i } ] } ]
+    chapters: [ { from: 0, to: 51 } ]
 
 parser:
   - type: BOOK_TITLE

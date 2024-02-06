@@ -14,6 +14,7 @@ import com.github.unaszole.bible.scraping.CachedDownloader;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.scraping.Scraper;
+import com.github.unaszole.bible.scraping.generic.*;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
 import com.github.unaszole.bible.stream.StreamUtils;
@@ -30,9 +31,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,259 +52,6 @@ public class GenericHtml extends Scraper {
                 }
             })
     );
-
-    public interface Accessor<T> extends Function<Function<T, String>, String> {
-        default Accessor<T> overriddenBy(final T overrides) {
-            return overrides == null ? this : (
-                    getter -> Optional.ofNullable(getter.apply(overrides)).orElse(this.apply(getter))
-            );
-        }
-
-        default List<Accessor<T>> overriddenByList(final List<T> overrides) {
-            return overrides.stream().map(this::overriddenBy).collect(Collectors.toList());
-        }
-    }
-
-    /**
-     * A set of variables to locate and identify source documents.
-     *
-     * All these variables may be defined globally, at book level, or at "chapter sequence" level.
-     * The definition at "chapter sequence" level, if present, overrides the one at book level, which in turn overrides
-     * the global.
-     *
-     * All these variables may contain arguments in the form {ARGUMENT_NAME}, that will be substituted with argument
-     * values provided for each book or chapter.
-     *
-     * Thus, while the recommended strategy is to set these variables globally with a pattern, and use arguments to
-     * customise the value for each book and chapter, it's also possible to override them entirely for specific cases.
-     */
-    private static class SourceVars {
-
-        /**
-         * The URL of the page for a book, or part of a book (either a book introduction, or a sequence of
-         * several chapters).
-         */
-        public String bookUrl;
-        /**
-         * The URL of the page for a chapter, or part of a chapter.
-         * This should be specified if and only if {@link #bookUrl} is unset, empty, or points to a page that does not
-         * contain any chapter.
-         */
-        public String chapterUrl;
-        /**
-         * The "published number" for a chapter.
-         * This is only relevant if {@link #chapterUrl} is provided, and allows customising the number that will
-         * actually be displayed for the extracted chapter.
-         * Note that if a chapter is loaded from several pages and each page gets a different published number,
-         * all of them will be concatenated with "-".
-         * If omitted, then the published number will be the OSIS chapter number.
-         */
-        public String chapterPublishedNumber;
-
-        public Accessor<SourceVars> getAccessor() {
-            return (getter -> getter.apply(this));
-        }
-
-        @Override
-        public String toString() {
-            try {
-                return MAPPER.writeValueAsString(this);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    private static class StreamEditorConfig {
-        public static class Metadata {
-            public ContextType type;
-            public BibleBook book;
-            public Integer chapter;
-            public Integer verse;
-
-            public ContextMetadata get(BibleBook defaultBook, int defaultChapter) {
-                return new ContextMetadata(type,
-                        book != null ? book : defaultBook,
-                        chapter != null ? chapter : defaultChapter,
-                        verse
-                );
-            }
-        }
-
-        public static class VersificationUpdate {
-            public Integer shiftChapter;
-            public Integer shiftVerse;
-
-            public ContextStreamEditor.VersificationUpdater getUpdater() {
-                ContextStreamEditor.VersificationUpdater updater = new ContextStreamEditor.VersificationUpdater();
-                if(shiftChapter != null) {
-                    updater.chapterNb(m -> m.chapter + shiftChapter);
-                }
-                if(shiftVerse != null) {
-                    updater.verseNbs(m -> Arrays.stream(m.verses).map(v -> v + shiftVerse).toArray());
-                }
-                return updater;
-            }
-        }
-
-        public Metadata from;
-        public Metadata to;
-        public VersificationUpdate updateVersification;
-
-        public <T extends ContextStream<T>> ContextStreamEditor<T> configureEditor(ContextStreamEditor<T> editor, BibleBook defaultBook, int defaultChapter) {
-            ContextMetadata fromMeta = from.get(defaultBook, defaultChapter);
-            ContextMetadata toMeta = to.get(defaultBook, defaultChapter);
-            if(updateVersification != null) {
-                editor.updateVersification(fromMeta, toMeta, updateVersification.getUpdater());
-            }
-            return editor;
-        }
-    }
-
-    /**
-     * Specifies the contents of a book to retrieve from the source.
-     */
-    private static class Book {
-
-        /**
-         * Specifies a sequence of chapters from this book.
-         */
-        private static class ChapterSeq {
-            /**
-             * The OSIS number of this chapter, if this sequence represents a single chapter.
-             * If given, then {@link #from} and {@link #to} MUST be omitted.
-             */
-            public Integer at;
-            /**
-             * The first OSIS chapter number of this sequence.
-             * If given, then {@link #at} MUST be omitted, and {@link #to} MUST be provided.
-             */
-            public Integer from;
-            /**
-             * The last OSIS chapter number of this sequence.
-             * If given, then {@link #at} MUST be omitted, and {@link #from} MUST be provided.
-             */
-            public Integer to;
-            /**
-             * Overrides of the source variables for this chapter sequence.
-             */
-            public SourceVars sourceVars;
-            /**
-             * List of pages to retrieve for each chapter in this sequence, each page being specified by a set of
-             * arguments.
-             * In a chapter sequence only, in addition to direct string values as everywhere else, it's possible to
-             * specify arguments as simple integer expressions : these must start by "=" and be of the form
-             * "= $i + 1" or "= $i - 2", where $i is the OSIS number of the chapter.
-             */
-            public List<Map<String, String>> args;
-            /**
-             * Configuration for a stream editor.
-             */
-            public List<StreamEditorConfig> edit;
-
-            private static final Pattern CHAPTER_EXPR = Pattern.compile("^=\\s*([^\\s]+)\\s*(([+-])\\s*([^\\s]+)\\s*)?$");
-            private int eval(String str, int chapterNb) {
-                return str.equals("$i") ? chapterNb : Integer.parseInt(str);
-            }
-
-            public Stream<Integer> listChapters() {
-                if(at != null) {
-                    return Stream.of(at);
-                }
-                else {
-                    return Stream.iterate(from, n -> n <= to, n -> n + 1);
-                }
-            }
-
-            public boolean containsChapter(int chapterNb) {
-                if(at != null) {
-                    assert from == null && to == null : this + " invalid : if 'at' is specified, 'from' and 'to' are forbidden.";
-                    return at == chapterNb;
-                }
-                else {
-                    assert from != null && to != null : this + " invalid : if 'at' unspecified, 'from' and 'to' are mandatory.";
-                    return from <= chapterNb && chapterNb <= to;
-                }
-            }
-
-            private String evalChapterArg(String arg, int chapterNb) {
-                if(!arg.startsWith("=")) {
-                    // Argument is not a numeric expression : return it as is.
-                    return arg;
-                }
-
-                Matcher expr = CHAPTER_EXPR.matcher(arg);
-                if(expr.matches()) {
-                    int val = eval(expr.group(1), chapterNb);
-                    if (expr.group(2) != null) {
-                        if ("+".equals(expr.group(3))) {
-                            val += eval(expr.group(4), chapterNb);
-                        } else {
-                            val -= eval(expr.group(4), chapterNb);
-                        }
-                    }
-                    return Integer.toString(val);
-                }
-                throw new IllegalArgumentException("Invalid expression " + arg);
-            }
-
-            public List<Map<String, String>> evaluateChapterArgs(int chapterNb) {
-                return args.stream().map(
-                        pageArgs -> pageArgs.entrySet().stream()
-                                .map(e -> Map.entry(e.getKey(), evalChapterArg(e.getValue(), chapterNb)))
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                ).collect(Collectors.toList());
-            }
-
-            @Override
-            public String toString() {
-                try {
-                    return MAPPER.writeValueAsString(this);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        /**
-         * The OSIS ID of the book.
-         */
-        public BibleBook osis;
-        /**
-         * Overrides of the source variables for this book.
-         */
-        public SourceVars sourceVars;
-        /**
-         * Set of arguments for this book.
-         */
-        public Map<String, String> args;
-        /**
-         * Description of this book's contents as a sequence of chapters.
-         */
-        public List<ChapterSeq> chapters;
-        /**
-         * Configuration for a stream editor.
-         */
-        public List<StreamEditorConfig> edit;
-
-        public ChapterSeq getChapterSeq(int chapterNb) {
-            for(ChapterSeq seq: chapters) {
-                if(seq.containsChapter(chapterNb)) {
-                    return seq;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            try {
-                return MAPPER.writeValueAsString(this);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
 
     /**
      * Configuration to extract a context from an HTML element.
@@ -439,8 +184,7 @@ public class GenericHtml extends Scraper {
         }
     }
 
-    private static class Config {
-        public SourceVars sourceVars;
+    private static class Config extends PatternContainer {
         public List<String> flags;
         public List<Book> books;
         public List<ContextExtractor> parser;
@@ -452,21 +196,22 @@ public class GenericHtml extends Scraper {
                     .orElse(null);
         }
 
-        public Accessor<Map<String, String>> getArgsAccessor(List<String> flagValues) {
+        public void setArgsFromFlags(List<String> flagValues) {
             int nbExpectedFlags = flags == null ? 0 : flags.size();
             int nbGivenFlags = flagValues.size();
             if(nbGivenFlags != nbExpectedFlags) {
-                throw new IllegalArgumentException("Provided " + nbGivenFlags
-                        + " flags, but expecting " + nbExpectedFlags
+                throw new IllegalArgumentException("Provided " + nbGivenFlags + " flags (" + flagValues + "), while expecting "
+                        + nbExpectedFlags + (flags == null ? "" : " (" + flags + ")")
                 );
             }
 
-            final Map<String, String> rootArgs = new HashMap<>();
-            for(int i = 0; i < flagValues.size(); i++) {
-                rootArgs.put(flags.get(i), flagValues.get(i));
+            if(args == null) {
+                args = new HashMap<>();
             }
 
-            return getter -> getter.apply(rootArgs);
+            for(int i = 0; i < flagValues.size(); i++) {
+                args.put(flags.get(i), flagValues.get(i));
+            }
         }
 
         @Override
@@ -519,7 +264,7 @@ public class GenericHtml extends Scraper {
 
     private static Path getCacheSubPath(Path cachePath, String[] flags) {
         Path outPath = cachePath.resolve("GenericHtml");
-        
+
         File configFile = new File(flags[0]);
         if(configFile.exists()) {
             outPath = outPath.resolve(configFile.getName());
@@ -537,11 +282,11 @@ public class GenericHtml extends Scraper {
 
     private final CachedDownloader downloader;
     private final Config config;
-    private final List<String> flags;
 
     public GenericHtml(Path cachePath, String[] flags) throws IOException {
+        List<String> flagValues = Arrays.stream(flags).skip(1).collect(Collectors.toList());
         this.config = getConfig(flags[0]);
-        this.flags = Arrays.stream(flags).skip(1).collect(Collectors.toList());
+        this.config.setArgsFromFlags(flagValues);
         this.downloader = new CachedDownloader(getCacheSubPath(cachePath, flags));
     }
 
@@ -549,15 +294,15 @@ public class GenericHtml extends Scraper {
         return config.books.stream().map(b -> b.osis).collect(Collectors.toList());
     }
 
-    private Document downloadAndParse(final CachedDownloader downloader, String url) {
+    private Document downloadAndParse(final CachedDownloader downloader, URL url) {
         try {
-            return Jsoup.parse(downloader.getFile(new URL(url)).toFile());
+            return Jsoup.parse(downloader.getFile(url).toFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Stream<Element> getDocStream(final CachedDownloader downloader, List<String> urls) {
+    private Stream<Element> getDocStream(final CachedDownloader downloader, List<URL> urls) {
         return StreamUtils.concatStreams(
                 urls.stream()
                         .map(pageUrl -> StreamUtils.deferredStream(
@@ -567,17 +312,10 @@ public class GenericHtml extends Scraper {
         );
     }
 
-    private static final Pattern ARG_REFERENCE = Pattern.compile("\\{([A-Z0-9_]+)}");
-    private String substituteArgs(String str, final Accessor<Map<String, String>> args) {
-        Matcher argRefs = ARG_REFERENCE.matcher(str);
-        return argRefs.replaceAll(r -> args.apply(m -> m.get(r.group(1))));
-    }
-
     @Override
     protected ContextStream.Single getContextStreamFor(final ContextMetadata rootContextMeta) {
         Book book;
-        Book.ChapterSeq seq;
-        Accessor<SourceVars> sourceVars;
+        ChapterSeq seq;
         switch (rootContextMeta.type) {
             case CHAPTER:
                 // Fetch book and chapter sequence to access the relevant source variables and args.
@@ -591,32 +329,31 @@ public class GenericHtml extends Scraper {
                     return null;
                 }
 
-                // If the requested chapter is explicitly listed in the book structure, load the config.
-                sourceVars = config.sourceVars.getAccessor()
-                        .overriddenBy(book.sourceVars)
-                        .overriddenBy(seq.sourceVars);
-                List<Accessor<Map<String, String>>> listArgs = config.getArgsAccessor(flags)
-                        .overriddenBy(book.args)
-                        .overriddenByList(seq.evaluateChapterArgs(rootContextMeta.chapter));
+                // If the requested chapter is explicitly listed in the book structure, load the patterns.
+                PatternContainer seqPatterns = seq.defaultedBy(book.defaultedBy(config));
+                if(seqPatterns.pagePattern == null) {
+                    seqPatterns.pagePattern = "chapterUrl";
+                }
+                if(seqPatterns.valuePattern == null) {
+                    seqPatterns.valuePattern = "chapterPublishedNumber";
+                }
 
-                if(sourceVars.apply(s -> s.chapterUrl) != null) {
-                    // If we have a chapter URL pattern, then we proceed.
+                List<URL> chapterUrls = seq.getPageUrls(seqPatterns, rootContextMeta.chapter);
+
+                if(!chapterUrls.isEmpty()) {
+                    // We have pages for this chapter, proceed.
 
                     // Compute chapter value
-                    String chapterValue = listArgs.stream()
-                            .map(pageArgs -> substituteArgs(sourceVars.apply(v -> v.chapterPublishedNumber), pageArgs))
-                            .distinct()
-                            .collect(Collectors.joining("-"));
-
-                    // Compute chapter page URLs
-                    List<String> chapterUrls = listArgs.stream()
-                            .map(pageArgs -> substituteArgs(sourceVars.apply(v -> v.chapterUrl), pageArgs))
-                            .collect(Collectors.toList());
+                    String chapterValue = String.join("-",
+                            seq.getPageValues(seqPatterns, seqPatterns.valuePattern, rootContextMeta.chapter)
+                    );
 
                     // Prepare parser
                     Context chapterCtx = new Context(rootContextMeta, chapterValue);
-                    ContextStream.Single chapterStream = new ConfiguredHtmlParser(config.parser, getDocStream(downloader, chapterUrls),
-                            chapterCtx).asContextStream();
+                    ContextStream.Single chapterStream = new ConfiguredHtmlParser(config.parser,
+                            getDocStream(downloader, chapterUrls),
+                            chapterCtx
+                    ).asContextStream();
 
                     // Configure editor if provided.
                     if(seq.edit != null) {
@@ -638,16 +375,19 @@ public class GenericHtml extends Scraper {
                 if(book == null) {
                     return null;
                 }
-                sourceVars = config.sourceVars.getAccessor()
-                        .overriddenBy(book.sourceVars);
-                Accessor<Map<String, String>> args = config.getArgsAccessor(flags).overriddenBy(book.args);
+
+                // If the book is present, load the patterns.
+                PatternContainer bookPatterns = book.defaultedBy(config);
+                if(bookPatterns.pagePattern == null) {
+                    bookPatterns.pagePattern = "bookUrl";
+                }
 
                 // Build the list of context streams for all chapters, to append to the book page stream.
                 List<ContextStream.Single> chapterStreams;
                 if(book.chapters != null && book.chapters.size() > 0) {
                     // If we have a chapter structure defined, build context streams for each.
                     chapterStreams = book.chapters.stream()
-                            .flatMap(Book.ChapterSeq::listChapters)
+                            .flatMap(ChapterSeq::listChapters)
                             .map(chapterNb -> getContextStreamFor(ContextMetadata.forChapter(book.osis, chapterNb)))
                             .collect(Collectors.toList());
                 }
@@ -659,11 +399,12 @@ public class GenericHtml extends Scraper {
                 // Build the book stream.
                 Context bookCtx = new Context(rootContextMeta);
                 ContextStream.Single bookStream = null;
-                if(sourceVars.apply(s -> s.bookUrl) != null) {
-                    // If we have a book URL pattern, we parse it, and then append the chapters.
-                    String bookUrl = substituteArgs(sourceVars.apply(s -> s.bookUrl), args);
+
+                List<URL> bookUrls = book.getUrls(bookPatterns);
+                if(!bookUrls.isEmpty()) {
+                    // We have pages for this book, prepare a parser.
                     bookStream = new ConfiguredHtmlParser(config.parser,
-                            getDocStream(downloader, List.of(bookUrl)), bookCtx
+                            getDocStream(downloader, bookUrls), bookCtx
                     ).asContextStream().edit().inject(
                             ContextStreamEditor.InjectionPosition.AT_END, rootContextMeta, chapterStreams
                     ).process();
@@ -690,4 +431,5 @@ public class GenericHtml extends Scraper {
 
         return null;
     }
+
 }
