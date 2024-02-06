@@ -1,3 +1,12 @@
+# This "Generic HTML" scraper for TheoPlace is provided as an example, both of the power of generic scrapers and their
+# limitations.
+# In particular, the limitations of this generic scraper are the following :
+# - Notes are always pushed to the end of a verse, because a generic parser iterates through HTML elements, not nodes
+#   inside these elements. Therefore it cannot track how elements are positioned in the middle of text.
+# - Chapters and books that are missing in some bibles will actually be included as empty, because generic parsers do
+#   not provide a mechanism to ignore pages after parsing them.
+# For these reasons, when extracting bibles for actual use, the native TheoPlace scraper should be used instead !
+
 sourceVars:
   bookUrl: "https://theo.place/intro-livre-{BIBLE}-{BOOK_NB}-{BOOK_NAME}"
   chapterUrl: "https://theo.place/bible-{BIBLE}-{BOOK_NB}-{CHAPTER}"
@@ -119,7 +128,7 @@ books:
     chapters: [ { from: 1, to: 14, args: [ { CHAPTER: = $i } ] } ]
 
   - osis: Joel
-    args: { BOOK_NB: 29, BOOK_NAME: joël }
+    args: { BOOK_NB: 29, BOOK_NAME: jo%C3%ABl }
     chapters: [ { from: 1, to: 4, args: [ { CHAPTER: = $i } ] } ]
 
   - osis: Amos
@@ -341,3 +350,9 @@ parser:
     selector: "#logos > span[data-verset]"
     valueExtractor:
       op: text
+  - type: NOTE
+    selector: "#logos button.footnote"
+    descendantExtractors:
+      - type: TEXT
+        valueExtractor:
+          op: attribute=data-bs-content

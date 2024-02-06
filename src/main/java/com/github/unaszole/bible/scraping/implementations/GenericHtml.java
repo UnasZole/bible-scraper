@@ -54,14 +54,6 @@ public class GenericHtml extends Scraper {
             })
     );
 
-    private static String substituteArgs(String str, Map<String, String> args, Function<String, String> eval) {
-        String out = str;
-        for(Map.Entry<String, String> arg: args.entrySet()) {
-            out = out.replace("{" + arg.getKey() + "}", eval.apply(arg.getValue()));
-        }
-        return out;
-    }
-
     public interface Accessor<T> extends Function<Function<T, String>, String> {
         default Accessor<T> overriddenBy(final T overrides) {
             return overrides == null ? this : (
@@ -343,6 +335,10 @@ public class GenericHtml extends Scraper {
                         return target.text();
                     case "ownText":
                         return target.ownText();
+                }
+
+                if(op.startsWith("attribute=")) {
+                    return target.attr(op.substring("attribute=".length()));
                 }
 
                 return null;

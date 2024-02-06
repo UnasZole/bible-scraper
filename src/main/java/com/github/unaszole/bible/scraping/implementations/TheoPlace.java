@@ -86,7 +86,7 @@ public class TheoPlace extends Scraper {
         BOOKS.put(BibleBook.EZEK, new BookRef(26, "ezechiel", 48));
         BOOKS.put(BibleBook.DAN, new BookRef(27, "daniel", 12));
         BOOKS.put(BibleBook.HOS, new BookRef(28, "osee", 14));
-        BOOKS.put(BibleBook.JOEL, new BookRef(29, "joël", 3));
+        BOOKS.put(BibleBook.JOEL, new BookRef(29, "jo%C3%ABl", 3));
         BOOKS.put(BibleBook.AMOS, new BookRef(30, "amos", 9));
         BOOKS.put(BibleBook.OBAD, new BookRef(31, "abdias", 1));
         BOOKS.put(BibleBook.JONAH, new BookRef(32, "jonas", 4));
