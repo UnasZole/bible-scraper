@@ -1,7 +1,8 @@
+description: "Bibles multiples de recatho.com"
 patterns:
   bookUrl: "https://www.recatho.com/sainte-bible/{BIBLE}/{BOOK}"
 
-flags: [ BIBLE ]
+inputs: [ BIBLE ]
 
 books:
   - osis: Gen

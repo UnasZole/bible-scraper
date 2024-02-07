@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command(name = "scrape")
+@CommandLine.Command(name = "scrape", description = "Retrieve a Bible from a remote source and output it in a standard format.")
 public class ScrapeCommand implements Callable<Integer> {
 
     @CommandLine.Option(names = {"-h", "--help"}, usageHelp = true, description = "Show this help message and exit.")

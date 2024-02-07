@@ -4,20 +4,34 @@ import com.github.unaszole.bible.scraping.Scraper;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 public class ScraperArgument {
 
     @CommandLine.Option(names = {"--scraper", "-s"}, required = true, description = "Class name (or FQN) of the scraper to use.")
     private String className;
 
-    @CommandLine.Option(names = {"--scraperFlags", "-f"}, description = "Options to pass to the scraper.")
-    private String[] flags = {};
+    @CommandLine.Option(names = {"--input", "-i"}, description = "Inputs to pass to the scraper.")
+    private String[] inputs = {};
 
-    public Scraper get(Path cachePath) throws Exception {
-        Class<? extends Scraper> scraperClass = (Class<? extends Scraper>) Class.forName(className.contains(".")
+    private Class<? extends Scraper> getScraperClass() throws ClassNotFoundException {
+        return (Class<? extends Scraper>) Class.forName(className.contains(".")
                 ? className
                 : "com.github.unaszole.bible.scraping.implementations." + className);
+    }
 
-        return scraperClass.getConstructor(Path.class, String[].class).newInstance(cachePath, flags);
+    public Scraper.Help getHelp() throws Exception {
+        try {
+            return (Scraper.Help) getScraperClass()
+                    .getMethod("getHelp", String[].class).invoke(null, (Object) inputs);
+        }
+        catch (NoSuchMethodException e) {
+            return null;
+        }
+    }
+
+    public Scraper get(Path cachePath) throws Exception {
+        return getScraperClass().getConstructor(Path.class, String[].class).newInstance(cachePath, inputs);
     }
 }

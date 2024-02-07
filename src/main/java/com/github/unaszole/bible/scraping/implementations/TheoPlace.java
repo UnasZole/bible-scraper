@@ -27,6 +27,12 @@ import java.util.stream.Stream;
 
 public class TheoPlace extends Scraper {
 
+    public static Help getHelp(String[] inputs) {
+        return new Help("Multiples bibles de theo.place", List.of(
+                Map.entry("bible (required)", "La bible à lire de theo.place")
+        ), inputs.length == 1);
+    }
+
     private static final String CHAPTER_URL = "https://theo.place/bible-{BIBLE}-{BOOK_NB}-{CHAPTER_NB}";
     private static final String BOOK_INTRO_URL = "https://theo.place/intro-livre-{BIBLE}-{BOOK_NB}-{BOOK_NAME}";
 
@@ -244,8 +250,8 @@ public class TheoPlace extends Scraper {
     private final CachedDownloader downloader;
     private final String bible;
 
-    public TheoPlace(Path cachePath, String[] flags) throws IOException {
-        this.bible = flags[0];
+    public TheoPlace(Path cachePath, String[] inputs) throws IOException {
+        this.bible = inputs[0];
         this.downloader = new CachedDownloader(cachePath.resolve("TheoPlace").resolve(bible));
     }
 

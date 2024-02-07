@@ -1,3 +1,4 @@
+description: "Nouvelle traduction liturgique francophone (aelf.org)"
 patterns:
   chapterUrl: "https://www.aelf.org/bible/{BOOK}/{CHAPTER}"
   chapterPublishedNumber: "{CHAPTER}"

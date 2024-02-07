@@ -24,6 +24,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Aelf extends Scraper {
+
+    public static Help getHelp(String[] inputs) {
+        return new Help("Nouvelle traduction liturgique francophone (aelf.org)",
+                Collections.emptyList(), inputs.length == 0);
+    }
+
     private static final String CHAPTER_URL="https://www.aelf.org/bible/{BOOK}/{CHAPTER}";
 
     private static class ChapterRange {
@@ -263,7 +269,7 @@ public class Aelf extends Scraper {
 
     private final CachedDownloader downloader;
 
-    public Aelf(Path cachePath, String[] flags) throws IOException {
+    public Aelf(Path cachePath, String[] inputs) throws IOException {
         this.downloader = new CachedDownloader(cachePath.resolve("Aelf"));
     }
 

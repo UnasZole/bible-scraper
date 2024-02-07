@@ -7,13 +7,25 @@ import org.crosswire.jsword.versification.BibleBook;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class ChouraquiAggregated extends Scraper {
+
+    public static Help getHelp(String[] inputs) {
+        Help slHelp = ChouraquiSpiritualLand.getHelp(inputs);
+
+        return new Help("Bible d'André Chouraqui complète, agrégée de plusieurs sources",
+                slHelp.inputDescriptions, slHelp.inputsValid
+        );
+    }
+
     private final ChouraquiSpiritualLand spiritualLand;
     private final TheoPlace theoPlace;
-    public ChouraquiAggregated(Path cachePath, String[] flags) throws IOException {
-        this.spiritualLand = new ChouraquiSpiritualLand(cachePath, flags);
+    public ChouraquiAggregated(Path cachePath, String[] inputs) throws IOException {
+        this.spiritualLand = new ChouraquiSpiritualLand(cachePath, inputs);
         this.theoPlace = new TheoPlace(cachePath, new String[]{"chu"});
     }
 

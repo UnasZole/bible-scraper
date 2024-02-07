@@ -8,8 +8,21 @@ import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public abstract class Scraper {
+
+	public static class Help {
+		public final String description;
+		public final List<Map.Entry<String, String>> inputDescriptions;
+		public final boolean inputsValid;
+
+        public Help(String description, List<Map.Entry<String, String>> inputDescriptions, boolean inputsValid) {
+            this.description = description;
+            this.inputDescriptions = inputDescriptions;
+			this.inputsValid = inputsValid;
+        }
+    }
 
 	/**
 	 *

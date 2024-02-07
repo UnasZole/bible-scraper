@@ -26,6 +26,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ChouraquiSpiritualLand extends Scraper {
+
+	public static Help getHelp(String[] inputs) {
+		return new Help("Bible d'André Chouraqui (spiritualland.org)", List.of(
+				Map.entry("variant (optional)", "Variante de versification. " +
+						"Indiquer 'Catholic' pour insérer les passages deutérocanoniques d'Esther et Daniel dans leurs chapitres d'origine.")
+		), inputs.length == 0 || (inputs.length == 1 && Objects.equals(inputs[0], "Catholic")));
+	}
 	
 	private static final String URL_PREFIX = "https://www.spiritualland.org/Les%20Bibles%20Version%20Html/Bible%20-%20Version%20Chouraqui/";
 	
@@ -322,9 +329,9 @@ public class ChouraquiSpiritualLand extends Scraper {
 	private final CachedDownloader downloader;
 	private final Variant variant;
 	
-	public ChouraquiSpiritualLand(Path cachePath, String[] flags) throws IOException {
+	public ChouraquiSpiritualLand(Path cachePath, String[] inputs) throws IOException {
 		this.downloader = new CachedDownloader(cachePath.resolve("ChouraquiSpiritualLand"));
-		if(flags.length >= 1 && Objects.equals(flags[0], "Catholic")) {
+		if(inputs.length >= 1 && Objects.equals(inputs[0], "Catholic")) {
 			this.variant = new CatholicVariant();
 		}
 		else {

@@ -9,6 +9,7 @@
 #   not provide a mechanism to ignore pages after parsing them.
 # For these reasons, when extracting bibles for actual use, the native TheoPlace scraper should be used instead !
 
+description: "Bibles multiples de theo.place"
 patterns:
   # By using the default name "bookUrl" and leaving the pagePattern unset, this pattern will be implicitly used at book level.
   bookUrl: "https://theo.place/intro-livre-{BIBLE}-{BOOK_NB}-{BOOK_NAME}"
@@ -21,7 +22,7 @@ args:
   # By default, the CHAPTER argument should be evaluated only within chapter sequence, and default to $i, the OSIS chapter number.
   CHAPTER: = $i
 
-flags: [ BIBLE ]
+inputs: [ BIBLE ]
 
 books:
   - osis: Gen

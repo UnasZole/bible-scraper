@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.github.unaszole.bible.cli.commands.HelpCommand;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
@@ -35,6 +36,43 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GenericHtml extends Scraper {
+
+    public static Help getHelp(String[] inputs) throws Exception {
+        Config config = null;
+        if(inputs.length >= 1) {
+            try {
+                config = getConfig(inputs[0]);
+            } catch (IOException ignored) {
+            }
+        }
+
+        String title = "Generic HTML scraper";
+        if(config == null) {
+            return new Help(title, List.of(
+                    Map.entry("config (required)",
+                            "Path to a YAML file configuring the generic scraper, or one of " +
+                                    HelpCommand.listResources("scrapers/GenericHtml")
+                                            .map(Path::getFileName)
+                                            .map(Path::toString)
+                                            .map(s -> s.substring(0, s.lastIndexOf(".")))
+                                            .collect(Collectors.toList())
+                    )
+            ), false);
+        }
+
+        boolean validInputs = inputs.length == 1;
+        List<Map.Entry<String, String>> options = new ArrayList<>();
+        options.add(Map.entry("config (required)", inputs[0]));
+        if(config.inputs != null) {
+            for (String inputName : config.inputs) {
+                options.add(Map.entry(inputName + " (required)", ""));
+            }
+            validInputs = inputs.length == config.inputs.size() + 1;
+        }
+        return new Help(title + " : " + (config.description != null ? config.description : inputs[0]),
+                options, validInputs);
+
+    }
 
     private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory()).registerModule(new SimpleModule()
             .addDeserializer(Evaluator.class, new StdDeserializer<>(Evaluator.class) {
@@ -185,7 +223,8 @@ public class GenericHtml extends Scraper {
     }
 
     private static class Config extends PatternContainer {
-        public List<String> flags;
+        public String description;
+        public List<String> inputs;
         public List<Book> books;
         public List<ContextExtractor> parser;
 
@@ -196,12 +235,12 @@ public class GenericHtml extends Scraper {
                     .orElse(null);
         }
 
-        public void setArgsFromFlags(List<String> flagValues) {
-            int nbExpectedFlags = flags == null ? 0 : flags.size();
-            int nbGivenFlags = flagValues.size();
+        public void setArgsFromFlags(List<String> inputValues) {
+            int nbExpectedFlags = inputs == null ? 0 : inputs.size();
+            int nbGivenFlags = inputValues.size();
             if(nbGivenFlags != nbExpectedFlags) {
-                throw new IllegalArgumentException("Provided " + nbGivenFlags + " flags (" + flagValues + "), while expecting "
-                        + nbExpectedFlags + (flags == null ? "" : " (" + flags + ")")
+                throw new IllegalArgumentException("Provided " + nbGivenFlags + " flags (" + inputValues + "), while expecting "
+                        + nbExpectedFlags + (inputs == null ? "" : " (" + inputs + ")")
                 );
             }
 
@@ -209,8 +248,8 @@ public class GenericHtml extends Scraper {
                 args = new HashMap<>();
             }
 
-            for(int i = 0; i < flagValues.size(); i++) {
-                args.put(flags.get(i), flagValues.get(i));
+            for(int i = 0; i < inputValues.size(); i++) {
+                args.put(inputs.get(i), inputValues.get(i));
             }
         }
 
@@ -283,11 +322,11 @@ public class GenericHtml extends Scraper {
     private final CachedDownloader downloader;
     private final Config config;
 
-    public GenericHtml(Path cachePath, String[] flags) throws IOException {
-        List<String> flagValues = Arrays.stream(flags).skip(1).collect(Collectors.toList());
-        this.config = getConfig(flags[0]);
+    public GenericHtml(Path cachePath, String[] inputs) throws IOException {
+        List<String> flagValues = Arrays.stream(inputs).skip(1).collect(Collectors.toList());
+        this.config = getConfig(inputs[0]);
         this.config.setArgsFromFlags(flagValues);
-        this.downloader = new CachedDownloader(getCacheSubPath(cachePath, flags));
+        this.downloader = new CachedDownloader(getCacheSubPath(cachePath, inputs));
     }
 
     private List<BibleBook> getBooks() {
