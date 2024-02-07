@@ -224,6 +224,12 @@ books:
     args: { BOOK: livre-de-l-apocalypse }
 
 parser:
+  - type: BOOK_TITLE
+    selector: "#livre > h1"
+    descendantExtractors:
+      - type: TEXT
+        valueExtractor:
+          op: text
   - type: CHAPTER
     selector: "div.ch"
     valueExtractor:
@@ -241,7 +247,7 @@ parser:
   - type: PARAGRAPH_BREAK
     selector: "div.vs > div.sep"
   - type: NOTE
-    selector: "div.vs > div.c.m"
+    selector: "div.vs > div.c"
     descendantExtractors:
       - type: TEXT
         valueExtractor:
