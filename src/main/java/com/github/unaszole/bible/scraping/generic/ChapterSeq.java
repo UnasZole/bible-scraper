@@ -2,7 +2,6 @@ package com.github.unaszole.bible.scraping.generic;
 
 import java.net.URL;
 import java.util.List;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;

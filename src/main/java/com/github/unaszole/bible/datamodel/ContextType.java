@@ -50,8 +50,8 @@ public enum ContextType {
 	// Other structure element delimiters (ie section titles, paragraphs.) will be contained inside each verse context.
 	CHAPTER_TITLE(false, atLeastOne(TEXT)),
 	/**
-	 * A verse.
-	 * Has a context value : the string representation of the context number in the source document.
+	 * A chapter.
+	 * Has a context value : the string representation of the chapter number in the source document.
 	 */
 	CHAPTER(false, atMostOne(CHAPTER_TITLE), atMostOne(STRUCTURED_TEXT), atLeastOne(VERSE)),
 	
