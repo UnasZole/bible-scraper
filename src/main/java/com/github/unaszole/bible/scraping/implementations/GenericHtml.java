@@ -25,6 +25,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,10 +34,14 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GenericHtml extends Scraper {
+
+    private static final Logger LOG = LoggerFactory.getLogger(GenericHtml.class);
 
     public static Help getHelp(String[] inputs) throws Exception {
         Config config = null;
@@ -108,24 +114,44 @@ public class GenericHtml extends Scraper {
              * An operator to extract a string from the selected element. The following are supported :
              * <li>text : extract the full text of this element and all its descendants.</li>
              * <li>ownText : extract the text of this element, excluding its descendants.</li>
+             * <li>attribute=&lt;attribute name&gt; : extract an attribute of this element by providing its name.</li>
              */
             public String op;
+            /**
+             * A regexp to capture a part of the text content extracted by the operator.
+             * This regexp will be implicitly anchored, and must contain one single capturing group.
+             */
+            public String regexp;
 
             public String extract(Element e) {
                 Element target = selector != null ? e.select(selector).first() : e;
 
-                switch(op) {
+                String[] opSplit = op.split("=");
+                String opResult = null;
+                switch(opSplit[0]) {
                     case "text":
-                        return target.text();
+                        opResult = target.text();
+                        break;
                     case "ownText":
-                        return target.ownText();
+                        opResult = target.ownText();
+                        break;
+                    case "attribute":
+                        opResult = target.attr(opSplit[1]);
+                        break;
                 }
 
-                if(op.startsWith("attribute=")) {
-                    return target.attr(op.substring("attribute=".length()));
+                if(regexp != null && opResult != null) {
+                    Matcher matcher = Pattern.compile(regexp).matcher(opResult);
+                    if(matcher.matches()) {
+                        opResult = matcher.group(1);
+                    }
+                    else {
+                        LOG.warn("Failed to match " + opResult + " against " + regexp);
+                        opResult = null;
+                    }
                 }
 
-                return null;
+                return opResult;
             }
 
             @Override
