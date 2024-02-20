@@ -30,6 +30,9 @@ public class Book extends PagesContainer {
     public List<StreamEditorConfig> edit;
 
     public ChapterSeq getChapterSeq(int chapterNb) {
+        if(chapters == null) {
+            return null;
+        }
         for (ChapterSeq seq : chapters) {
             if (seq.containsChapter(chapterNb)) {
                 return seq;
