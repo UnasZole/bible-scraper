@@ -1,6 +1,8 @@
 package com.github.unaszole.bible.scraping.generic;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Objects;
@@ -66,8 +68,16 @@ public class PagesContainer extends PatternContainer {
         return values.stream()
                 .map(s -> {
                     try {
-                        return new URL(s);
-                    } catch (MalformedURLException e) {
+                        // Try to fix the URL almost as a browser would do, so that users can input URLs like visible
+                        // in their browser, even if not properly encoded.
+                        // Taken from https://stackoverflow.com/a/30640843
+                        URL rawUrl = new URL(s);
+                        return new URL(
+                                new URI(rawUrl.getProtocol(), rawUrl.getUserInfo(), rawUrl.getHost(), rawUrl.getPort(),
+                                        rawUrl.getPath(), rawUrl.getQuery(), rawUrl.getRef()
+                                ).toString().replace("%25", "%")
+                        );
+                    } catch (URISyntaxException | MalformedURLException e) {
                         throw new RuntimeException(e);
                     }
                 })
