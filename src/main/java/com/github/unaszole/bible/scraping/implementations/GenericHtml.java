@@ -181,6 +181,12 @@ public class GenericHtml extends Scraper {
          */
         public Evaluator selector;
         /**
+         * If provided, and if the "selector" points to an element with an "href" attribute (typically an "a"), then
+         * this link target selector is evaluated from the target of the link to select another element.
+         * Typically used to fetch note contents elsewhere in a page from a note reference link.
+         */
+        public Evaluator linkTargetSelector;
+        /**
          * Configuration to extract a value for this context. This extractor is relative to the element selected by the
          * {@link #selector}.
          * This MUST be set for CHAPTER, VERSE and TEXT contexts !
@@ -198,7 +204,17 @@ public class GenericHtml extends Scraper {
         }
 
         private Context extractInternal(Element targetElt, ContextMetadata parent, ContextMetadata previousOfType) {
-            String value = valueExtractor != null ? valueExtractor.extract(targetElt) : null;
+            Element actualTargetElt = targetElt;
+
+            if(linkTargetSelector != null && actualTargetElt.hasAttr("href")) {
+                String[] link = actualTargetElt.attr("href").split("#");
+                if(!link[0].isEmpty()) {
+                    throw new IllegalArgumentException("Cannot follow link " + link + " as it's not local to the page");
+                }
+                actualTargetElt = targetElt.ownerDocument().getElementById(link[1]).selectFirst(linkTargetSelector);
+            }
+
+            String value = valueExtractor != null ? valueExtractor.extract(actualTargetElt) : null;
 
             ContextMetadata meta;
             switch (type) {
@@ -219,7 +235,7 @@ public class GenericHtml extends Scraper {
 
                 for (int i = 0; i < descendantExtractors.size(); i++) {
                     ContextExtractor descendant = descendantExtractors.get(i);
-                    descendants[i] = descendant.extractDescendantContext(targetElt, meta, null);
+                    descendants[i] = descendant.extractDescendantContext(actualTargetElt, meta, null);
                 }
             }
 
