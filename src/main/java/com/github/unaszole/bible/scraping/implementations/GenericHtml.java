@@ -219,7 +219,7 @@ public class GenericHtml extends Scraper {
             ContextMetadata meta;
             switch (type) {
                 case CHAPTER:
-                    meta = ContextMetadata.forChapter(parent.book, Integer.parseInt(value));
+                    meta = ParsingUtils.getChapterMetadata(parent, previousOfType, value);
                     break;
                 case VERSE:
                     value = stripLeadingZeroes(value);

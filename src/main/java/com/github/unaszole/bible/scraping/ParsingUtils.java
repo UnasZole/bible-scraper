@@ -17,7 +17,32 @@ import java.util.regex.Pattern;
 
 public class ParsingUtils {
 
+    private static final Pattern CHAPTER_NB = Pattern.compile("^(\\d+)$");
     private static final Pattern VERSE_NB = Pattern.compile("^(\\d+)?([A-Za-z])?$");
+
+    public static ContextMetadata getChapterMetadata(ContextMetadata parent, ContextMetadata previousChapter, String parsedNb) {
+        int previousChapterNb = previousChapter != null ? previousChapter.chapter : 0;
+
+        int chapterNb;
+        Matcher nbMatcher = CHAPTER_NB.matcher(parsedNb);
+        if(nbMatcher.matches()) {
+            int nb = Integer.parseInt(nbMatcher.group(1));
+            if(nb > previousChapterNb) {
+                // If the number we parsed is above the previous chapter number, trust it.
+                chapterNb = nb;
+            }
+            else {
+                // Else, we just increment the previous chapter number.
+                chapterNb = previousChapterNb + 1;
+            }
+        }
+        else {
+            // Unparseable number : just increment the previous one.
+            chapterNb = previousChapterNb + 1;
+        }
+
+        return ContextMetadata.forChapter(parent.book, chapterNb);
+    }
 
     public static ContextMetadata getVerseMetadata(ContextMetadata parent, ContextMetadata previousVerse, String parsedNb) {
         int previousVerseNb = previousVerse != null ? Arrays.stream(previousVerse.verses).max().orElse(0) : 0;
@@ -49,7 +74,7 @@ public class ParsingUtils {
             }
         }
 
-        return new ContextMetadata(ContextType.VERSE, parent.book, parent.chapter, actualVerseNbs);
+        return ContextMetadata.forMergedVerses(parent.book, parent.chapter, actualVerseNbs);
     }
 
     public static <T> int indexOf(List<T> list, Predicate<? super T> predicate) {
