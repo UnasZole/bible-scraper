@@ -1,9 +1,14 @@
 package com.github.unaszole.bible.datamodel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Queue;
 import java.util.Set;
 
 public class ContextSequence {
+
+	private static final Logger LOG = LoggerFactory.getLogger(ContextSequence.class);
 	
 	public static ContextSequence atLeastOne(ContextType... types) {
 		return new ContextSequence(types, 1, Integer.MAX_VALUE);
@@ -48,7 +53,19 @@ public class ContextSequence {
 			contexts.poll();
 			consumed++;
 		}
-		
+
+		if(!contexts.isEmpty()) {
+			// We have unmatched contexts, we must close the sequence.
+			if(consumed < minOccurrences)
+			{
+				// But if the sequence is incomplete, it's a structure error !
+				LOG.error("Sequence {} is closed while incomplete after meeting forbidden element {}",
+						this, contexts.peek()
+				);
+			}
+			return Status.CLOSED;
+		}
+
 		if(consumed < minOccurrences) {
 			return Status.INCOMPLETE;
 		}
