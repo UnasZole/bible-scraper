@@ -9,8 +9,10 @@ import java.util.function.Consumer;
 public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
     protected final PrintWriter out;
-    public UsfmStructuredTextWriter(PrintWriter out) {
+    private final String paragraphMarker;
+    public UsfmStructuredTextWriter(PrintWriter out, String paragraphMarker) {
         this.out = out;
+        this.paragraphMarker = paragraphMarker;
     }
 
     private boolean inParagraph = false;
@@ -20,7 +22,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
     protected void ensureInParagraph() {
         if(!inParagraph) {
             out.println();
-            out.print("\\p ");
+            out.print(paragraphMarker + " ");
             inParagraph = true;
         }
     }

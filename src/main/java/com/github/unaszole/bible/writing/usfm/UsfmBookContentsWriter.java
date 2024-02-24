@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements StructuredTextWriter.BookContentsWriter {
     public UsfmBookContentsWriter(PrintWriter out) {
-        super(out);
+        super(out, "\\p");
     }
 
     @Override

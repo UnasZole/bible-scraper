@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 public class UsfmBookIntroWriter extends UsfmStructuredTextWriter implements StructuredTextWriter.BookIntroWriter {
     public UsfmBookIntroWriter(PrintWriter out) {
-        super(out);
+        super(out, "\\ip");
     }
 
     @Override
