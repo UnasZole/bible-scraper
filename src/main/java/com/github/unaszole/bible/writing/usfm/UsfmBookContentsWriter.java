@@ -1,9 +1,11 @@
 package com.github.unaszole.bible.writing.usfm;
 
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements StructuredTextWriter.BookContentsWriter {
@@ -12,24 +14,30 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
     }
 
     @Override
-    public void majorSection(String title) {
+    public void majorSection(Consumer<TextWriter> writes) {
         closeParagraph();
         out.println();
-        out.println("\\ms1 " + title);
+        out.print("\\ms1 ");
+        writeText(writes);
+        out.println();
     }
 
     @Override
-    public void section(String title) {
+    public void section(Consumer<TextWriter> writes) {
         closeParagraph();
         out.println();
-        out.println("\\s1 " + title);
+        out.print("\\s1 ");
+        writeText(writes);
+        out.println();
     }
 
     @Override
-    public void minorSection(String title) {
+    public void minorSection(Consumer<TextWriter> writes) {
         closeParagraph();
         out.println();
-        out.println("\\s2 " + title);
+        out.print("\\s2 ");
+        writeText(writes);
+        out.println();
     }
 
     @Override
@@ -41,10 +49,12 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
     }
 
     @Override
-    public void chapterTitle(String title) {
+    public void chapterTitle(Consumer<TextWriter> writes) {
         closeParagraph();
         out.println();
-        out.println("\\cd " + title);
+        out.print("\\cd ");
+        writeText(writes);
+        out.println();
     }
 
     @Override

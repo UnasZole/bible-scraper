@@ -1,11 +1,14 @@
 package com.github.unaszole.bible.writing.osis;
 
+import com.github.unaszole.bible.writing.BufferedTextWrites;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.TextWriter;
 import org.crosswire.jsword.versification.BibleBook;
 
 import javax.xml.stream.XMLStreamWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class OsisBookContentsWriter extends OsisStructuredTextWriter
@@ -15,7 +18,7 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     private int currentChapter = -1;
     private String[] currentChapterSourceNb = null;
     private boolean inActiveChapter = false;
-    private String pendingChapterTitle = null;
+    private Consumer<TextWriter> pendingChapterTitle = null;
     private int[] currentVerse = null;
 
     public OsisBookContentsWriter(XMLStreamWriter xmlWriter, BibleBook book) {
@@ -42,11 +45,11 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
         return getCurrentVerseOsisIds().get(0);
     }
 
-    private void writeChapterTitle(String title) {
+    private void writeChapterTitle(Consumer<TextWriter> writes) {
         // <title type="chapter">
         writeStartElement("title");
         writeAttribute("type", "chapter");
-        writeCharacters(title);
+        writeText(writes);
         writeEndElement();
         // </title>
     }
@@ -134,12 +137,12 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     }
 
     @Override
-    public void chapterTitle(String title) {
+    public void chapterTitle(Consumer<TextWriter> writes) {
         if(inActiveChapter) {
-            writeChapterTitle(title);
+            writeChapterTitle(writes);
         }
         else {
-            this.pendingChapterTitle = title;
+            this.pendingChapterTitle = new BufferedTextWrites(writes);
         }
     }
 

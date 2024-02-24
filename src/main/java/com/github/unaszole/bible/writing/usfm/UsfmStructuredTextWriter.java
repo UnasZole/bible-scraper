@@ -1,8 +1,10 @@
 package com.github.unaszole.bible.writing.usfm;
 
+import com.github.unaszole.bible.writing.interfaces.TextWriter;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 
 import java.io.PrintWriter;
+import java.util.function.Consumer;
 
 public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
@@ -23,20 +25,24 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
         }
     }
 
+    protected void writeText(Consumer<TextWriter> writes) {
+        try(TextWriter writer = new UsfmTextWriter(out)) {
+            writes.accept(writer);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void paragraph() {
         closeParagraph();
     }
 
     @Override
-    public void text(String str) {
+    public void flatText(Consumer<TextWriter> writes) {
         ensureInParagraph();
-        out.print(str);
-    }
 
-    @Override
-    public void note(String str) {
-        out.print("\\f + \\ft " + str + " \\f*");
+        writeText(writes);
     }
 
     @Override

@@ -173,6 +173,10 @@ public class GenericHtml extends Scraper {
          */
         public ContextType withAncestor;
         /**
+         * An excluded ancestor type for this extractor to trigger. Only relevant for a root extractor.
+         */
+        public ContextType withoutAncestor;
+        /**
          * A selector that selects only HTML elements that this extractor can build a context from.
          * For an extractor at the root of the parser, MUST always be provided : checks if the incoming element can open
          * this context.
@@ -319,8 +323,10 @@ public class GenericHtml extends Scraper {
         protected Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
                                       ContextMetadata previousOfType, Element e) {
             ContextExtractor extractor = parserConfig.stream()
-                    .filter(ex -> ex.type == type && (ex.withAncestor == null
-                            || ancestorStack.stream().anyMatch(a -> a.type == ex.withAncestor)))
+                    .filter(ex -> ex.type == type &&
+                            (ex.withAncestor == null || ancestorStack.stream().anyMatch(a -> a.type == ex.withAncestor)) &&
+                            (ex.withoutAncestor == null || ancestorStack.stream().noneMatch(a -> a.type == ex.withoutAncestor))
+                    )
                     .findFirst()
                     .orElse(null);
             if(extractor != null) {

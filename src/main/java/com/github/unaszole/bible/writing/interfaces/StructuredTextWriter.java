@@ -1,5 +1,7 @@
 package com.github.unaszole.bible.writing.interfaces;
 
+import java.util.function.Consumer;
+
 /**
  * Writer for generic structured text.
  */
@@ -7,21 +9,21 @@ public interface StructuredTextWriter extends AutoCloseable {
 
     /**
      * Mark the start of a new major section.
-     * @param title The title.
+     * @param writes Logic to write the title.
      */
-    void majorSection(String title);
+    void majorSection(Consumer<TextWriter> writes);
 
     /**
      * Mark the start of a new section.
-     * @param title The title.
+     * @param writes Logic to write the title.
      */
-    void section(String title);
+    void section(Consumer<TextWriter> writes);
 
     /**
      * Mark the start of a new minor section.
-     * @param title The title.
+     * @param writes Logic to write the title.
      */
-    void minorSection(String title);
+    void minorSection(Consumer<TextWriter> writes);
 
     /**
      * Mark the start of a new paragraph.
@@ -29,23 +31,17 @@ public interface StructuredTextWriter extends AutoCloseable {
     void paragraph();
 
     /**
-     * Write text contents.
-     * @param str The text.
+     * Write some text.
+     * @param writes Logic to write the text.
      */
-    void text(String str);
-
-    /**
-     * Write a note.
-     * @param str The text of the note.
-     */
-    void note(String str);
+    void flatText(Consumer<TextWriter> writes);
 
     interface BookIntroWriter extends StructuredTextWriter {
         /**
          * Write the introduction title.
-         * @param title The title.
+         * @param writes Logic to write the title.
          */
-        void title(String title);
+        void title(Consumer<TextWriter> writes);
     };
 
     /**
@@ -77,9 +73,9 @@ public interface StructuredTextWriter extends AutoCloseable {
 
         /**
          * Write a chapter title.
-         * @param title The title.
+         * @param writes Logic to write the title.
          */
-        void chapterTitle(String title);
+        void chapterTitle(Consumer<TextWriter> writes);
 
         /**
          * Mark the start of a new verse.

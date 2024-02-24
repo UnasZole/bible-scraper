@@ -1,8 +1,10 @@
 package com.github.unaszole.bible.writing.usfm;
 
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import java.io.PrintWriter;
+import java.util.function.Consumer;
 
 public class UsfmBookIntroWriter extends UsfmStructuredTextWriter implements StructuredTextWriter.BookIntroWriter {
     public UsfmBookIntroWriter(PrintWriter out) {
@@ -10,30 +12,38 @@ public class UsfmBookIntroWriter extends UsfmStructuredTextWriter implements Str
     }
 
     @Override
-    public void title(String title) {
+    public void title(Consumer<TextWriter> writes) {
         closeParagraph();
         out.println();
-        out.println("\\imt1 " + title);
+        out.print("\\imt1 ");
+        writeText(writes);
+        out.println();
     }
 
     @Override
-    public void majorSection(String title) {
+    public void majorSection(Consumer<TextWriter> writes) {
         closeParagraph();
         out.println();
-        out.println("\\is1 " + title);
+        out.print("\\is1 ");
+        writeText(writes);
+        out.println();
     }
 
     @Override
-    public void section(String title) {
+    public void section(Consumer<TextWriter> writes) {
         closeParagraph();
         out.println();
-        out.println("\\is2 " + title);
+        out.print("\\is2 ");
+        writeText(writes);
+        out.println();
     }
 
     @Override
-    public void minorSection(String title) {
+    public void minorSection(Consumer<TextWriter> writes) {
         closeParagraph();
         out.println();
-        out.println("\\is3 " + title);
+        out.print("\\is3 ");
+        writeText(writes);
+        out.println();
     }
 }

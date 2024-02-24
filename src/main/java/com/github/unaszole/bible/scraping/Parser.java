@@ -66,7 +66,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 	 * @return The list of implicit contexts built to reach the accepted element type (not including this accepted element type).
 	 */
 	private static List<ContextMetadata> getImplicitPathToNext(Deque<ContextMetadata> contextStack,
-															   Set<ContextType> allowedEltTypes,
+															   List<ContextType> allowedEltTypes,
 															   Function<ContextType, ContextMetadata> getPreviousOfType,
 															   TriPredicate<Deque<ContextMetadata>, ContextType, ContextMetadata> isTypeOkForNext) {
 		for(ContextType eltType: allowedEltTypes) {
@@ -106,7 +106,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 	}
 
 	public static boolean addDescendant(Context rootContext, final Context descendant) {
-		Set<ContextType> allowedTypes = rootContext.getAllowedTypesForNextChild();
+		List<ContextType> allowedTypes = rootContext.getAllowedTypesForNextChild();
 
 		if(allowedTypes.contains(descendant.metadata.type)) {
 			// The root context can contain the descendant directly : add it.

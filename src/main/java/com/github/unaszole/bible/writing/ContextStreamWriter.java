@@ -6,6 +6,7 @@ import com.github.unaszole.bible.stream.ContextEvent;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -70,31 +71,48 @@ public class ContextStreamWriter {
         throw new IllegalStateException("Did not find " + metadata + " closing event.");
     }
 
+    private <W extends TextWriter> void writeFlatText(W w) {
+        while(hasNext()) {
+            ContextEvent event = next();
+
+            if(isOpen(ContextType.NOTE, event)) {
+                w.note(consumeAndAggregateValues(event.metadata));
+            }
+            if(isClose(ContextType.TEXT, event)) {
+                w.text(textTransformer.apply(event.value));
+            }
+
+
+            if(isClose(ContextType.FLAT_TEXT, event)) {
+                return;
+            }
+        }
+    }
+
     private <W extends StructuredTextWriter> void writeStructuredText(W w, BiPredicate<W, ContextEvent> specialisedBehaviour) {
         while(hasNext()) {
             ContextEvent event = next();
 
             if(isOpen(ContextType.MAJOR_SECTION_TITLE, event)) {
-                w.majorSection(consumeAndAggregateValues(event.metadata));
+                w.majorSection(this::writeFlatText);
             }
             if(isOpen(ContextType.SECTION_TITLE, event)) {
-                w.section(consumeAndAggregateValues(event.metadata));
+                w.section(this::writeFlatText);
             }
             if(isOpen(ContextType.MINOR_SECTION_TITLE, event)) {
-                w.minorSection(consumeAndAggregateValues(event.metadata));
-            }
-            if(isOpen(ContextType.NOTE, event)) {
-                w.note(consumeAndAggregateValues(event.metadata));
+                w.minorSection(this::writeFlatText);
             }
 
-            if(isOpen(ContextType.FLAT_TEXT, event) && isClose(ContextType.FLAT_TEXT, getLast())) {
-                // Implicit paragraph break if two flat texts immediately follow each other.
-                w.paragraph();
+
+            if(isOpen(ContextType.FLAT_TEXT, event)) {
+                if(isClose(ContextType.FLAT_TEXT, getLast())) {
+                    // Implicit paragraph break if two flat texts immediately follow each other.
+                    w.paragraph();
+                }
+                w.flatText(this::writeFlatText);
             }
 
-            if(isClose(ContextType.TEXT, event)) {
-                w.text(textTransformer.apply(event.value));
-            }
+
             if(isClose(ContextType.PARAGRAPH_BREAK, event)) {
                 w.paragraph();
             }
@@ -108,7 +126,7 @@ public class ContextStreamWriter {
     public void writeBookIntro(StructuredTextWriter.BookIntroWriter writer) {
         writeStructuredText(writer, (w, event) -> {
             if(isOpen(ContextType.BOOK_INTRO_TITLE, event)) {
-                w.title(consumeAndAggregateValues(event.metadata));
+                w.title(this::writeFlatText);
             }
 
             return isClose(ContextType.BOOK_INTRO, event);
@@ -125,7 +143,7 @@ public class ContextStreamWriter {
                 w.chapter(event.metadata.chapter, event.value);
             }
             if(isOpen(ContextType.CHAPTER_TITLE, event)) {
-                w.chapterTitle(consumeAndAggregateValues(event.metadata));
+                w.chapterTitle(this::writeFlatText);
             }
             if(isOpen(ContextType.VERSE, event)) {
                 w.verse(event.metadata.verses, event.value);

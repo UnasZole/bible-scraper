@@ -31,7 +31,7 @@ public class Context {
 		return children.isEmpty() ? Optional.empty() : Optional.of(children.get(children.size() - 1));
 	}
 	
-	public Set<ContextType> getAllowedTypesForNextChild() {
+	public List<ContextType> getAllowedTypesForNextChild() {
 		return metadata.type.getAllowedTypesForNextChild(
 			children.stream().map(c -> c.metadata.type).collect(Collectors.toList())
 		);

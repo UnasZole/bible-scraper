@@ -1,8 +1,10 @@
 package com.github.unaszole.bible.writing.osis;
 
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import javax.xml.stream.XMLStreamWriter;
+import java.util.function.Consumer;
 
 public class OsisBookIntroWriter extends OsisStructuredTextWriter
         implements StructuredTextWriter.BookIntroWriter {
@@ -11,10 +13,10 @@ public class OsisBookIntroWriter extends OsisStructuredTextWriter
     }
 
     @Override
-    public void title(String title) {
+    public void title(Consumer<TextWriter> writes) {
         // <title>
         writeStartElement("title");
-        writeCharacters(title);
+        writeText(writes);
         writeEndElement();
         // </title>
     }

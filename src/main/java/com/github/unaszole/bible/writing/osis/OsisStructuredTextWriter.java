@@ -1,8 +1,10 @@
 package com.github.unaszole.bible.writing.osis;
 
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
+import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import javax.xml.stream.XMLStreamWriter;
+import java.util.function.Consumer;
 
 public abstract class OsisStructuredTextWriter
         extends BaseXmlWriter
@@ -18,7 +20,15 @@ public abstract class OsisStructuredTextWriter
         super(xmlWriter);
     }
 
-    private void openMajorSection(String title) {
+    protected void writeText(Consumer<TextWriter> writes) {
+        try(TextWriter writer = new OsisTextWriter(xmlWriter)) {
+            writes.accept(writer);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void openMajorSection(Consumer<TextWriter> writes) {
         // Close the current section if any.
         closeCurrentMajorSection();
 
@@ -28,14 +38,14 @@ public abstract class OsisStructuredTextWriter
 
         // <title>
         writeStartElement("title");
-        writeCharacters(title);
+        writeText(writes);
         writeEndElement();
         // </title>
 
         this.inMajorSection = true;
     }
 
-    private void openSection(String title) {
+    private void openSection(Consumer<TextWriter> writes) {
         // Close the current section if any.
         closeCurrentSection();
 
@@ -45,14 +55,14 @@ public abstract class OsisStructuredTextWriter
 
         // <title>
         writeStartElement("title");
-        writeCharacters(title);
+        writeText(writes);
         writeEndElement();
         // </title>
 
         this.inSection = true;
     }
 
-    private void openMinorSection(String title) {
+    private void openMinorSection(Consumer<TextWriter> writes) {
         // Close the current section if any.
         closeCurrentMinorSection();
 
@@ -62,7 +72,7 @@ public abstract class OsisStructuredTextWriter
 
         // <title>
         writeStartElement("title");
-        writeCharacters(title);
+        writeText(writes);
         writeEndElement();
         // </title>
 
@@ -130,18 +140,18 @@ public abstract class OsisStructuredTextWriter
     }
 
     @Override
-    public void majorSection(String title) {
-        openMajorSection(title);
+    public void majorSection(Consumer<TextWriter> writes) {
+        openMajorSection(writes);
     }
 
     @Override
-    public void section(String title) {
-        openSection(title);
+    public void section(Consumer<TextWriter> writes) {
+        openSection(writes);
     }
 
     @Override
-    public void minorSection(String title) {
-        openMinorSection(title);
+    public void minorSection(Consumer<TextWriter> writes) {
+        openMinorSection(writes);
     }
 
     @Override
@@ -151,18 +161,10 @@ public abstract class OsisStructuredTextWriter
     }
 
     @Override
-    public void note(String str) {
-        // <note>
-        writeStartElement("note");
-        writeCharacters(str);
-        writeEndElement();
-        // </note>
-    }
-
-    @Override
-    public void text(String str) {
+    public void flatText(Consumer<TextWriter> writes) {
         ensureInActiveParagraph();
-        writeCharacters(str);
+
+        writeText(writes);
     }
 
     @Override
