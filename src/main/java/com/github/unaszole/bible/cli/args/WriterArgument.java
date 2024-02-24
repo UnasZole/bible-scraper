@@ -44,7 +44,7 @@ public class WriterArgument {
             case OSIS:
                 OutputStream os = outputPath.isPresent() ? Files.newOutputStream(outputPath.get()) : System.out;
                 return new OsisBibleWriter(os,
-                        Versifications.instance().getVersification(SystemCatholic2.V11N_NAME),
+                        "",
                         "plop", "gnu", "fr");
 
             case USFM:

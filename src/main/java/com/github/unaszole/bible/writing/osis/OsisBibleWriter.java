@@ -28,7 +28,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 				.createXMLStreamWriter(outputStream, "UTF-8"));
 	}
 
-	public OsisBibleWriter(OutputStream outputStream, Versification versification,
+	public OsisBibleWriter(OutputStream outputStream, String versification,
 						   String osisIDWork, String title, String ietfLanguage) throws XMLStreamException {
 		super(getXmlStreamWriter(outputStream));
 
@@ -94,8 +94,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 						
 						// <refSystem>
 						writeStartElement("refSystem");
-						String versificationName = versification.getName();
-						writeCharacters("Bible" + (versificationName.isEmpty() ? "" : "." + versificationName));
+						writeCharacters("Bible" + (versification.isEmpty() ? "" : "." + versification));
 						writeEndElement();
 						// </refSystem>
 					

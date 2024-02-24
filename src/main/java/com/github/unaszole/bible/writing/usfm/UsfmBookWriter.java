@@ -54,6 +54,7 @@ public class UsfmBookWriter implements BookWriter {
         OSIS_TO_USFM.put(BibleBook.ZEPH, "ZEP");
         OSIS_TO_USFM.put(BibleBook.HAG, "HAG");
         OSIS_TO_USFM.put(BibleBook.ZECH, "ZEC");
+        OSIS_TO_USFM.put(BibleBook.MAL, "MAL");
         OSIS_TO_USFM.put(BibleBook.MATT, "MAT");
         OSIS_TO_USFM.put(BibleBook.MARK, "MRK");
         OSIS_TO_USFM.put(BibleBook.LUKE, "LUK");
