@@ -19,6 +19,7 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     private String[] currentChapterSourceNb = null;
     private boolean inActiveChapter = false;
     private Consumer<TextWriter> pendingChapterTitle = null;
+    private Consumer<TextWriter> pendingChapterIntro = null;
     private int[] currentVerse = null;
 
     public OsisBookContentsWriter(XMLStreamWriter xmlWriter, BibleBook book) {
@@ -54,6 +55,15 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
         // </title>
     }
 
+    private void writeChapterIntro(Consumer<TextWriter> writes) {
+        // <div type="introduction">
+        writeStartElement("div");
+        writeAttribute("type", "introduction");
+        writeText(writes);
+        writeEndElement();
+        // </title>
+    }
+
     private void openChapter() {
         // <chapter sID>
         writeEmptyElement("chapter");
@@ -69,6 +79,10 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
         if(pendingChapterTitle != null) {
             writeChapterTitle(pendingChapterTitle);
             pendingChapterTitle = null;
+        }
+        if(pendingChapterIntro != null) {
+            writeChapterIntro(pendingChapterIntro);
+            pendingChapterIntro = null;
         }
     }
     protected final void ensureInActiveChapter() {
@@ -143,6 +157,16 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
         }
         else {
             this.pendingChapterTitle = new BufferedTextWrites(writes);
+        }
+    }
+
+    @Override
+    public void chapterIntro(Consumer<TextWriter> writes) {
+        if(inActiveChapter) {
+            writeChapterIntro(writes);
+        }
+        else {
+            this.pendingChapterIntro = new BufferedTextWrites(writes);
         }
     }
 

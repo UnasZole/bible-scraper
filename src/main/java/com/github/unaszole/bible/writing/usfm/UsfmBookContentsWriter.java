@@ -52,6 +52,15 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
     public void chapterTitle(Consumer<TextWriter> writes) {
         closeParagraph();
         out.println();
+        out.print("\\cl ");
+        writeText(writes);
+        out.println();
+    }
+
+    @Override
+    public void chapterIntro(Consumer<TextWriter> writes) {
+        closeParagraph();
+        out.println();
         out.print("\\cd ");
         writeText(writes);
         out.println();

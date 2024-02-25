@@ -145,6 +145,9 @@ public class ContextStreamWriter {
             if(isOpen(ContextType.CHAPTER_TITLE, event)) {
                 w.chapterTitle(this::writeFlatText);
             }
+            if(isOpen(ContextType.CHAPTER_INTRO, event)) {
+                w.chapterIntro(this::writeFlatText);
+            }
             if(isOpen(ContextType.VERSE, event)) {
                 w.verse(event.metadata.verses, event.value);
             }

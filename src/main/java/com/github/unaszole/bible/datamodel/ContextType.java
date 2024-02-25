@@ -41,16 +41,13 @@ public enum ContextType {
 	 */
 	VERSE(false, atLeastOne(STRUCTURED_TEXT)),
 	
-	// Chapter must be built from a lexeme that provides a chapter number.
-	// The chapter title can be derived implicitly.
-	// The chapter may start with some structure elements before the verses (usually just a section title).
-	// Other structure element delimiters (ie section titles, paragraphs.) will be contained inside each verse context.
-	CHAPTER_TITLE(true, one(FLAT_TEXT)),
+	CHAPTER_INTRO(true, one(FLAT_TEXT)),
+	CHAPTER_TITLE(false, one(FLAT_TEXT)),
 	/**
 	 * A chapter.
 	 * Has a context value : the string representation of the chapter number in the source document.
 	 */
-	CHAPTER(false, atMostOne(CHAPTER_TITLE), atMostOne(STRUCTURED_TEXT), atLeastOne(VERSE)),
+	CHAPTER(false, atMostOne(CHAPTER_TITLE), atMostOne(CHAPTER_INTRO), atMostOne(STRUCTURED_TEXT), atLeastOne(VERSE)),
 	
 	// Book must be built from a lexeme that provides a book identifier.
 	// The contained book title and intro can be derived implicitly.

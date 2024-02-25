@@ -78,6 +78,12 @@ public interface StructuredTextWriter extends AutoCloseable {
         void chapterTitle(Consumer<TextWriter> writes);
 
         /**
+         * Write a chapter introduction.
+         * @param writes Logic to write the intro.
+         */
+        void chapterIntro(Consumer<TextWriter> writes);
+
+        /**
          * Mark the start of a new verse.
          * @param verseNbs The verse numbers. Should usually be just one, but several verses may be combined in some
          *                 translations.
