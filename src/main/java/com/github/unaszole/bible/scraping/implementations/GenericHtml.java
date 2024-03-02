@@ -10,12 +10,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.unaszole.bible.cli.commands.HelpCommand;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.CachedDownloader;
-import com.github.unaszole.bible.scraping.Parser;
-import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.scraping.generic.*;
+import com.github.unaszole.bible.scraping.generic.html.ConfiguredHtmlParser;
+import com.github.unaszole.bible.scraping.generic.html.ElementContextExtractor;
+import com.github.unaszole.bible.scraping.generic.html.NodeParserConfig;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
 import com.github.unaszole.bible.stream.StreamUtils;
@@ -34,8 +34,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -97,182 +95,12 @@ public class GenericHtml extends Scraper {
             })
     );
 
-    /**
-     * Configuration to extract a context from an HTML element.
-     */
-    public static class ContextExtractor {
-        /**
-         * Configuration for extracting a String from an HTML element.
-         */
-        public static class Extractor {
-            /**
-             * A selector to select a descendant of the current element.
-             * If omitted, the operator applies to the current element itself.
-             */
-            public Evaluator selector;
-            /**
-             * An operator to extract a string from the selected element. The following are supported :
-             * <li>text : extract the full text of this element and all its descendants.</li>
-             * <li>ownText : extract the text of this element, excluding its descendants.</li>
-             * <li>attribute=&lt;attribute name&gt; : extract an attribute of this element by providing its name.</li>
-             */
-            public String op;
-            /**
-             * A regexp to capture a part of the text content extracted by the operator.
-             * This regexp will be implicitly anchored, and must contain one single capturing group.
-             */
-            public String regexp;
-
-            public String extract(Element e) {
-                Element target = selector != null ? e.select(selector).first() : e;
-
-                String[] opSplit = op.split("=");
-                String opResult = null;
-                switch(opSplit[0]) {
-                    case "text":
-                        opResult = target.text();
-                        break;
-                    case "ownText":
-                        opResult = target.ownText();
-                        break;
-                    case "attribute":
-                        opResult = target.attr(opSplit[1]);
-                        break;
-                }
-
-                if(regexp != null && opResult != null) {
-                    Matcher matcher = Pattern.compile(regexp).matcher(opResult);
-                    if(matcher.matches()) {
-                        opResult = matcher.group(1);
-                    }
-                    else {
-                        LOG.warn("Failed to match " + opResult + " against " + regexp);
-                        opResult = null;
-                    }
-                }
-
-                return opResult;
-            }
-
-            @Override
-            public String toString() {
-                try {
-                    return MAPPER.writeValueAsString(this);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        /**
-         * The type of contexts this extractor produces.
-         */
-        public ContextType type;
-        /**
-         * A required ancestor type for this extractor to trigger. Only relevant for a root extractor.
-         */
-        public ContextType withAncestor;
-        /**
-         * An excluded ancestor type for this extractor to trigger. Only relevant for a root extractor.
-         */
-        public ContextType withoutAncestor;
-        /**
-         * A selector that selects only HTML elements that this extractor can build a context from.
-         * For an extractor at the root of the parser, MUST always be provided : checks if the incoming element can open
-         * this context.
-         * For a descendant extractor, may be omitted, in which case the descendant context will be extracted
-         * from the same element.
-         */
-        public Evaluator selector;
-        /**
-         * If provided, and if the "selector" points to an element with an "href" attribute (typically an "a"), then
-         * this link target selector is evaluated from the target of the link to select another element.
-         * Typically used to fetch note contents elsewhere in a page from a note reference link.
-         */
-        public Evaluator linkTargetSelector;
-        /**
-         * Configuration to extract a value for this context. This extractor is relative to the element selected by the
-         * {@link #selector}.
-         * This MUST be set for CHAPTER, VERSE and TEXT contexts !
-         * It should be left null for other contexts.
-         */
-        public Extractor valueExtractor;
-        /**
-         * Configuration to extract additional descendant contexts under this one.
-         * All extractors are relative to the element selected by the {@link #selector}.
-         */
-        public List<ContextExtractor> descendantExtractors;
-
-        private static String stripLeadingZeroes(String parsedNb) {
-            return parsedNb.length() == 1 ? parsedNb : parsedNb.replaceAll("^0*(.)", "$1");
-        }
-
-        private Context extractInternal(Element targetElt, ContextMetadata parent, ContextMetadata previousOfType) {
-            Element actualTargetElt = targetElt;
-
-            if(linkTargetSelector != null && actualTargetElt.hasAttr("href")) {
-                String[] link = actualTargetElt.attr("href").split("#");
-                if(!link[0].isEmpty()) {
-                    throw new IllegalArgumentException("Cannot follow link " + link + " as it's not local to the page");
-                }
-                actualTargetElt = targetElt.ownerDocument().getElementById(link[1]).selectFirst(linkTargetSelector);
-            }
-
-            String value = valueExtractor != null ? valueExtractor.extract(actualTargetElt) : null;
-
-            ContextMetadata meta;
-            switch (type) {
-                case CHAPTER:
-                    meta = ParsingUtils.getChapterMetadata(parent, previousOfType, value);
-                    break;
-                case VERSE:
-                    value = stripLeadingZeroes(value);
-                    meta = ParsingUtils.getVerseMetadata(parent, previousOfType, value);
-                    break;
-                default:
-                    meta = new ContextMetadata(type, parent.book, parent.chapter, parent.verses);
-            }
-
-            Context[] descendants = new Context[0];
-            if (descendantExtractors != null) {
-                descendants = new Context[descendantExtractors.size()];
-
-                for (int i = 0; i < descendantExtractors.size(); i++) {
-                    ContextExtractor descendant = descendantExtractors.get(i);
-                    descendants[i] = descendant.extractDescendantContext(actualTargetElt, meta, null);
-                }
-            }
-
-            return Parser.buildContext(meta, value, descendants);
-        }
-
-        public Context extractDescendantContext(Element parentElt, ContextMetadata parent, ContextMetadata previousOfType) {
-            Element targetElt = selector != null ? parentElt.select(selector).first() : parentElt;
-            return extractInternal(targetElt, parent, previousOfType);
-        }
-
-        public Context extractRootContext(Element e, ContextMetadata parent, ContextMetadata previousOfType) {
-            if(e.is(selector)) {
-                return extractInternal(e, parent, previousOfType);
-            }
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            try {
-                return MAPPER.writeValueAsString(this);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     private static class Config extends PatternContainer {
         public String description;
         public List<String> inputs;
         public List<Book> books;
-        public List<ContextExtractor> parser;
+        public List<ElementContextExtractor> parser;
+        public List<NodeParserConfig> nodeParsers;
 
         public Book getBook(BibleBook book) {
             return books.stream()
@@ -306,33 +134,6 @@ public class GenericHtml extends Scraper {
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
-        }
-    }
-
-    private static class ConfiguredHtmlParser extends Parser.TerminalParser<Element> {
-
-        private final List<ContextExtractor> parserConfig;
-
-        private ConfiguredHtmlParser(List<ContextExtractor> parserConfig,
-                                     Stream<Element> docStream, Context rootContext) {
-            super(docStream.iterator(), rootContext);
-            this.parserConfig = parserConfig;
-        }
-
-        @Override
-        protected Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
-                                      ContextMetadata previousOfType, Element e) {
-            ContextExtractor extractor = parserConfig.stream()
-                    .filter(ex -> ex.type == type &&
-                            (ex.withAncestor == null || ancestorStack.stream().anyMatch(a -> a.type == ex.withAncestor)) &&
-                            (ex.withoutAncestor == null || ancestorStack.stream().noneMatch(a -> a.type == ex.withoutAncestor))
-                    )
-                    .findFirst()
-                    .orElse(null);
-            if(extractor != null) {
-                return extractor.extractRootContext(e, ancestorStack.peekFirst(), previousOfType);
-            }
-            return null;
         }
     }
 
@@ -437,7 +238,7 @@ public class GenericHtml extends Scraper {
 
                     // Prepare parser
                     Context chapterCtx = new Context(rootContextMeta, chapterValue);
-                    ContextStream.Single chapterStream = new ConfiguredHtmlParser(config.parser,
+                    ContextStream.Single chapterStream = new ConfiguredHtmlParser(config.parser, config.nodeParsers,
                             getDocStream(downloader, chapterUrls),
                             chapterCtx
                     ).asContextStream();
@@ -490,7 +291,7 @@ public class GenericHtml extends Scraper {
                 List<URL> bookUrls = book.getUrls(bookPatterns);
                 if(!bookUrls.isEmpty()) {
                     // We have pages for this book, prepare a parser.
-                    bookStream = new ConfiguredHtmlParser(config.parser,
+                    bookStream = new ConfiguredHtmlParser(config.parser, config.nodeParsers,
                             getDocStream(downloader, bookUrls), bookCtx
                     ).asContextStream().edit().inject(
                             ContextStreamEditor.InjectionPosition.AT_END, rootContextMeta, chapterStreams
