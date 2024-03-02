@@ -12,4 +12,6 @@ public interface TextWriter extends AutoCloseable {
      * @param str The text of the note.
      */
     void note(String str);
+
+    void translationAdd(String str);
 }

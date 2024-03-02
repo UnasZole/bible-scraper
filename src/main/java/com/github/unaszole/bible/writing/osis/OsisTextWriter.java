@@ -11,6 +11,11 @@ public class OsisTextWriter extends BaseXmlWriter implements TextWriter {
     }
 
     @Override
+    public void text(String str) {
+        writeCharacters(str);
+    }
+
+    @Override
     public void note(String str) {
         // <note>
         writeStartElement("note");
@@ -20,8 +25,13 @@ public class OsisTextWriter extends BaseXmlWriter implements TextWriter {
     }
 
     @Override
-    public void text(String str) {
+    public void translationAdd(String str) {
+        // <transChange type="added">
+        writeStartElement("transChange");
+        writeAttribute("type", "added");
         writeCharacters(str);
+        writeEndElement();
+        // </transChange>
     }
 
     @Override

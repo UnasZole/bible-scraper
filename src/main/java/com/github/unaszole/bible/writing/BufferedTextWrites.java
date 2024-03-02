@@ -24,6 +24,11 @@ public class BufferedTextWrites implements Consumer<TextWriter> {
             }
 
             @Override
+            public void translationAdd(String str) {
+                actions.add(Map.entry("translationAdd", str));
+            }
+
+            @Override
             public void close() {
 
             }
@@ -38,6 +43,9 @@ public class BufferedTextWrites implements Consumer<TextWriter> {
             }
             else if("note".equals(action.getKey())) {
                 t.note(action.getValue());
+            }
+            else if("translationAdd".equals(action.getKey())) {
+                t.translationAdd(action.getValue());
             }
         }
     }

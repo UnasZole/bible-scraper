@@ -18,12 +18,15 @@ public enum ContextType {
 	 * An inline note, that may be inserted at any point in a flat text.
 	 */
 	NOTE(false, atLeastOne(TEXT)),
+	TRANSLATION_ADD(false, atLeastOne(TEXT)),
+	ANNOTATION(true, one(NOTE, TRANSLATION_ADD)),
+
 	/**
 	 * A flat text, ie. a text that does not have any structure - but may contain notes.
 	 * All its contents should be considered as a single string, with the notes either rendered directly in-place or
 	 * via an in-place reference to an external rendering (eg. footnote).
 	 */
-	FLAT_TEXT(true, atLeastOne(NOTE, TEXT)),
+	FLAT_TEXT(true, atLeastOne(TEXT, ANNOTATION)),
 	MINOR_SECTION_TITLE(false, one(FLAT_TEXT)),
 	SECTION_TITLE(false, one(FLAT_TEXT)),
 	MAJOR_SECTION_TITLE(false, one(FLAT_TEXT)),

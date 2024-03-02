@@ -18,7 +18,12 @@ public class UsfmTextWriter implements TextWriter {
 
     @Override
     public void note(String str) {
-        out.print("\\f + \\ft " + str + " \\f*");
+        out.print("\\f + \\ft " + str + "\\f*");
+    }
+
+    @Override
+    public void translationAdd(String str) {
+        out.print("\\add " + str + "\\add*");
     }
 
     @Override

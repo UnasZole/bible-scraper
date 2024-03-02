@@ -78,6 +78,9 @@ public class ContextStreamWriter {
             if(isOpen(ContextType.NOTE, event)) {
                 w.note(consumeAndAggregateValues(event.metadata));
             }
+            if(isOpen(ContextType.TRANSLATION_ADD, event)) {
+                w.translationAdd(consumeAndAggregateValues(event.metadata));
+            }
             if(isClose(ContextType.TEXT, event)) {
                 w.text(textTransformer.apply(event.value));
             }
