@@ -3,8 +3,6 @@
 # In particular, the limitations of this generic scraper are the following :
 # - In some bibles, major and normal sections will be messed up because the website's formatting on those is inconsistent.
 #   The generic parser cannot include complex logic based on sibling comparisons to cope with such inconsistencies.
-# - Notes are always pushed to the end of a verse, because a generic parser iterates through HTML elements, not nodes
-#   inside these elements. Therefore, it cannot track how elements are positioned in the middle of text.
 # - Chapters and books that are missing in some bibles will actually be included as empty, because generic parsers do
 #   not provide a mechanism to ignore pages after parsing them.
 # For these reasons, when extracting bibles for actual use, the native TheoPlace scraper should be used instead !
@@ -355,14 +353,22 @@ parser:
     selector: "#logos > span.verset"
     valueExtractor:
       op: text
-  - type: TEXT
+
+nodeParsers:
+  - selector: "#logos > span[data-verset]"
     withAncestor: VERSE
-    selector: "#logos > span[data-verset]"
-    valueExtractor:
-      op: text
-  - type: NOTE
-    selector: "#logos button.footnote"
-    descendantExtractors:
+    textNodeExtractors:
       - type: TEXT
+        withoutAncestor: ANNOTATION
+        regexp: (.*)
+    elementExtractors:
+      - type: TEXT
+        selector: "#logos > span[data-verset] > *:not(button.footnote)"
         valueExtractor:
-          op: attribute=data-bs-content
+          op: text
+      - type: NOTE
+        selector: "#logos button.footnote"
+        descendantExtractors:
+          - type: TEXT
+            valueExtractor:
+              op: attribute=data-bs-content

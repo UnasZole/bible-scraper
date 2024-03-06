@@ -177,6 +177,20 @@ verse number), and a TEXT context inside (by extracting the verse text contents)
 DescendantExtractors are similar to the root extractors defined above, except that their selector will find the first
 matching element within the current element, and the withAncestor field is ignored.
 
+Elements which text nodes need to be processed in order can be managed using the `nodeParsers` list.
+Each node parser contains :
+- A `selector` that determines which elements will use this specific parser.
+- Optional `withAncestor`/`withoutAncestor` directives that enable this specific parsing method conditionally depending 
+on the current context.
+- A list of `textNodeExtractors`, to extract contexts from text nodes of the selected element. Each extractor specifies:
+  - The `type` property designates which context type is extracted.
+  - Optional `withAncestor`/`withoutAncestor` directives that allow ignoring the text node based on current context.
+  - A `regexp` that determines if the extractor matches the text node. If the regexp matches, a context will be created;
+if the regexp contains a capturing group, then the value of this group will be the context value.
+- A list of `elementExtractors`, to extract contexts from the selected element or any of its descendants. These elements
+will be examined in order : the selected element first, then all descendants in document order, with all text nodes
+being examined at the correct positions in between.
+
 #### Limitations
 
 Due to its much simpler setup, the generic HTML scraper has some limitations compared to what can be done with native
@@ -185,9 +199,6 @@ Notably :
 - It takes rules for each HTML element in isolation. Therefore, the structure of the HTML pages must
 be consistent enough that you only need to check the element itself (its contents, its attributes, but NOT its siblings
 or parents) to know what type of context this element may open.
-- It cannot track the position of HTML elements between text nodes. Therefore, if the source contains notes
-in the middle of text, you'll be able to extract the notes but they may appear a few words later than their expected occurrence
-(for example at the end of a verse).
 - It can take additional inputs, allowing it to support websites that propose many bibles - however it
 does not provide a way to specify a different page structure for each bible, so you need all bibles reached by this scraper
 to follow a consistent URL pattern and consistent structure in terms of books and chapters.
