@@ -2,4 +2,4 @@
 
 cd $(dirname "$0")
 
-java -jar target/bible-scraper-0.1-SNAPSHOT-jar-with-dependencies.jar --cachePath=tmp/ $@
+java -ea -jar target/bible-scraper-0.1-SNAPSHOT-jar-with-dependencies.jar --cachePath=tmp/ $@

@@ -12,7 +12,6 @@ public enum ContextType {
 	 * A sequence of such text nodes should be considered as a single string, ie. their values concatenated without additional spaces.
 	 */
 	TEXT(false),
-	PARAGRAPH_BREAK(false),
 
 	/**
 	 * An inline note, that may be inserted at any point in a flat text.
@@ -27,15 +26,38 @@ public enum ContextType {
 	 * via an in-place reference to an external rendering (eg. footnote).
 	 */
 	FLAT_TEXT(true, atLeastOne(TEXT, ANNOTATION)),
+	/**
+	 * An explicit paragraph break.
+	 */
+	PARAGRAPH_BREAK(false),
+	/**
+	 * This marks the beginning of a line of poetry.
+	 * Anything until the next structure marker is considered part of this line.
+	 * Has a context value : a positive integer denoting the indent level. If unsure, put 1.
+	 */
+	POETRY_LINE_INDENT(false),
+	/**
+	 * This marks the beginning of a refrain line in poetry.
+	 * Anything until the next structure marker is considered part of this line.
+	 */
+	POETRY_REFRAIN_INDENT(false),
+	/**
+	 * This marks the end of a stanza, ie a group of lines in a poem.
+	 */
+	POETRY_STANZA_BREAK(false),
+	POETRY_MARKER(true, one(POETRY_LINE_INDENT, POETRY_REFRAIN_INDENT, POETRY_STANZA_BREAK)),
 	MINOR_SECTION_TITLE(false, one(FLAT_TEXT)),
 	SECTION_TITLE(false, one(FLAT_TEXT)),
 	MAJOR_SECTION_TITLE(false, one(FLAT_TEXT)),
+	SECTION_MARKER(true, one(MAJOR_SECTION_TITLE, SECTION_TITLE, MINOR_SECTION_TITLE)),
+	STRUCTURE_MARKER(true, one(SECTION_MARKER, POETRY_MARKER, PARAGRAPH_BREAK)),
+
 	/**
 	 * A structured text, ie. flat texts joined by structural delimiters.
 	 * Two successive flat texts are joined by an implicit paragraph break.
 	 * Explicit paragraph breaks should be used when a paragraph starts before the first flat text or after the last.
 	 */
-	STRUCTURED_TEXT(true, any(MAJOR_SECTION_TITLE, SECTION_TITLE, MINOR_SECTION_TITLE, FLAT_TEXT, PARAGRAPH_BREAK)),
+	STRUCTURED_TEXT(true, any(STRUCTURE_MARKER, FLAT_TEXT)),
 	
 	// Verse must be built from a lexeme that provides a verse number.
 	/**

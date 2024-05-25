@@ -26,6 +26,22 @@ public interface StructuredTextWriter extends AutoCloseable {
     void minorSection(Consumer<TextWriter> writes);
 
     /**
+     * Mark the start of a new line of poetry.
+     * @param indentLevel The level of indent for this line (>= 1).
+     */
+    void poetryLine(int indentLevel);
+
+    /**
+     * Mark the start of a refrain line of poetry.
+     */
+    void poetryRefrainLine();
+
+    /**
+     * Mark the start of a new stanza of poetry.
+     */
+    void poetryStanza();
+
+    /**
      * Mark the start of a new paragraph.
      */
     void paragraph();

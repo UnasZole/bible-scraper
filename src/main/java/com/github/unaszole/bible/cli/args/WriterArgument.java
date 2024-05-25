@@ -4,8 +4,6 @@ import com.github.unaszole.bible.writing.Typography;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import com.github.unaszole.bible.writing.osis.OsisBibleWriter;
 import com.github.unaszole.bible.writing.usfm.UsfmBibleWriter;
-import org.crosswire.jsword.versification.system.SystemCatholic2;
-import org.crosswire.jsword.versification.system.Versifications;
 import picocli.CommandLine;
 
 import java.io.OutputStream;

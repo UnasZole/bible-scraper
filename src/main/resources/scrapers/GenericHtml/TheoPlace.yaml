@@ -363,7 +363,7 @@ nodeParsers:
         regexp: (.*)
     elementExtractors:
       - type: TEXT
-        selector: "#logos > span[data-verset] > *:not(button.footnote)"
+        selector: "#logos > span[data-verset] > *:not(button.footnote):not(br)"
         valueExtractor:
           op: text
       - type: NOTE
@@ -372,3 +372,18 @@ nodeParsers:
           - type: TEXT
             valueExtractor:
               op: attribute=data-bs-content
+
+      # theo.place does not have explicit poetry markup, but uses line breaks inside verses.
+      # The following rules interpret that in a "best-effort" mode, such that verses which contain line breaks are treated as poetry.
+      # It leads to some false positives : when the poetry starts or end in the middle of a verse, the full verse will be tagged as poetry anyway.
+      # See Num 21:14 in the "tob" bible for example.
+      - type: POETRY_LINE_INDENT
+        selector: "#logos > span[data-verset]:has(> br)"
+        valueExtractor:
+          op: literal=1
+      - type: POETRY_LINE_INDENT
+        selector: "#logos > span[data-verset] > br"
+        valueExtractor:
+          op: literal=1
+      - type: POETRY_STANZA_BREAK
+        selector: "#logos > span[data-verset]:has(> br) + br + span.verset + span[data-verset]:not(:has(> br))"

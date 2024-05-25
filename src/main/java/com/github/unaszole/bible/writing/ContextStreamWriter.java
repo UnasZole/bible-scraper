@@ -106,6 +106,12 @@ public class ContextStreamWriter {
                 w.minorSection(this::writeFlatText);
             }
 
+            if(isOpen(ContextType.POETRY_LINE_INDENT, event)) {
+                w.poetryLine(Integer.parseInt(event.value));
+            }
+            if(isOpen(ContextType.POETRY_REFRAIN_INDENT, event)) {
+                w.poetryRefrainLine();
+            }
 
             if(isOpen(ContextType.FLAT_TEXT, event)) {
                 if(isClose(ContextType.FLAT_TEXT, getLast())) {
@@ -115,7 +121,9 @@ public class ContextStreamWriter {
                 w.flatText(this::writeFlatText);
             }
 
-
+            if(isClose(ContextType.POETRY_STANZA_BREAK, event)) {
+                w.poetryStanza();
+            }
             if(isClose(ContextType.PARAGRAPH_BREAK, event)) {
                 w.paragraph();
             }

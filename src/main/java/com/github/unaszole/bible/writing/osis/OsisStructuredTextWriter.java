@@ -15,6 +15,8 @@ public abstract class OsisStructuredTextWriter
     private boolean inMinorSection = false;
     private boolean inParagraph = false;
     private boolean inActiveParagraph = false;
+    private boolean inStanza = false;
+    private boolean inPoetryLine = false;
 
     public OsisStructuredTextWriter(XMLStreamWriter xmlWriter) {
         super(xmlWriter);
@@ -97,7 +99,63 @@ public abstract class OsisStructuredTextWriter
         }
     }
 
+    private void openStanza() {
+        // Close the current stanza if any.
+        closeCurrentStanza();
+
+        // <lg>
+        writeStartElement("lg");
+        this.inStanza = true;
+    }
+
+    protected final void ensureInStanza() {
+        ensureInActiveParagraph();
+        if(!inStanza) {
+            openStanza();
+        }
+    }
+
+    private void openPoetryLine(boolean isRefrain, int indentLevel) {
+        // Close the current line if any.
+        closeCurrentPoetryLine();
+
+        ensureInStanza();
+
+        // <l>
+        writeStartElement("l");
+        if(isRefrain) {
+            writeAttribute("type", "refrain");
+        }
+        if(indentLevel >=1 ) {
+            writeAttribute("level", "1");
+        }
+
+        this.inPoetryLine = true;
+    }
+
+    private void closeCurrentPoetryLine() {
+        if(inPoetryLine) {
+            // </l>
+            writeEndElement();
+            this.inPoetryLine = false;
+        }
+    }
+
+    private void closeCurrentStanza() {
+        // Always close the poetry line when closing a stanza.
+        closeCurrentPoetryLine();
+
+        if(inStanza) {
+            writeEndElement();
+            // </lg>
+            this.inStanza = false;
+        }
+    }
+
     private void closeCurrentParagraph() {
+        // Always close the stanza when closing a paragraph.
+        closeCurrentStanza();
+
         if(inParagraph) {
             writeEndElement();
             // </p>
@@ -152,6 +210,27 @@ public abstract class OsisStructuredTextWriter
     @Override
     public void minorSection(Consumer<TextWriter> writes) {
         openMinorSection(writes);
+    }
+
+    @Override
+    public void poetryLine(int indentLevel) {
+        openPoetryLine(false, indentLevel);
+    }
+
+    /**
+     * Mark the start of a refrain line of poetry.
+     */
+    @Override
+    public void poetryRefrainLine() {
+        openPoetryLine(true, 0);
+    }
+
+    /**
+     * Mark the start of a new stanza of poetry.
+     */
+    @Override
+    public void poetryStanza() {
+        closeCurrentStanza();
     }
 
     @Override

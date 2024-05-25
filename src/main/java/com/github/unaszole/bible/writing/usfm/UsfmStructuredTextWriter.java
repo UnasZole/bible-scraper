@@ -15,8 +15,20 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
         this.paragraphMarker = paragraphMarker;
     }
 
+    private boolean inStanza = false;
+    protected void closeStanza() {
+        inStanza = false;
+    }
+    protected void ensureInStanza() {
+        if(!inStanza) {
+            out.println("\\b");
+            inStanza = true;
+        }
+    }
+
     private boolean inParagraph = false;
     protected void closeParagraph() {
+        closeStanza();
         inParagraph = false;
     }
     protected void ensureInParagraph() {
@@ -33,6 +45,29 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void poetryLine(int indentLevel) {
+        out.println();
+        out.print("\\q" + indentLevel + " ");
+    }
+
+    /**
+     * Mark the start of a refrain line of poetry.
+     */
+    @Override
+    public void poetryRefrainLine() {
+        out.println();
+        out.print("\\qr ");
+    }
+
+    /**
+     * Mark the start of a new stanza of poetry.
+     */
+    @Override
+    public void poetryStanza() {
+        closeStanza();
     }
 
     @Override
