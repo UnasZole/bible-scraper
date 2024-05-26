@@ -37,7 +37,7 @@ public interface StructuredTextWriter extends AutoCloseable {
     void poetryRefrainLine();
 
     /**
-     * Mark the start of a new stanza of poetry.
+     * Mark the end of a stanza of poetry.
      */
     void poetryStanza();
 

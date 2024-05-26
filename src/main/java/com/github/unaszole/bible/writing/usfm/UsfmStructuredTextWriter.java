@@ -17,12 +17,42 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
     private boolean inStanza = false;
     protected void closeStanza() {
+        if(inStanza) {
+            out.println();
+            out.println("\\b");
+        }
         inStanza = false;
     }
     protected void ensureInStanza() {
         if(!inStanza) {
-            out.println("\\b");
             inStanza = true;
+        }
+    }
+
+    /**
+     * >= 1 if pending a normal poetry line.
+     * = -1 if pending a refrain line.
+     * = 0 if no poetry line pending.
+     */
+    private int pendingPoetryLineIndent = 0;
+
+    protected void openPendingPoetryLineIfAny() {
+        if(pendingPoetryLineIndent != 0) {
+            boolean isRefrain = pendingPoetryLineIndent == -1;
+            int indentLevel = Math.max(pendingPoetryLineIndent, 0);
+
+            ensureInStanza();
+
+            out.println();
+            if(isRefrain) {
+                out.print("\\qr ");
+            }
+            if(indentLevel >=1 ) {
+                out.print("\\q" + indentLevel + " ");
+            }
+
+            // Line is opened : no longer pending.
+            this.pendingPoetryLineIndent = 0;
         }
     }
 
@@ -49,8 +79,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
     @Override
     public void poetryLine(int indentLevel) {
-        out.println();
-        out.print("\\q" + indentLevel + " ");
+        pendingPoetryLineIndent = indentLevel;
     }
 
     /**
@@ -58,8 +87,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
      */
     @Override
     public void poetryRefrainLine() {
-        out.println();
-        out.print("\\qr ");
+        pendingPoetryLineIndent = -1;
     }
 
     /**
@@ -78,6 +106,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
     @Override
     public void flatText(Consumer<TextWriter> writes) {
         ensureInParagraph();
+        openPendingPoetryLineIfAny();
 
         writeText(writes);
     }

@@ -3,6 +3,8 @@ package com.github.unaszole.bible.scraping.generic.html;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.scraping.Parser;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
 import java.util.List;
@@ -13,6 +15,21 @@ import java.util.regex.Pattern;
  * Configuration to extract a context from an HTML text node.
  */
 public class TextNodeContextExtractor extends ContextExtractor {
+    public enum WhitespaceProcessing {
+        /**
+         * Preserve whitespaces as in the source document.
+         */
+        PRESERVE,
+        /**
+         * Process whitespaces according to CSS rules to remove meaningless whitespaces.
+         * cf. https://www.w3.org/TR/css-text-3/#white-space-processing
+         * This is a best-effort implementation, as this parser does not have the same notion of "inline context" and
+         * overall rendering rules as a web browser.
+         */
+        CSS
+    }
+
+    public WhitespaceProcessing whitespaceProcessing = WhitespaceProcessing.CSS;
 
     /**
      * Regexp to validate the text node contents, and capture a context value from it.
@@ -32,8 +49,57 @@ public class TextNodeContextExtractor extends ContextExtractor {
      */
     public List<TextNodeContextExtractor> descendantExtractors;
 
+    private boolean isLineBoundary(Node node) {
+        if(node == null) {
+            return true;
+        }
+        if(node instanceof Element && ((Element)node).tagName().equalsIgnoreCase("br")) {
+            return true;
+        }
+        return false;
+    }
+
+    private String extractCssText(TextNode textNode) {
+        String str = textNode.text();
+
+        // "Carriage returns (U+000D) are treated identically to spaces (U+0020) in all respects."
+        str = str.replace("\r", " ");
+
+        // "Any sequence of collapsible spaces and tabs immediately preceding or following a segment break is removed."
+        str = str.replaceAll("[ \\t]*\\n[ \\t]*", "\n");
+        // "any collapsible segment break immediately following another collapsible segment break is removed."
+        str = str.replaceAll("\\n+", "\n");
+        // "any remaining segment break is either transformed into a space"
+        str = str.replace("\n", " ");
+        // "Every collapsible tab is converted to a collapsible space"
+        str = str.replace("\t", " ");
+
+        // "Any collapsible space immediately following another collapsible space [...] is collapsed"
+        str = str.replaceAll(" +", " ");
+
+        // "A sequence of collapsible spaces at the beginning of a line is removed."
+        if(isLineBoundary(textNode.previousSibling())) {
+            str = str.replaceAll("^ +", "");
+        }
+        // "A sequence of collapsible spaces at the end of a line is removed"
+        if(isLineBoundary(textNode.nextSibling())) {
+            str = str.replaceAll(" +$", "");
+        }
+
+        return str;
+    }
+
+    private String extractText(TextNode textNode) {
+        switch (whitespaceProcessing) {
+            case PRESERVE:
+                return textNode.text();
+            default:
+                return extractCssText(textNode);
+        }
+    }
+
     public Context extract(TextNode textNode, ContextMetadata parent, ContextMetadata previousOfType) {
-        Matcher matcher = regexp.matcher(textNode.text());
+        Matcher matcher = regexp.matcher(extractText(textNode));
 
         if(matcher.matches()) {
             // The regexp actually matches, we can open a context.
