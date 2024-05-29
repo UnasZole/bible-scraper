@@ -100,6 +100,18 @@ public class ContextMetadata {
 		return new ContextMetadata(ContextType.MINOR_SECTION_TITLE);
 	}
 
+	public static ContextMetadata forPoetryLineIndent() {
+		return new ContextMetadata(ContextType.POETRY_LINE_INDENT);
+	}
+
+	public static ContextMetadata forPoetryRefrainIndent() {
+		return new ContextMetadata(ContextType.POETRY_REFRAIN_INDENT);
+	}
+
+	public static ContextMetadata forPoetryStanzaBreak() {
+		return new ContextMetadata(ContextType.POETRY_STANZA_BREAK);
+	}
+
 	public static ContextMetadata forParagraphBreak() {
 		return new ContextMetadata(ContextType.PARAGRAPH_BREAK);
 	}

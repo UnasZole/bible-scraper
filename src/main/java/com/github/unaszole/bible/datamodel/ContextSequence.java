@@ -3,6 +3,7 @@ package com.github.unaszole.bible.datamodel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
@@ -26,12 +27,12 @@ public class ContextSequence {
 		return new ContextSequence(types, 0, Integer.MAX_VALUE);
 	}
 	
-	public final Set<ContextType> allowedTypes;
+	public final List<ContextType> allowedTypes;
 	public final int minOccurrences;
 	public final int maxOccurrences;
 	
 	public ContextSequence(ContextType[] allowedTypes, int minOccurrences, int maxOccurrences) {
-		this.allowedTypes = Set.of(allowedTypes);
+		this.allowedTypes = List.of(allowedTypes);
 		this.minOccurrences = minOccurrences;
 		this.maxOccurrences = maxOccurrences;
 	}

@@ -224,32 +224,32 @@ books:
   - osis: Rev
     args: { BOOK: livre-de-l-apocalypse }
 
-parser:
-  - type: BOOK_TITLE
-    selector: "#livre > h1"
-    descendantExtractors:
-      - type: TEXT
-        valueExtractor:
-          op: text
-  - type: CHAPTER
-    selector: "div.ch"
-    valueExtractor:
-      op: attribute=data-ch
-  - type: VERSE
-    selector: "div.vs > span.v"
-    valueExtractor:
-      selector: "> span.nv"
-      op: text
-    descendantExtractors:
-      - type: TEXT
-        selector: "> span:not(.nv)"
-        valueExtractor:
-          op: text
-  - type: PARAGRAPH_BREAK
-    selector: "div.vs > div.sep"
-  - type: NOTE
-    selector: "div.vs > div.c"
-    descendantExtractors:
-      - type: TEXT
-        valueExtractor:
-          op: text
+elements:
+  - selector: "#livre > h1"
+    contexts:
+      - type: BOOK_TITLE
+        descendants:
+          - type: TEXT
+            op: text
+  - selector: "div.ch"
+    contexts:
+      - type: CHAPTER
+        op: attribute=data-ch
+  - selector: "div.vs > span.v"
+    contexts:
+      - type: VERSE
+        selector: "> span.nv"
+        op: text
+        descendants:
+          - type: TEXT
+            selector: "> span:not(.nv)"
+            op: text
+  - selector: "div.vs > div.sep"
+    contexts:
+      - type: PARAGRAPH_BREAK
+  - selector: "div.vs > div.c"
+    contexts:
+      - type: NOTE
+        descendants:
+          - type: TEXT
+            op: text

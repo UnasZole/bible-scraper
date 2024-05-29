@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,224 +18,29 @@ import java.util.stream.Stream;
  * context) must always be provided along with the document data, to describes what the data contains (A full bible ? A book ? A chapter ?).
  * @param <Position> The type of "position" processed by this parser.
 */
-public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
+public class Parser<Position> implements Iterator<List<ContextEvent>> {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(Parser.class);
 
-	/**
-	 * Utility method for parsers : check if the current context is a descendant of a context of a given type.
-	 * @param searchedAncestorType The type of ancestor to search for.
-	 * @param ancestors The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
-	 * @return True if an ancestor of the searched type is present, false otherwise.
-	 */
-	protected static boolean hasAncestor(ContextType searchedAncestorType, Deque<ContextMetadata> ancestors) {
-		return ancestors.stream().anyMatch(a -> a.type == searchedAncestorType);
-	}
-
-	protected static boolean hasAncestorCtx(ContextType searchedAncestorType, Deque<Context> ancestors) {
-		return ancestors.stream().anyMatch(a -> a.metadata.type == searchedAncestorType);
-	}
-
-	protected static boolean isInVerseText(Deque<ContextMetadata> ancestors) {
-		return hasAncestor(ContextType.VERSE, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors);
-	}
-	
-	private static void integrateNewContext(Context existingAncestor, List<ContextMetadata> implicitAncestors, Context newContext) {
-		Context currentAncestor = existingAncestor;
-		for(ContextMetadata implicitAncestor: implicitAncestors) {
-			Context newAncestor = new Context(implicitAncestor);
-			currentAncestor.addChild(newAncestor);
-			currentAncestor = newAncestor;
-		}
-		
-		currentAncestor.addChild(newContext);
-	}
-
-	public interface TriPredicate<A, B, C> {
-		boolean test(A a, B b, C c);
-	}
-
-	/**
-	 *
-	 * @param contextStack The current stack of the evaluation, with possible implicit contexts appended.
-	 *                     First element (top of the stack) is the direct parent of the element being checked.
-	 * @param allowedEltTypes The type of elements allowed at this point in the stack.
-	 * @param getPreviousOfType Function returning the metadata of the previous sibling of the same type, or null if there is none.
-	 * @param isTypeOkForNext Returns true if an element at the given stack position and of the given type is accepted as end of the path.
-	 * @return The list of implicit contexts built to reach the accepted element type (not including this accepted element type).
-	 */
-	private static List<ContextMetadata> getImplicitPathToNext(Deque<ContextMetadata> contextStack,
-															   List<ContextType> allowedEltTypes,
-															   Function<ContextType, ContextMetadata> getPreviousOfType,
-															   TriPredicate<Deque<ContextMetadata>, ContextType, ContextMetadata> isTypeOkForNext) {
-		for(ContextType eltType: allowedEltTypes) {
-			if(isTypeOkForNext.test(contextStack, eltType, getPreviousOfType.apply(eltType))) {
-				// If this element type is accepted at the current stack location, return an empty list.
-				// (No additional implicit element needed.)
-				return List.of();
-			}
-
-			if(eltType.implicitAllowed) {
-				// If this element type can be created implicitly, look for an implicit path from it.
-
-				// Build an implicit context for this element.
-				ContextMetadata eltMeta = ContextMetadata.fromParent(eltType, contextStack.peekFirst());
-
-				// Build a new context stack, with an implicit context for this element on top.
-				Deque<ContextMetadata> contextStackWithElt = new LinkedList<>(contextStack);
-				contextStackWithElt.addFirst(eltMeta);
-
-				// Recursively search for an implicit path from this element's children.
-				// If building implicit element, there will be no previous element of this type.
-				List<ContextMetadata> implicitFromThisElt = getImplicitPathToNext(contextStackWithElt,
-						eltType.getAllowedTypesForFirstChild(), t -> null, isTypeOkForNext);
-
-				if(implicitFromThisElt != null) {
-					// If any found, then return the path with this implicit element and the found path from it.
-					List<ContextMetadata> result = new ArrayList<>();
-					result.add(eltMeta);
-					result.addAll(implicitFromThisElt);
-					return result;
-				}
-			}
-		}
-
-		// None of the allowed element types provided an implicit path ? Then no implicit path available.
-		return null;
-	}
-
-	public static boolean addDescendant(Context rootContext, final Context descendant) {
-		List<ContextType> allowedTypes = rootContext.getAllowedTypesForNextChild();
-
-		if(allowedTypes.contains(descendant.metadata.type)) {
-			// The root context can contain the descendant directly : add it.
-			rootContext.addChild(descendant);
-			return true;
-		}
-
-		Optional<Context> lastChild = rootContext.getLastChild();
-		if(lastChild.isPresent()) {
-			// The root context has a last child : check recursively if it can accept the descendant.
-			if(addDescendant(lastChild.get(), descendant)) {
-				return true;
-			}
-		}
-
-		// Finally, check if an implicit path is possible.
-		// Build a "fake" context stack from this root, as the stack is not used by the predicate anyway.
-		Deque<ContextMetadata> stack = new LinkedList<>();
-		stack.addFirst(rootContext.metadata);
-		List<ContextMetadata> implicitPath = getImplicitPathToNext(stack, allowedTypes, t -> null,
-				(s, type, previousMeta) -> type == descendant.metadata.type);
-
-		if(implicitPath != null) {
-			// If an implicit path is possible, integrate the descendant to the root via this path.
-			integrateNewContext(rootContext, implicitPath, descendant);
-			return true;
-		}
-
-		// Could not add the descendant to the given root.
-		return false;
-	}
-
-	/**
-	 * Utility method for parser implementations to build a deep context, ie a context containing others.
-	 * Contrary to the Context constructor, which only allows specifying direct children, this method accepts further
-	 * descendants by building implicit ancestors if needed.
-	 * This makes the code calling this method a lot less sensitive to evolutions of the context structure
-	 * (ie enriching the context tree with new implicit elements) than if it was using the Context constructor.
-	 *
-	 * @param metadata The metadata of the context to build.
-	 * @param value The value stored in the context, if any.
-	 * @param descendants The sequence of descendants to append to the built context, in order.
-	 * @return The new context, containing the descendants.
-	 */
-	public static Context buildContext(ContextMetadata metadata, String value, Context... descendants) {
-		Context newContext = new Context(metadata, value);
-		for(Context descendant: descendants) {
-			if(!addDescendant(newContext, descendant)) {
-				throw new IllegalArgumentException("Cannot insert " + descendant + " as descendant of " + newContext);
-			}
-		}
-		return newContext;
-	}
-
-	/**
-	 * Equivalent to {@link #buildContext(ContextMetadata, String, Context...)}, with a null value.
-	 * @param metadata The metadata of the context to build.
-	 * @param descendants The sequence of descendants to append to the built context, in order.
-	 * @return The new context, containing the descendants.
-	 */
-	public static Context buildContext(ContextMetadata metadata, Context... descendants) {
-		return buildContext(metadata, null, descendants);
-	}
-	
-	private static void navigateToAppendPoint(Deque<Context> currentContextStack, Context newContext, List<ContextEvent> events) {
-		Context currentContext = currentContextStack.peekFirst();
-
-		// Then check its children to navigate deeper.
-		List<Context> children = currentContext.children;
-		if(!children.isEmpty()) {
-			if(newContext == null || newContext == currentContext) {
-				// If we are under the new context, all previous children are also new and need to be collected.
-				for(int i = 0; i < children.size() - 1; i++) {
-					events.addAll(ContextEvent.fromContext(children.get(i)));
-				}
-
-				// Set new context to null for recursive iterations, to let them know we are under the new context.
-				newContext = null;
-			}
-
-			// Navigate to the last child (newly created, so build an event) and call recursively.
-			Context lastChild = children.get(children.size() - 1);
-			currentContextStack.addFirst(lastChild);
-			events.add(new ContextEvent(ContextEvent.Type.OPEN, lastChild));
-			navigateToAppendPoint(currentContextStack, newContext, events);
-		}
-	}
-
+	private final ParserCore<Position> core;
 	private final Iterator<Position> positions;
 	private final Deque<Context> currentContextStack;
 	private Parser<?> currentExternalParser;
 
 	/**
 	 *
+	 * @param core A parser core that actually reads data from the source positions.
 	 * @param positions An iterator on the positions in the document to parse.
 	 * @param currentContextStack The context stack to parse against. Must at least contain one context.
 	 *                               (Will be modified by the parsing).
 	 */
-	protected Parser(Iterator<Position> positions, Deque<Context> currentContextStack) {
+	public Parser(ParserCore<Position> core, Iterator<Position> positions, Deque<Context> currentContextStack) {
 		assert !currentContextStack.isEmpty();
+		this.core = core;
 		this.positions = positions;
         this.currentContextStack = currentContextStack;
 		this.currentExternalParser = null;
     }
-
-	/**
-	 * @param ancestorStack The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
-	 * @param type The type of context to try creating from this position.
-	 * @param previousOfType Metadata of the previous sibling of the same type, or null if there is none.
-	 * @param position The position to check for a context opening.
-	 * @return A new context built from this position, or null if no context can be created at this position.
-	 */
-	protected abstract Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
-										   ContextMetadata previousOfType, Position position);
-
-	/**
-	 * Handle the position using external parsing logic if needed. That's useful if you are using a lexeme based parser,
-	 * but need to switch to a different type of lexeme or parser to analyse a given position.
-	 * When implemented, this method will usually break the positions in a sequence of smaller sub-positions of
-	 * a different type, and return a dedicated parser working on this sequence.
-	 *
-	 * @param position The position to parse with an external logic.
-	 * @param currentContextStack The current context stack when this position was reached. This stack may be modified during the external parsing.
-	 * @return The external parser to handle the position. If null, then the position will be handled by the current parser.
-	 */
-	protected Parser<?> parseExternally(Position position, Deque<Context> currentContextStack) {
-		// No manual parsing is done by default.
-		// This method should be overridden by implementations if some positions require manual parsing.
-		return null;
-	}
 
 	/**
 	 * Generate additional events once the parsing is complete.
@@ -247,36 +51,134 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		return List.of();
 	}
 
-	/**
-	 @param contextStack The current stack of the evaluation, where first element (top of the stack) is the closest existing ancestor.
-	 @param position The lexeme being processed.
-	 */
-	private Context getNextContextFrom(Deque<Context> contextStack, Position position) {
-		final Context closestAncestor = contextStack.peekFirst();
+	private static class ContextState {
+		/**
+		 * Stack of contexts in a given state.
+		 */
+		public final List<Context> contextStack;
+		/**
+		 * Sequence of events from the base state (in principle the last committed state) to this state.
+		 */
+		public final List<ContextEvent> events;
+		/**
+		 * If true, no more context can (or should) be extracted from the current position, parser needs to advance.
+		 */
+		public final boolean positionExhausted;
 
-		// Look for a context that can be opened by this lexeme via an implicit path.
-		final Context[] nextCtx = new Context[] { null };
-		List<ContextMetadata> implicitPath = getImplicitPathToNext(
-				contextStack.stream().map(c -> c.metadata).collect(Collectors.toCollection(LinkedList::new)),
-				closestAncestor.getAllowedTypesForNextChild(),
-				type -> closestAncestor.getLastChildOfTypeMeta(type),
-				(stack, type, previousOfType) -> {
-					// Try opening a context of the proposed type in the proposed stack location.
-					Context next = readContext(stack, type, previousOfType, position);
-					if(next != null) {
-						// If successful, save it and validate this implicit path.
-						nextCtx[0] = next;
-						return true;
-					}
-					return false;
-				}
-		);
-
-		if(nextCtx[0] != null) {
-			// If a next context was actually built, integrate it as descendant of the closest ancestor.
-			integrateNewContext(closestAncestor, implicitPath, nextCtx[0]);
+		private ContextState(List<Context> contextStack, List<ContextEvent> events, boolean positionExhausted) {
+			this.contextStack =	Collections.unmodifiableList(contextStack);
+			this.events = Collections.unmodifiableList(events);
+			this.positionExhausted = positionExhausted;
 		}
-		return nextCtx[0];
+
+		public ContextState openChildContext(Context context) {
+			assert contextStack.get(0).getAllowedTypesForNextChild().contains(context.metadata.type)
+					: "Context to open " + context + " must be one of " + contextStack.get(0).getAllowedTypesForNextChild();
+
+			// Head of stack is replaced by one where the new child is added.
+			Context parentCtx = contextStack.get(0).addChild(context);
+			LinkedList<Context> newStack = new LinkedList<>(contextStack);
+			newStack.removeFirst();
+			newStack.addFirst(parentCtx);
+
+			// New child is added as head of stack, and open event is appended.
+			newStack.addFirst(context);
+			List<ContextEvent> newEvents = new LinkedList<>(events);
+			newEvents.add(new ContextEvent(ContextEvent.Type.OPEN, context));
+
+			return new ContextState(newStack, newEvents, positionExhausted);
+		}
+
+		public boolean canCloseCurrentContext() {
+			// At least two contexts in stack (we must always keep a root), and head context is complete.
+			return contextStack.size() > 1 && !contextStack.get(0).isIncomplete();
+		}
+
+		public ContextState closeCurrentContext() {
+			assert canCloseCurrentContext()	: "Context to close " + contextStack.get(0) + " must be complete";
+
+			// New state has the head context removed from stack, and a close event appended.
+			List<Context> newStack = new LinkedList<>(contextStack);
+			Context closed = newStack.remove(0);
+			List<ContextEvent> newEvents = new LinkedList<>(events);
+			newEvents.add(new ContextEvent(ContextEvent.Type.CLOSE, closed));
+
+			return new ContextState(newStack, newEvents, positionExhausted);
+		}
+
+		public ContextState notifyPositionExhausted() {
+			return new ContextState(contextStack, events, true);
+		}
+	}
+
+	private ContextState parseDescendantContext(ContextState baseState, Position position) {
+		Context baseContext = baseState.contextStack.get(0);
+
+		// Loop through all allowed types for the next child of the head context.
+		for(ContextType eltType: baseContext.getAllowedTypesForNextChild()) {
+			// Try to extract a real context of this type.
+			ParserCore.PositionParseOutput out = core.readContext(baseState.contextStack.stream()
+							.map(c -> c.metadata)
+							.collect(Collectors.toCollection(LinkedList::new)),
+					eltType, baseState.contextStack.get(0).getLastChildOfTypeMeta(eltType), position);
+
+			if(out.parsedContext != null) {
+				// Found a matching context : return a new state with it.
+				ContextState resultState = baseState.openChildContext(out.parsedContext);
+				if(out.positionExhausted) {
+					resultState = resultState.notifyPositionExhausted();
+				}
+				return resultState;
+			}
+
+			if(eltType.implicitAllowed) {
+				// If this element type can be created implicitly, build one and look recursively.
+
+				// Build an implicit context for this element.
+				Context newContext = new Context(ContextMetadata.fromParent(eltType, baseContext.metadata));
+
+				// Call recursively until we get a real state.
+				ContextState reachedState = parseDescendantContext(baseState.openChildContext(newContext), position);
+				if(reachedState != null) {
+					return reachedState;
+				}
+			}
+		}
+
+		// None of the allowed element types found a context, then do not return a new state.
+		return null;
+	}
+
+	private List<ContextEvent> parsePosition(Position position) {
+		// Initial state with current context stack and no event.
+		ContextState committedState = new ContextState(new LinkedList<>(currentContextStack), new LinkedList<>(), false);
+
+		// While new contexts can be opened from this position.
+		while(!committedState.positionExhausted) {
+			ContextState tentativeState = committedState;
+
+			ContextState nextState;
+			while((nextState = parseDescendantContext(tentativeState, position)) == null
+					&& tentativeState.canCloseCurrentContext()) {
+				// No descendant context could be opened : try to move up to the parent.
+				tentativeState = tentativeState.closeCurrentContext();
+			}
+
+			if(nextState != null) {
+				// We reached a valid next state : commit it !
+				committedState = nextState;
+			}
+			else {
+				// Couldn't reach a next state after testing all possibilities with the current position ?
+				// Consider the position exhausted.
+				committedState = committedState.notifyPositionExhausted();
+			}
+		}
+
+		// Save the stack and return all events from the last committed state.
+		this.currentContextStack.clear();
+		this.currentContextStack.addAll(committedState.contextStack);
+		return committedState.events;
 	}
 
 	/**
@@ -316,44 +218,19 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 			Position position = positions.next();
 
 			// Check if we need external parsing logic at this position.
-			this.currentExternalParser = parseExternally(position, currentContextStack);
+			this.currentExternalParser = core.parseExternally(position, currentContextStack);
 			if(currentExternalParser != null) {
 				// We built an external parser.
 				// Return an empty list, and the next iteration will consume it.
 				return List.of();
 			}
 
-			// Check if another context can be created at this position as descendant of the current.
-			LinkedList<Context> nextContextStack = new LinkedList<>(currentContextStack);
-			Context nextCtx = getNextContextFrom(nextContextStack, position);
-			// If not descendant of the current context, and if the current context may be considered complete, try to move up the stack.
-			while(nextContextStack.size() > 1 && !nextContextStack.peekFirst().isIncomplete() && nextCtx == null) {
-				nextContextStack.removeFirst();
-				nextCtx = getNextContextFrom(nextContextStack, position);
-			}
-
-			if(nextCtx != null) {
-				// Another context was created at this position !
-				// Collect related events.
-				List<ContextEvent> events = new ArrayList<>();
-
-				// Move up the current context stack to align with the next context stack.
-				while(currentContextStack.peekFirst() != nextContextStack.peekFirst()) {
-					// Every item from the current stack that is not on the next stack is completed : collect a close event.
-					assert !currentContextStack.peekFirst().isIncomplete() : "Context to close " + currentContextStack.peekFirst() + " must be complete";
-					events.add(new ContextEvent(ContextEvent.Type.CLOSE, currentContextStack.removeFirst()));
-				}
-
-				// Finally, navigate to the current "append point" : this is the last child (of the last child of the last child, recursively),
-				// of the newly added context, ie the place that may be extended by the next lexeme.
-				// Collect events for all newly added contexts on the way.
-				navigateToAppendPoint(currentContextStack, nextCtx, events);
-
-				// Return these events and stop at this position until next call.
+			List<ContextEvent> events = parsePosition(position);
+			if(!events.isEmpty()) {
+				// Events produced from this position : return them.
 				return events;
 			}
-
-			// No new context could be opened at this position : move to next position.
+			// No new events were produced from this position : move to next position.
 		}
 
 		// Reached the last position.
@@ -364,7 +241,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		return StreamUtils.toStream(StreamUtils.toFlatIterator(this));
 	}
 
-	public static abstract class TerminalParser<Position> extends Parser<Position> {
+	public static class TerminalParser<Position> extends Parser<Position> {
 
 		private final Context rootContext;
 
@@ -372,8 +249,8 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 		 * @param positions An iterator on the positions in the document to parse.
 		 * @param rootContext The root context to be filled by this parser.
 		 */
-		protected TerminalParser(Iterator<Position> positions, Context rootContext) {
-			super(positions, new LinkedList<>(List.of(rootContext)));
+		public TerminalParser(ParserCore<Position> core, Iterator<Position> positions, Context rootContext) {
+			super(core, positions, new LinkedList<>(List.of(rootContext)));
 			this.rootContext = rootContext;
 		}
 
@@ -382,7 +259,7 @@ public abstract class Parser<Position> implements Iterator<List<ContextEvent>> {
 			// Collect close events for the active stack, up until the root context
 			// (excluded, since it was not opened by the parser itself).
 			List<ContextEvent> events = new ArrayList<>();
-			while (!Objects.equals(currentContextStack.peekFirst(), rootContext)) {
+			while (currentContextStack.peekFirst().contextUniqueId != rootContext.contextUniqueId) {
 				events.add(new ContextEvent(ContextEvent.Type.CLOSE, currentContextStack.removeFirst()));
 			}
 			return events;

@@ -322,14 +322,13 @@ books:
     args: { BOOK: Ap }
     chapters: [ { from: 1, to: 22 } ]
 
-parser:
-  - type: VERSE
-    selector: "#right-col p:has(> span:is(.verse_number, .text-danger))"
-    valueExtractor:
-      selector: "> span:is(.verse_number, .text-danger)"
-      op: text
-    descendantExtractors:
-      - type: TEXT
-        valueExtractor:
-          op: ownText
+elements:
+  - selector: "#right-col p:has(> span:is(.verse_number, .text-danger))"
+    contexts:
+      - type: VERSE
+        selector: "> span:is(.verse_number, .text-danger)"
+        op: text
+        descendants:
+          - type: TEXT
+            op: ownText
 

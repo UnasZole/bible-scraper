@@ -315,75 +315,77 @@ books:
     args: { BOOK_NB: 73, BOOK_NAME: ecclesiastique }
     chapters: [ { from: 0, to: 51 } ]
 
-parser:
-  - type: BOOK_TITLE
-    selector: "h1.mb-3"
-    descendantExtractors:
-      - type: TEXT
-        valueExtractor:
-          op: ownText
-  - type: FLAT_TEXT
-    withAncestor: BOOK_INTRO
-    selector: "#logos > p"
-    descendantExtractors:
-      - type: TEXT
-        valueExtractor:
-          op: text
+elements:
+  - selector: "h1.mb-3"
+    contexts:
+      - type: BOOK_TITLE
+        descendants:
+          - type: TEXT
+            op: ownText
+  - selector: "#logos > p"
+    withAncestors: [ BOOK_INTRO ]
+    contexts:
+      - type: FLAT_TEXT
+        descendants:
+          - type: TEXT
+            op: text
+  - selector: "#logos > h2"
+    contexts:
+      - type: MAJOR_SECTION_TITLE
+        descendants:
+          - type: TEXT
+            op: text
+  - selector: "#logos > h3:not(:has(> em))"
+    contexts:
+      - type: SECTION_TITLE
+        descendants:
+          - type: TEXT
+            op: text
+  - selector: "#logos > h3:has(> em)"
+    contexts:
+      - type: MINOR_SECTION_TITLE
+        descendants:
+          - type: TEXT
+            op: text
 
-  - type: MAJOR_SECTION_TITLE
-    selector: "#logos > h2"
-    descendantExtractors:
-      - type: TEXT
-        valueExtractor:
-          op: text
-  - type: SECTION_TITLE
-    selector: "#logos > h3:not(:has(> em))"
-    descendantExtractors:
-      - type: TEXT
-        valueExtractor:
-          op: text
-  - type: MINOR_SECTION_TITLE
-    selector: "#logos > h3:has(> em)"
-    descendantExtractors:
-      - type: TEXT
-        valueExtractor:
-          op: text
-
-  - type: VERSE
-    selector: "#logos > span.verset"
-    valueExtractor:
-      op: text
+  - selector: "#logos > span.verset"
+    contexts:
+      - type: VERSE
+        op: text
 
 nodeParsers:
   - selector: "#logos > span[data-verset]"
-    withAncestor: VERSE
-    textNodeExtractors:
-      - type: TEXT
-        withoutAncestor: ANNOTATION
-        regexp: (.*)
-    elementExtractors:
-      - type: TEXT
-        selector: "#logos > span[data-verset] > *:not(button.footnote):not(br)"
-        valueExtractor:
-          op: text
-      - type: NOTE
-        selector: "#logos button.footnote"
-        descendantExtractors:
+    withAncestors: [ VERSE ]
+    withoutAncestors: [ ANNOTATION ]
+    nodes:
+      - contexts:
           - type: TEXT
-            valueExtractor:
+            regexp: (.*)
+
+    elements:
+      - selector: "#logos > span[data-verset] > *:not(button.footnote):not(br)"
+        contexts:
+          - type: TEXT
+            op: text
+      - selector: "#logos button.footnote"
+        contexts:
+          - type: NOTE
+            descendants:
+            - type: TEXT
               op: attribute=data-bs-content
 
       # theo.place does not have explicit poetry markup, but uses line breaks inside verses.
       # The following rules interpret that in a "best-effort" mode, such that verses which contain line breaks are treated as poetry.
       # It leads to some false positives : when the poetry starts or end in the middle of a verse, the full verse will be tagged as poetry anyway.
       # See Num 21:14 in the "tob" bible for example.
-      - type: POETRY_LINE_INDENT
-        selector: "#logos > span[data-verset]:has(> br)"
-        valueExtractor:
-          op: literal=1
-      - type: POETRY_LINE_INDENT
-        selector: "#logos > span[data-verset] > br"
-        valueExtractor:
-          op: literal=1
-      - type: POETRY_STANZA_BREAK
-        selector: "#logos > span[data-verset]:has(> br) + br + span.verset + span[data-verset]:not(:has(> br))"
+      - selector: "#logos > span[data-verset]:has(> br)"
+        contexts:
+          - type: POETRY_LINE_INDENT
+            op: literal=1
+      - selector: "#logos > span[data-verset] > br"
+        contexts:
+          - type: POETRY_LINE_INDENT
+            op: literal=1
+      - selector: "#logos > span[data-verset]:has(> br) + br + span.verset + span[data-verset]:not(:has(> br))"
+        contexts:
+          - type: POETRY_STANZA_BREAK

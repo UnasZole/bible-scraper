@@ -1,30 +1,38 @@
 package com.github.unaszole.bible.datamodel;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Context {
-	
+
+	private static long instanceCounter = 0;
+
 	public final ContextMetadata metadata;
 	public final String value;
-	public final List<Context> children = new ArrayList<>();
+	public final List<Context> children;
+	public final long contextUniqueId;
 
-	public Context(ContextMetadata metadata, Context... children) {
-		this(metadata, null, children);
-	}
-
-	public Context(ContextMetadata metadata, String value, Context... children) {
+	private Context(ContextMetadata metadata, String value, List<Context> children, long contextUniqueId) {
 		this.metadata = metadata;
 		this.value = value;
-		this.children.addAll(List.of(children));
+		this.children = children;
+		this.contextUniqueId = contextUniqueId;
+	}
+
+	public Context(ContextMetadata metadata, String value) {
+		this(metadata, value, List.of(), instanceCounter++);
+	}
+
+	public Context(ContextMetadata metadata) {
+		this(metadata, null);
 	}
 	
-	public void addChild(Context child) {
-		children.add(child);
+	public Context addChild(Context child) {
+		List<Context> newChildren = new ArrayList<>(children);
+		newChildren.add(child);
+		return new Context(metadata, value, newChildren, contextUniqueId);
 	}
 	
 	public Optional<Context> getLastChild() {

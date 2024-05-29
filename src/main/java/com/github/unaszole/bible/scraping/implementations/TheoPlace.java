@@ -3,10 +3,7 @@ package com.github.unaszole.bible.scraping.implementations;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.scraping.CachedDownloader;
-import com.github.unaszole.bible.scraping.Parser;
-import com.github.unaszole.bible.scraping.ParsingUtils;
-import com.github.unaszole.bible.scraping.Scraper;
+import com.github.unaszole.bible.scraping.*;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
 import com.github.unaszole.bible.stream.StreamUtils;
@@ -24,6 +21,8 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
+
+import static com.github.unaszole.bible.scraping.ContextReaderListBuilder.context;
 
 public class TheoPlace extends Scraper {
 
@@ -139,7 +138,7 @@ public class TheoPlace extends Scraper {
         BOOKS.put(BibleBook.SIR, new BookRef(73, "ecclesiastique", 51));
     };
 
-    private static class PageParser extends Parser.TerminalParser<Element> {
+    private static class PageParser extends PositionBufferedParserCore<Element> {
 
         private final static Evaluator DOC_TITLE_SELECTOR = QueryParser.parse("h1.mb-3");
         private final static Evaluator MAJOR_SECTION_TITLE_SELECTOR = QueryParser.parse("#logos > h2");
@@ -150,31 +149,27 @@ public class TheoPlace extends Scraper {
         private final static Evaluator VERSE_TEXT_SELECTOR = QueryParser.parse("#logos > span[data-verset]");
         private final static Evaluator NOTE_SELECTOR = QueryParser.parse("#logos button.footnote");
 
-        protected PageParser(Stream<Element> docStream, Context rootContext) {
-            super(docStream.iterator(), rootContext);
-        }
-
-        public static Context parseFlatText(Element e) {
-            Context out = new Context(ContextMetadata.forFlatText());
+        public static List<ContextReader> parseFlatText(Element e) {
+            ContextReaderListBuilder contentsBuilder = new ContextReaderListBuilder();
             for(Node n: e.childNodes()) {
                 if(n instanceof Element) {
                     if(((Element) n).is(NOTE_SELECTOR)) {
-                        addDescendant(out, buildContext(ContextMetadata.forNote(),
-                                new Context(ContextMetadata.forText(), n.attr("data-bs-content"))
-                        ));
+                        contentsBuilder.followedBy(ContextMetadata.forNote(),
+                                context(ContextMetadata.forText(), n.attr("data-bs-content"))
+                        );
                     }
                     else if(((Element) n).is("br")) {
-                        addDescendant(out, new Context(ContextMetadata.forText(), " "));
+                        contentsBuilder.followedBy(ContextMetadata.forText(), " ");
                     }
                     else {
-                        addDescendant(out, new Context(ContextMetadata.forText(), ((Element) n).text()));
+                        contentsBuilder.followedBy(ContextMetadata.forText(), ((Element) n).text());
                     }
                 }
                 else if(n instanceof TextNode) {
-                    addDescendant(out, new Context(ContextMetadata.forText(), ((TextNode) n).text()));
+                    contentsBuilder.followedBy(ContextMetadata.forText(), ((TextNode) n).text());
                 }
             }
-            return out;
+            return context(ContextMetadata.forFlatText(), contentsBuilder).build();
         }
 
         private boolean isMajorSectionTitle(Element e) {
@@ -188,16 +183,16 @@ public class TheoPlace extends Scraper {
         }
 
         @Override
-        protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type,
+        protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestors, ContextType type,
                                       ContextMetadata previousOfType, Element e) {
             ContextMetadata parent = ancestors.peekFirst();
 
             switch(type) {
                 case BOOK_TITLE:
-                    return e.is(DOC_TITLE_SELECTOR) ? buildContext(
-                            ContextMetadata.forBookTitle(parent.book),
-                            new Context(ContextMetadata.forText(), e.ownText())
-                    ) : null;
+                    return e.is(DOC_TITLE_SELECTOR) ?
+                            context(ContextMetadata.forBookTitle(parent.book),
+                                    context(ContextMetadata.forText(), e.ownText())
+                            ).build() : List.of();
 
                 /*
                 case CHAPTER_TITLE:
@@ -211,39 +206,39 @@ public class TheoPlace extends Scraper {
                 */
 
                 case VERSE:
-                    return e.is(VERSE_START_SELECTOR) ? new Context(
+                    return e.is(VERSE_START_SELECTOR) ? context(
                             ParsingUtils.getVerseMetadata(parent, previousOfType, e.text()), e.text()
-                    ) : null;
+                    ).build() : List.of();
 
                 case MAJOR_SECTION_TITLE:
-                    return isMajorSectionTitle(e) ? buildContext(
-                            ContextMetadata.forMajorSectionTitle(),
-                            new Context(ContextMetadata.forText(), e.text())
-                    ) : null;
+                    return isMajorSectionTitle(e) ?
+                            context(ContextMetadata.forMajorSectionTitle(),
+                                    context(ContextMetadata.forText(), e.text())
+                            ).build() : List.of();
 
                 case SECTION_TITLE:
-                    return isSectionTitle(e) ? buildContext(
-                            ContextMetadata.forSectionTitle(),
-                            new Context(ContextMetadata.forText(), e.text())
-                    ) : null;
+                    return isSectionTitle(e) ?
+                            context(ContextMetadata.forSectionTitle(),
+                                    context(ContextMetadata.forText(), e.text())
+                            ).build() : List.of();
 
                 case MINOR_SECTION_TITLE:
-                    return e.is(MINOR_SECTION_TITLE_SELECTOR) ? buildContext(
-                            ContextMetadata.forMinorSectionTitle(),
-                            new Context(ContextMetadata.forText(), e.text())
-                    ) : null;
+                    return e.is(MINOR_SECTION_TITLE_SELECTOR) ?
+                            context(ContextMetadata.forMinorSectionTitle(),
+                                    context(ContextMetadata.forText(), e.text())
+                            ).build() : List.of();
 
                 case FLAT_TEXT:
-                    if(hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
-                        return e.is(BOOK_INTRO_PARAGRAPH_SELECTOR) ? parseFlatText(e) : null;
+                    if(ParsingUtils.hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
+                        return e.is(BOOK_INTRO_PARAGRAPH_SELECTOR) ? parseFlatText(e) : List.of();
                     }
-                    if(hasAncestor(ContextType.VERSE, ancestors)) {
-                        return e.is(VERSE_TEXT_SELECTOR) ? parseFlatText(e) : null;
+                    if(ParsingUtils.hasAncestor(ContextType.VERSE, ancestors)) {
+                        return e.is(VERSE_TEXT_SELECTOR) ? parseFlatText(e) : List.of();
                     }
-                    return null;
+                    return List.of();
             }
 
-            return null;
+            return List.of();
         }
     }
 
@@ -266,7 +261,8 @@ public class TheoPlace extends Scraper {
                 if(!doc.select("h3:contains(Livre ou chapitre inexistant)").isEmpty()) {
                     return Stream.of();
                 }
-                return new PageParser(doc.stream(), rootContext).asContextStream().getStream();
+                return new Parser.TerminalParser<>(new PageParser(), doc.stream().iterator(), rootContext)
+                        .asContextStream().getStream();
             }
             catch (IOException e) {
                 throw new RuntimeException(e);

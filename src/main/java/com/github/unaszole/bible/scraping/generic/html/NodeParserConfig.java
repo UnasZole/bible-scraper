@@ -3,6 +3,7 @@ package com.github.unaszole.bible.scraping.generic.html;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.Parser;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -11,47 +12,33 @@ import org.jsoup.nodes.TextNode;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class NodeParserConfig extends ExternalParserConfig {
 
-    public List<TextNodeContextExtractor> textNodeExtractors;
-    public List<ElementContextExtractor> elementExtractors;
+    public List<TextNodeParser> nodes;
+    public List<ElementParser> elements;
 
-    private Context readElementContext(Deque<ContextMetadata> ancestorStack, ContextType type,
-                                       ContextMetadata previousOfType, Element e) {
-        if(elementExtractors == null) {
-            return null;
-        }
-
-        List<ElementContextExtractor> extractors = elementExtractors.stream()
-                .filter(ex -> ex.canOpenContextAt(ancestorStack, type))
-                .collect(Collectors.toList());
-        for(ElementContextExtractor extractor: extractors) {
-            Context out = extractor.extractRootContext(e, ancestorStack.peekFirst(), previousOfType);
-            if(out != null) {
-                return out;
+    private List<PositionBufferedParserCore.ContextReader> parseElement(Deque<ContextMetadata> ancestorStack,
+                                                                        ContextType type, Element e) {
+        for(ElementParser eltParser: elements) {
+            List<PositionBufferedParserCore.ContextReader> result = eltParser.parse(e, ancestorStack, type);
+            if(result != null) {
+                return result;
             }
         }
-        return null;
+        return List.of();
     }
 
-    private Context readTextNodeContext(Deque<ContextMetadata> ancestorStack, ContextType type,
-                                        ContextMetadata previousOfType, TextNode t) {
-        if(textNodeExtractors == null) {
-            return null;
-        }
+    private List<PositionBufferedParserCore.ContextReader> parseTextNode(Deque<ContextMetadata> ancestorStack,
+                                                                         ContextType type, TextNode t) {
 
-        List<TextNodeContextExtractor> extractors = textNodeExtractors.stream()
-                .filter(ex -> ex.canOpenContextAt(ancestorStack, type))
-                .collect(Collectors.toList());
-        for(TextNodeContextExtractor extractor: extractors) {
-            Context out = extractor.extract(t, ancestorStack.peekFirst(), previousOfType);
-            if(out != null) {
-                return out;
+        for(TextNodeParser nodeParser: nodes) {
+            List<PositionBufferedParserCore.ContextReader> result = nodeParser.parse(t, ancestorStack, type);
+            if(result != null) {
+                return result;
             }
         }
-        return null;
+        return List.of();
     }
 
     private Iterator<Node> getNodeIterator(Element e) {
@@ -102,18 +89,17 @@ public class NodeParserConfig extends ExternalParserConfig {
 
     @Override
     public Parser<?> getParser(Element e, Deque<Context> currentContextStack) {
-        return new Parser<Node>(getNodeIterator(e), currentContextStack) {
+        return new Parser<Node>(new PositionBufferedParserCore<Node>() {
             @Override
-            protected Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
-                                          ContextMetadata previousOfType, Node n) {
+            protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type, ContextMetadata previousOfType, Node n) {
                 if(n instanceof Element) {
-                    return readElementContext(ancestorStack, type, previousOfType, (Element) n);
+                    return parseElement(ancestorStack, type, (Element) n);
                 }
                 else if(n instanceof TextNode) {
-                    return readTextNodeContext(ancestorStack, type, previousOfType, (TextNode) n);
+                    return parseTextNode(ancestorStack, type, (TextNode) n);
                 }
                 return null;
             }
-        };
+        }, getNodeIterator(e), currentContextStack);
     }
 }

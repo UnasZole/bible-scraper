@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.github.unaszole.bible.scraping.ContextReaderListBuilder.context;
+
 public class ChouraquiSpiritualLand extends Scraper {
 
 	public static Help getHelp(String[] inputs) {
@@ -142,7 +144,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 			.collect(Collectors.toList());
 	}
 	
-	private static class ElementParser extends Parser.TerminalParser<Element> {
+	private static class ElementParser extends PositionBufferedParserCore<Element> {
 		private final static String CHAPTER_TITLE_REGEXP = "^Chapitre (\\d+)\\.?$";
 		private final static String S_CHAPTER_TITLE_CONTAINER = ":is(div,p,h3):matches(" + CHAPTER_TITLE_REGEXP + ")";
 		private final static String S_NONCHAPTER_STRONG_CONTAINER = "div:not(" + S_CHAPTER_TITLE_CONTAINER + "):has(> strong)";
@@ -165,10 +167,6 @@ public class ChouraquiSpiritualLand extends Scraper {
 		private final static Pattern CHAPTER_TITLE_PATTERN = Pattern.compile(CHAPTER_TITLE_REGEXP);
 		private final static Pattern VERSE_START_PATTERN = Pattern.compile(VERSE_START_REGEXP);
 
-		protected ElementParser(Stream<Element> docStream, Context rootContext) {
-			super(docStream.iterator(), rootContext);
-		}
-
 		private static String extract(Pattern pattern, int groupNb, String sourceString) {
 			Matcher matcher = pattern.matcher(sourceString);
 			if(matcher.matches()) {
@@ -186,22 +184,25 @@ public class ChouraquiSpiritualLand extends Scraper {
 		}
 		
 		@Override
-		protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type,
+		protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestors, ContextType type,
 									  ContextMetadata previousOfType, Element e) {
 			ContextMetadata parent = ancestors.peekFirst();
 			
 			switch(type) {
 				case BOOK_TITLE:
 					return e.is(BOOK_TITLE_SELECTOR) && !isBookIntroTitle(e.text())
-							&& !isBookGroupTitle(e.text()) ? buildContext(ContextMetadata.forBookTitle(parent.book),
-							new Context(ContextMetadata.forText(), e.text())
-					) : null;
+							&& !isBookGroupTitle(e.text()) ?
+							context(
+									ContextMetadata.forBookTitle(parent.book),
+									context(ContextMetadata.forText(), e.text())
+							).build() : List.of();
 
 				case BOOK_INTRO_TITLE:
-					return e.is(S_BOOK_INTRO_TITLE_CONTAINER) ? buildContext(
-							ContextMetadata.forBookIntroTitle(parent.book),
-							new Context(ContextMetadata.forText(), e.text())
-					) : null;
+					return e.is(S_BOOK_INTRO_TITLE_CONTAINER) ?
+							context(
+									ContextMetadata.forBookIntroTitle(parent.book),
+									context(ContextMetadata.forText(), e.text())
+							).build() : List.of();
 
 				case CHAPTER:
 					if(e.is(CHAPTER_TITLE_SELECTOR)) {
@@ -216,22 +217,19 @@ public class ChouraquiSpiritualLand extends Scraper {
 						}
 						if(previousOfType != null && chapterNb == previousOfType.chapter) {
 							// If chapter is the same as previous, ignore.
-							return null;
+							return List.of();
 						}
 
 						ContextMetadata chapterMeta = ContextMetadata.forChapter(parent.book, chapterNb);
 
-						return buildContext(chapterMeta, chapterNbStr /*,
-								new Context(ContextMetadata.forChapterTitle(parent.book, chapterNb)),
-								new Context(ContextMetadata.forText(), e.text())
-						*/);
+						return context(chapterMeta, chapterNbStr).build();
 					}
 				
 				case SECTION_TITLE:
-					return e.is(SECTION_TITLE_SELECTOR) ? buildContext(
-							ContextMetadata.forSectionTitle(),
-							new Context(ContextMetadata.forText(), e.text())
-					) : null;
+					return e.is(SECTION_TITLE_SELECTOR) ?
+							context(ContextMetadata.forSectionTitle(),
+									context(ContextMetadata.forText(), e.text())
+							).build() : List.of();
 				
 				case VERSE:
 					if(e.is(VERSE_START_SELECTOR)) {
@@ -240,42 +238,40 @@ public class ChouraquiSpiritualLand extends Scraper {
 						
 						ContextMetadata verseMeta = ParsingUtils.getVerseMetadata(parent, previousOfType, verseNb);
 
-						return buildContext(verseMeta, verseNb,
-								new Context(ContextMetadata.forFlatText()),
-								new Context(ContextMetadata.forText(), verseText)
-						);
+						return context(verseMeta, verseNb,
+								context(ContextMetadata.forFlatText(),
+										context(ContextMetadata.forText(), verseText)
+								)
+						).build();
 					}
 				
 				case PARAGRAPH_BREAK:
 					
-					if(hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
-						return e.is(BOOK_INTRO_BR_SELECTOR) ? buildContext(
-							ContextMetadata.forParagraphBreak()
-						) : null;
+					if(ParsingUtils.hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
+						return e.is(BOOK_INTRO_BR_SELECTOR) ?
+								context(ContextMetadata.forParagraphBreak()).build() : List.of();
 					}
 					
 				case TEXT:
 					
 					if("".equals(e.text())) {
 						// Do not create empty text nodes.
-						return null;
+						return List.of();
 					}
 
-					if(hasAncestor(ContextType.BOOK_INTRO, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors)) {
+					if(ParsingUtils.hasAncestor(ContextType.BOOK_INTRO, ancestors) && ParsingUtils.hasAncestor(ContextType.FLAT_TEXT, ancestors)) {
 						// Trying to find flat text within a book intro.
-						return e.is(BOOK_INTRO_SELECTOR) ? buildContext(
-							ContextMetadata.forText(), e.text()
-						) : null;
+						return e.is(BOOK_INTRO_SELECTOR) ?
+								context(ContextMetadata.forText(), e.text()).build() : List.of();
 					}
-					else if(isInVerseText(ancestors)) {
+					else if(ParsingUtils.isInVerseText(ancestors)) {
 						// Trying to find additional text within a verse.
-						return e.is(VERSE_CONTINUATION_SELECTOR) ? buildContext(
-							ContextMetadata.forText(), " " + e.text()
-						) : null;
+						return e.is(VERSE_CONTINUATION_SELECTOR) ?
+								context(ContextMetadata.forText(), " " + e.text()).build() : List.of();
 					}
 				
 				default:
-					return null;
+					return List.of();
 			}
 		}
 		
@@ -288,14 +284,10 @@ public class ChouraquiSpiritualLand extends Scraper {
 		private final static Evaluator UNFORMATTED_CHAPTER_CONTENT_SELECTOR = QueryParser.parse(S_UNFORMATTED_CHAPTER_CONTENT + ":not(.text1titre *)");
 		private final static Pattern UNFORMATTED_VERSE_PATTERN = Pattern.compile(UNFORMATTED_VERSE_REGEXP);
 		
-		private static class UnformattedChapterParser extends Parser<MatchResult> {
-
-			protected UnformattedChapterParser(Iterator<MatchResult> positions, Deque<Context> currentContextStack) {
-				super(positions, currentContextStack);
-			}
+		private static class UnformattedChapterParser extends PositionBufferedParserCore<MatchResult> {
 
 			@Override
-			protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type,
+			protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestors, ContextType type,
 										  ContextMetadata previousOfType, MatchResult verseMatch) {
 				ContextMetadata parent = ancestors.peekFirst();
 				switch(type) {
@@ -306,21 +298,23 @@ public class ChouraquiSpiritualLand extends Scraper {
 							parent.chapter, 
 							Integer.parseInt(verseNb)
 						);
-						return buildContext(verseMeta, verseNb,
-								new Context(ContextMetadata.forFlatText()),
-								new Context(ContextMetadata.forText(), verseMatch.group(2))
-						);
+
+						return context(verseMeta, verseNb,
+								context(ContextMetadata.forFlatText(),
+										context(ContextMetadata.forText(), verseMatch.group(2))
+								)
+						).build();
 				}
-				return null;
+				return List.of();
 			}
 		}
 		
 		@Override
-		protected Parser<?> parseExternally(Element e, Deque<Context> currentContextStack) {
-			if(hasAncestorCtx(ContextType.CHAPTER, currentContextStack) && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
+		public Parser<?> parseExternally(Element e, Deque<Context> currentContextStack) {
+			if(ParsingUtils.hasAncestorCtx(ContextType.CHAPTER, currentContextStack) && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
 				// If lexeme matches as an unformatted sequence of verses, we parse them and pass them to a dedicated parser.
 				Matcher verseMatcher = UNFORMATTED_VERSE_PATTERN.matcher(e.text());
-				return new UnformattedChapterParser(verseMatcher.results().iterator(), currentContextStack);
+				return new Parser<MatchResult>(new UnformattedChapterParser(), verseMatcher.results().iterator(), currentContextStack);
 			}
 			return null;
 		}
@@ -465,7 +459,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 	private ContextStream.Single getBookStream(BibleBook book) {
 		Context bookCtx = new Context(ContextMetadata.forBook(book));
 		return variant.editBook(book,
-				new ElementParser(getDocStream(book), bookCtx).asContextStream().edit()
+				new Parser.TerminalParser<>(new ElementParser(), getDocStream(book).iterator(), bookCtx).asContextStream().edit()
 		).process();
 	}
 

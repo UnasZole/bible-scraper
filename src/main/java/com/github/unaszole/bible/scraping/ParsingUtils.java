@@ -1,21 +1,37 @@
 package com.github.unaszole.bible.scraping;
 
+import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ParsingUtils {
+
+    /**
+     * Utility method for parsers : check if the current context is a descendant of a context of a given type.
+     * @param searchedAncestorType The type of ancestor to search for.
+     * @param ancestors The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
+     * @return True if an ancestor of the searched type is present, false otherwise.
+     */
+    public static boolean hasAncestor(ContextType searchedAncestorType, Deque<ContextMetadata> ancestors) {
+        return ancestors.stream().anyMatch(a -> a.type == searchedAncestorType);
+    }
+
+    public static boolean hasAncestorCtx(ContextType searchedAncestorType, Deque<Context> ancestors) {
+        return ancestors.stream().anyMatch(a -> a.metadata.type == searchedAncestorType);
+    }
+
+    public static boolean isInVerseText(Deque<ContextMetadata> ancestors) {
+        return hasAncestor(ContextType.VERSE, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors);
+    }
 
     private static final Pattern CHAPTER_NB = Pattern.compile("^(\\d+)$");
     private static final Pattern VERSE_NB = Pattern.compile("^(\\d+)?([A-Za-z])?$");

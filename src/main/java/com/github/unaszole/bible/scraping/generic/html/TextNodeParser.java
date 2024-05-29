@@ -1,20 +1,20 @@
 package com.github.unaszole.bible.scraping.generic.html;
 
-import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.scraping.Parser;
+import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.ContextReaderListBuilder;
+import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
+import java.util.Deque;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Configuration to extract a context from an HTML text node.
- */
-public class TextNodeContextExtractor extends ContextExtractor {
+public class TextNodeParser extends ContextStackAware {
+
     public enum WhitespaceProcessing {
         /**
          * Preserve whitespaces as in the source document.
@@ -29,25 +29,23 @@ public class TextNodeContextExtractor extends ContextExtractor {
         CSS
     }
 
+    /**
+     * Determines if and how whitespaces in the text node's contents should be processed before parsing.
+     */
     public WhitespaceProcessing whitespaceProcessing = WhitespaceProcessing.CSS;
 
     /**
-     * Regexp to validate the text node contents, and capture a context value from it.
-     * If the regexp does not match the text node contents, then no context can be extracted
-     * If the regexp matches, and contains a capturing group, then the value of the first capturing group will be used
-     * as context value.
-     * If the regexp matches but has no capturing group, then the context will have a null value.
+     * A regexp used to test if a text node can be parsed by this parser.
+     * If this regexp contains a capturing group, only the part of the string captured by the first group will be
+     * passed to the context extractors.
+     * If unset, this parser will accept all nodes and process their full text.
      */
     public Pattern regexp;
 
     /**
-     * Configuration to extract additional descendant contexts under this one.
-     * All extractors are relative to the same text node, but may use different regexps to capture different portions.
-     *
-     * NOTE : all of these extractors MUST match : the {@link #regexp} should be written in a way that guarantees that
-     * all the descendant extractor regexps also match.
+     * Instructions to extract a sequence of contexts from the parsed text node.
      */
-    public List<TextNodeContextExtractor> descendantExtractors;
+    public List<StringContextExtractor> contexts;
 
     private boolean isLineBoundary(Node node) {
         if(node == null) {
@@ -59,7 +57,7 @@ public class TextNodeContextExtractor extends ContextExtractor {
         return false;
     }
 
-    private String extractCssText(TextNode textNode) {
+    private String processCssText(TextNode textNode) {
         String str = textNode.text();
 
         // "Carriage returns (U+000D) are treated identically to spaces (U+0020) in all respects."
@@ -89,36 +87,56 @@ public class TextNodeContextExtractor extends ContextExtractor {
         return str;
     }
 
-    private String extractText(TextNode textNode) {
+    private String processText(TextNode textNode) {
         switch (whitespaceProcessing) {
             case PRESERVE:
                 return textNode.text();
             default:
-                return extractCssText(textNode);
+                return processCssText(textNode);
         }
     }
 
-    public Context extract(TextNode textNode, ContextMetadata parent, ContextMetadata previousOfType) {
-        Matcher matcher = regexp.matcher(extractText(textNode));
+    private String extractText(TextNode textNode) {
+        String text = processText(textNode);
 
-        if(matcher.matches()) {
-            // The regexp actually matches, we can open a context.
-            String value = matcher.groupCount() >= 1 ? matcher.group(1) : null;
-            ContextMetadata meta = getContextMetadata(parent, previousOfType, value);
-
-            Context[] descendants = new Context[0];
-            if (descendantExtractors != null) {
-                descendants = new Context[descendantExtractors.size()];
-
-                for (int i = 0; i < descendantExtractors.size(); i++) {
-                    TextNodeContextExtractor descendant = descendantExtractors.get(i);
-                    descendants[i] = descendant.extract(textNode, meta, null);
-                }
-            }
-
-            return Parser.buildContext(meta, value, descendants);
+        if(regexp == null) {
+            return text;
         }
 
+        Matcher matcher = regexp.matcher(text);
+        if(!matcher.matches()) {
+            // Regexp failed to match, so we can't parse.
+            return null;
+        }
+
+        if(matcher.groupCount() >= 1) {
+            // There was one capturing group : return only the captured portion.
+            return matcher.group(1);
+        }
+
+        // Else, return the full string.
+        return text;
+    }
+
+    private boolean canParseInContext(Deque<ContextMetadata> ancestorStack, ContextType nextContextType) {
+        // If the first context of the sequence matches the requested type, and the context stack is valid.
+        return contexts != null && !contexts.isEmpty() && contexts.get(0).type == nextContextType
+                && isContextStackValid(ancestorStack);
+    }
+
+    public List<PositionBufferedParserCore.ContextReader> parse(TextNode n, Deque<ContextMetadata> ancestorStack,
+                                                                ContextType nextContextType) {
+        final String text = extractText(n);
+
+        if(text != null && canParseInContext(ancestorStack, nextContextType)) {
+            if(!contexts.isEmpty()) {
+                final ContextReaderListBuilder builder = new ContextReaderListBuilder();
+                contexts.forEach(ex -> ex.appendTo(builder, text));
+                return builder.build();
+            }
+
+            return List.of();
+        }
         return null;
     }
 }

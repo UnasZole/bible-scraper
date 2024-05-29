@@ -3,10 +3,13 @@ package com.github.unaszole.bible.stream;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.Parser;
 
 import java.util.*;
 import java.util.stream.Stream;
+
+import static com.github.unaszole.bible.scraping.ContextReaderListBuilder.context;
 
 public abstract class ContextStream<StreamType extends ContextStream<StreamType>> {
 
@@ -64,16 +67,16 @@ public abstract class ContextStream<StreamType extends ContextStream<StreamType>
                 .iterator();
 
         Context extractedContext = new Context(wantedMetadata);
-        new Parser.TerminalParser<ContextEvent>(it, extractedContext) {
+        new Parser.TerminalParser<ContextEvent>(new PositionBufferedParserCore<ContextEvent>() {
             @Override
-            protected Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
-                                          ContextMetadata previousOfType, ContextEvent event) {
+            protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
+                                                 ContextMetadata previousOfType, ContextEvent event) {
                 if(event.type == ContextEvent.Type.OPEN && event.metadata.type == type) {
-                    return new Context(event.metadata, event.value);
+                    return context(event.metadata, event.value).build();
                 }
-                return null;
+                return List.of();
             }
-        }.fill();
+        }, it, extractedContext).fill();
 
         return extractedContext;
     }

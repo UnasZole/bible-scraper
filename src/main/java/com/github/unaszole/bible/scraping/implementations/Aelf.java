@@ -3,10 +3,7 @@ package com.github.unaszole.bible.scraping.implementations;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.scraping.CachedDownloader;
-import com.github.unaszole.bible.scraping.Parser;
-import com.github.unaszole.bible.scraping.ParsingUtils;
-import com.github.unaszole.bible.scraping.Scraper;
+import com.github.unaszole.bible.scraping.*;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.StreamUtils;
 import org.crosswire.jsword.versification.BibleBook;
@@ -22,6 +19,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.github.unaszole.bible.scraping.ContextReaderListBuilder.context;
 
 public class Aelf extends Scraper {
 
@@ -221,15 +220,11 @@ public class Aelf extends Scraper {
         BOOKS.put(BibleBook.REV, new BookRef("Ap", 22));
     }
 
-    private static class PageParser extends Parser.TerminalParser<Element> {
+    private static class PageParser extends PositionBufferedParserCore<Element> {
 
         private static final String S_VERSE_NB = "span:is(.verse_number, .text-danger)";
         private static final Evaluator VERSE_SELECTOR = QueryParser.parse("#right-col p:has(> " + S_VERSE_NB + ")");
         private static final Evaluator VERSE_NB_SELECTOR = QueryParser.parse("> " + S_VERSE_NB);
-
-        protected PageParser(Stream<Element> docStream, Context rootContext) {
-            super(docStream.iterator(), rootContext);
-        }
 
         private static String stripLeadingZeroes(String parsedNb) {
             return parsedNb.length() == 1 ? parsedNb : parsedNb.replaceAll("^0*", "");
@@ -244,8 +239,8 @@ public class Aelf extends Scraper {
         }
 
         @Override
-        protected Context readContext(Deque<ContextMetadata> ancestors, ContextType type,
-                                      ContextMetadata previousOfType, Element e) {
+        public List<ContextReader> readContexts(Deque<ContextMetadata> ancestors, ContextType type,
+                                               ContextMetadata previousOfType, Element e) {
             ContextMetadata parent = ancestors.peekFirst();
             switch(type) {
                 case VERSE:
@@ -256,14 +251,15 @@ public class Aelf extends Scraper {
 
                         String verseText = e.ownText();
 
-                        return buildContext(verseMeta, verseNb,
-                                new Context(ContextMetadata.forFlatText()),
-                                new Context(ContextMetadata.forText(), verseText)
-                        );
+                        return context(verseMeta, verseNb,
+                                context(ContextMetadata.forFlatText(),
+                                        context(ContextMetadata.forText(), verseText)
+                                )
+                        ).build();
                     }
             }
 
-            return null;
+            return List.of();
         }
     }
 
@@ -284,7 +280,8 @@ public class Aelf extends Scraper {
                 Context chapterCtx = new Context(rootContextMeta,
                         String.join("-", bookRef.getPages(rootContextMeta.chapter))
                 );
-                return new PageParser(docStream, chapterCtx).asContextStream();
+                return new Parser.TerminalParser<Element>(new PageParser(), docStream.iterator(), chapterCtx)
+                        .asContextStream();
             case BOOK:
                 return autoGetBookStream(rootContextMeta.book, BOOKS.get(rootContextMeta.book).getNbChapters());
             case BIBLE:

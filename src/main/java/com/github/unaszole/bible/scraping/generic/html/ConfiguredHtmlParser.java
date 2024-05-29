@@ -3,35 +3,32 @@ package com.github.unaszole.bible.scraping.generic.html;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.Parser;
 import org.jsoup.nodes.Element;
 
 import java.util.Deque;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class ConfiguredHtmlParser extends Parser.TerminalParser<Element> {
+public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
 
-    private final List<ElementContextExtractor> parserConfig;
+    private final List<ElementParser> elements;
 
-    private List<NodeParserConfig> nodeParserConfigs;
+    private final List<NodeParserConfig> nodeParsers;
 
-    public ConfiguredHtmlParser(List<ElementContextExtractor> parserConfig,
-                                List<NodeParserConfig> nodeParserConfigs,
-                                Stream<Element> docStream, Context rootContext) {
-        super(docStream.iterator(), rootContext);
-        this.parserConfig = parserConfig;
-        this.nodeParserConfigs = nodeParserConfigs;
+    public ConfiguredHtmlParser(List<ElementParser> elements,
+                                List<NodeParserConfig> nodeParsers) {
+        this.elements = elements;
+        this.nodeParsers = nodeParsers;
     }
 
     @Override
-    protected Parser<?> parseExternally(Element e, Deque<Context> currentContextStack) {
-        if(nodeParserConfigs == null) {
+    public Parser<?> parseExternally(Element e, Deque<Context> currentContextStack) {
+        if(nodeParsers == null) {
             return null;
         }
 
-        for(NodeParserConfig nodeParserConfig: nodeParserConfigs) {
+        for(NodeParserConfig nodeParserConfig: nodeParsers) {
             if(nodeParserConfig.canTriggerAtPosition(e, currentContextStack)) {
                 // The current element triggers an external node parser.
                 return nodeParserConfig.getParser(e, currentContextStack);
@@ -43,21 +40,19 @@ public class ConfiguredHtmlParser extends Parser.TerminalParser<Element> {
     }
 
     @Override
-    protected Context readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
+    public List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
                                   ContextMetadata previousOfType, Element e) {
-        if(parserConfig == null) {
+        if(elements == null) {
             return null;
         }
 
-        List<ElementContextExtractor> extractors = parserConfig.stream()
-                .filter(ex -> ex.canOpenContextAt(ancestorStack, type))
-                .collect(Collectors.toList());
-        for(ElementContextExtractor extractor: extractors) {
-            Context out = extractor.extractRootContext(e, ancestorStack.peekFirst(), previousOfType);
-            if(out != null) {
-                return out;
+        for(ElementParser eltParser: elements) {
+            List<ContextReader> result = eltParser.parse(e, ancestorStack, type);
+            if(result != null) {
+                return result;
             }
         }
-        return null;
+
+        return List.of();
     }
 }

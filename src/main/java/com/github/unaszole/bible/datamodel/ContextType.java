@@ -46,9 +46,9 @@ public enum ContextType {
 	 */
 	POETRY_STANZA_BREAK(false),
 	POETRY_MARKER(true, one(POETRY_LINE_INDENT, POETRY_REFRAIN_INDENT, POETRY_STANZA_BREAK)),
-	MINOR_SECTION_TITLE(false, one(FLAT_TEXT)),
-	SECTION_TITLE(false, one(FLAT_TEXT)),
-	MAJOR_SECTION_TITLE(false, one(FLAT_TEXT)),
+	MINOR_SECTION_TITLE(true, one(FLAT_TEXT)),
+	SECTION_TITLE(true, one(FLAT_TEXT)),
+	MAJOR_SECTION_TITLE(true, one(FLAT_TEXT)),
 	SECTION_MARKER(true, one(MAJOR_SECTION_TITLE, SECTION_TITLE, MINOR_SECTION_TITLE)),
 	STRUCTURE_MARKER(true, one(SECTION_MARKER, POETRY_MARKER, PARAGRAPH_BREAK)),
 
@@ -57,7 +57,7 @@ public enum ContextType {
 	 * Two successive flat texts are joined by an implicit paragraph break.
 	 * Explicit paragraph breaks should be used when a paragraph starts before the first flat text or after the last.
 	 */
-	STRUCTURED_TEXT(true, any(STRUCTURE_MARKER, FLAT_TEXT)),
+	STRUCTURED_TEXT(true, any(FLAT_TEXT, STRUCTURE_MARKER)),
 	
 	// Verse must be built from a lexeme that provides a verse number.
 	/**
