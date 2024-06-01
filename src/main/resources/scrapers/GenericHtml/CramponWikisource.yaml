@@ -1,0 +1,336 @@
+description: "Crampon Wikisource"
+patterns:
+  bookUrl: "https://fr.wikisource.org/wiki/Bible_Crampon_1923/{BOOK}"
+
+args:
+
+books:
+  - osis: Gen
+    args: { BOOK: Genèse }
+
+  - osis: Exod
+    args: { BOOK: Exode }
+
+  - osis: Lev
+    args: { BOOK: Lévitique }
+
+  - osis: Num
+    args: { BOOK: Nombres }
+
+  - osis: Deut
+    args: { BOOK: Deutéronome }
+
+  - osis: Josh
+    args: { BOOK: Josué }
+
+  - osis: Judg
+    args: { BOOK: Juges }
+
+  - osis: Ruth
+    args: { BOOK: Ruth }
+
+  - osis: 1Sam
+    args: { BOOK: 1_Samuel }
+
+  - osis: 2Sam
+    args: { BOOK: 2_Samuel }
+
+  - osis: 1Kgs
+    args: { BOOK: 1_Rois }
+
+  - osis: 2Kgs
+    args: { BOOK: 2_Rois }
+
+  - osis: 1Chr
+    args: { BOOK: 1_Chroniques }
+
+  - osis: 2Chr
+    args: { BOOK: 2_Chroniques }
+
+  - osis: Ezra
+    args: { BOOK: Esdras }
+
+  - osis: Neh
+    args: { BOOK: Néhémie }
+
+  - osis: Tob
+    args: { BOOK: Tobie }
+
+  - osis: Jdt
+    args: { BOOK: Judith }
+
+  - osis: Esth
+    args: { BOOK: Esther }
+
+  - osis: 1Macc
+    args: { BOOK: 1 Machabées }
+
+  - osis: 2Macc
+    args: { BOOK: 2 Machabées }
+
+  - osis: Job
+    args: { BOOK: Job }
+
+  - osis: Ps
+    pages:
+      - args: { BOOK: Psaumes_1 }
+      - args: { BOOK: Psaumes_2 }
+      - args: { BOOK: Psaumes_3 }
+      - args: { BOOK: Psaumes_4 }
+      - args: { BOOK: Psaumes_5 }
+
+  - osis: Prov
+    args: { BOOK: Proverbes }
+
+  - osis: Eccl
+    args: { BOOK: Ecclésiaste }
+
+  - osis: Song
+    args: { BOOK: Cantique }
+
+  - osis: Wis
+    args: { BOOK: Sagesse }
+
+  - osis: Sir
+    args: { BOOK: Ecclésiastique }
+
+  - osis: Isa
+    args: { BOOK: Isaïe }
+
+  - osis: Jer
+    args: { BOOK: Jérémie }
+
+  - osis: Lam
+    args: { BOOK: Lamentations }
+
+  - osis: Bar
+    args: { BOOK: Baruch }
+
+  - osis: Ezek
+    args: { BOOK: Ézéchiel }
+
+  - osis: Dan
+    args: { BOOK: Daniel }
+
+  - osis: Hos
+    args: { BOOK: Osée }
+
+  - osis: Joel
+    args: { BOOK: Joël }
+
+  - osis: Amos
+    args: { BOOK: Amos }
+
+  - osis: Obad
+    args: { BOOK: Abdias }
+
+  - osis: Jonah
+    args: { BOOK: Jonas }
+
+  - osis: Mic
+    args: { BOOK: Michée }
+
+  - osis: Nah
+    args: { BOOK: Nahum }
+
+  - osis: Hab
+    args: { BOOK: Habacuc }
+
+  - osis: Zeph
+    args: { BOOK: Sophonie }
+
+  - osis: Hag
+    args: { BOOK: Aggée }
+
+  - osis: Zech
+    args: { BOOK: Zacharie }
+
+  - osis: Mal
+    args: { BOOK: Malachie }
+
+  - osis: Matt
+    args: { BOOK: Matthieu }
+
+  - osis: Mark
+    args: { BOOK: Marc }
+
+  - osis: Luke
+    args: { BOOK: Luc }
+
+  - osis: John
+    args: { BOOK: Jean }
+
+  - osis: Acts
+    args: { BOOK: Actes }
+
+  - osis: Rom
+    args: { BOOK: Romains }
+
+  - osis: 1Cor
+    args: { BOOK: 1_Corinthiens }
+
+  - osis: 2Cor
+    args: { BOOK: 2_Corinthiens }
+
+  - osis: Gal
+    args: { BOOK: Galates }
+
+  - osis: Eph
+    args: { BOOK: Éphesiens }
+
+  - osis: Phil
+    args: { BOOK: Philippiens }
+
+  - osis: Col
+    args: { BOOK: Colossiens }
+
+  - osis: 1Thess
+    args: { BOOK: 1_Thessaloniciens }
+
+  - osis: 2Thess
+    args: { BOOK: 2_Thessaloniciens }
+
+  - osis: 1Tim
+    args: { BOOK: 1_Timothée }
+
+  - osis: 2Tim
+    args: { BOOK: 1_Timothée }
+
+  - osis: Titus
+    args: { BOOK: Tite }
+
+  - osis: Phlm
+    args: { BOOK: Philémon }
+
+  - osis: Heb
+    args: { BOOK: Hébreux }
+
+  - osis: Jas
+    args: { BOOK: Jacques }
+
+  - osis: 1Pet
+    args: { BOOK: 1_Pierre }
+
+  - osis: 2Pet
+    args: { BOOK: 2_Pierre }
+
+  - osis: 1John
+    args: { BOOK: 1_Jean }
+
+  - osis: 2John
+    args: { BOOK: 2_Jean }
+
+  - osis: 3John
+    args: { BOOK: 3_Jean }
+
+  - osis: Jude
+    args: { BOOK: Jude }
+
+  - osis: Rev
+    args: { BOOK: Apocalypse }
+
+
+elements:
+
+  - selector: ".prp-pages-output h2"
+    withAncestors: [ BOOK_TITLE ]
+    contexts:
+      - type: TEXT
+        op: text
+      - type: TEXT
+        op: "literal= "
+
+  - selector: ".prp-pages-output h3"
+    withAncestors: [ MAJOR_SECTION_TITLE ]
+    contexts:
+      - type: TEXT
+        op: text
+      - type: TEXT
+        op: "literal= "
+
+  - selector: ".prp-pages-output h4"
+    withAncestors: [ SECTION_TITLE ]
+    contexts:
+      - type: TEXT
+        op: text
+      - type: TEXT
+        op: "literal= "
+
+  - selector: "div.alineanegatif"
+    withAncestors: [ MINOR_SECTION_TITLE ]
+    contexts:
+      - type: TEXT
+        op: text
+      - type: TEXT
+        op: "literal= "
+
+  - selector: ".prp-pages-output div > a:matches((?:Chapitre|Psaume) (\\d+)[^\\d]*)"
+    contexts:
+      - type: CHAPTER
+        op: text
+        regexp: (?:Chapitre|Psaume) (\d+)[^\d]*
+
+  - selector: ".prp-pages-output p"
+    contexts:
+      - type: PARAGRAPH_BREAK
+
+
+nodeParsers:
+  - selector: ".prp-pages-output p"
+    withAncestors: [ CHAPTER ]
+    nodes:
+      # All text nodes within the paragraph must be taken entirely as normal text.
+      - withoutAncestors: [ STRUCTURE_MARKER, ANNOTATION ]
+        contexts:
+          - type: TEXT
+            regexp: (.*)
+
+    elements:
+      # Start of a new paragraph denotes a paragraph break ONLY if it's not a poem formatting, or a spacer (ie empty paragraph)
+      - selector: ":not(div.poem) > p:not(:matches(^\\s*$))"
+        contexts:
+          - type: PARAGRAPH_BREAK
+
+      # Poem paragraph start means start of the first poetry line.
+      - selector: "div.poem > p"
+        contexts:
+          - type: POETRY_LINE_INDENT
+            op: literal=1
+
+      # Line breaks within a poem denote a new poetry line.
+      - selector: ".prp-pages-output div.poem > p > br"
+        contexts:
+          - type: POETRY_LINE_INDENT
+            op: literal=1
+
+      - selector: ":is(sup.verset-num, span.sidenote-left > small)"
+        contexts:
+          - type: VERSE
+            op: ownText
+
+      # Lettrine and small caps must be taken as normal text.
+      - selector: "span.lettrine + span"
+        withoutAncestors: [ STRUCTURE_MARKER, ANNOTATION ]
+        contexts:
+          - type: TEXT
+            op: text
+      - selector: "span.sc"
+        withoutAncestors: [ STRUCTURE_MARKER, ANNOTATION ]
+        contexts:
+          - type: TEXT
+            op: text
+
+      - selector: "i"
+        contexts:
+          - type: TRANSLATION_ADD
+            descendants:
+              - type: TEXT
+                op: text
+
+      - selector: "sup.reference > a"
+        contexts:
+          - type: NOTE
+            descendants:
+              - type: TEXT
+                linkTargetSelector: "> span.reference-text"
+                op: text

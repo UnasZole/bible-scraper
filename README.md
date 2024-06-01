@@ -153,43 +153,64 @@ structured representation of bible contents) out of it.
 what each context can contain. Thus, at any point in time, the parser itself knows what types of context it may or may
 not open next. 
 The goal the parsing rules is therefore to answer the following two questions :
-  - Is the current HTML element valid to open a context of this type ?
-  - If so, then do we need to extract some context contents from the element, and how ?
+  - Given the current position in the context tree, can a given HTML element open a new context ?
+  - If so, how do we extract the HTML element's contents to fill the new context ?
 
-Parsing rules are specified in the `parser` section of the YAML configuration, as a list of root context extractors. Each
-context extractor has the following contents :
-- The `type` property designates which [context type](src/main/java/com/github/unaszole/bible/datamodel/ContextType.java)
-can be opened by this extractor. It may be restricted by the `withAncestor` property, to say for example "this extractor
-can provide TEXT contexts, but only if they are within a BOOK_INTRO".
-- The `selector` property is a [JSoup CSS selector](https://jsoup.org/apidocs/org/jsoup/select/Selector.html) to express
-the condition. If the current HTML matches this selector, then the extractor can produce a context.
-- The `valueExtractor` property is only relevant for contexts which have a value : a TEXT context (the text contents),
-a VERSE context (the parsed verse number) and a CHAPTER context (the parsed chapter number). It is specified by :
-  - An optional `selector` to find a descendant of the current HTML element. If omitted, it selects the current element
-  itself.
-  - An `op`erator to extract the text value from the selected element. May be one of "text" (full text contents of the
-  element and its descendants), "ownText" (text contents of only this element excluding its descendants), or
-  "attribute=<attributeName>" (text value of an HTML attribute of the element).
-- The `descendantExtractors` property allows filling the built context with descendant contexts that can be initialised
-from the same HTML element. For example, the same HTML element may allow you to start a VERSE context (by extracting the
-verse number), and a TEXT context inside (by extracting the verse text contents).
-
-DescendantExtractors are similar to the root extractors defined above, except that their selector will find the first
-matching element within the current element, and the withAncestor field is ignored.
+HTML element parsing rules are specified in the `elements` section of the YAML configuration. Each
+element parsing rule has the following contents :
+- The `selector` property is a [JSoup CSS selector](https://jsoup.org/apidocs/org/jsoup/select/Selector.html), evaluated from the root of the HTML document, to match an
+input HTML element. If the current HTML fails to match this selector, then the rule is ignored.
+- The `withAncestors` and `withoutAncestors` properties are optional lists of context types that will be matched against
+the context stack when a rule is evaluated. If any of the `withAncestors` context types is missing, or if
+any of the `withoutAncestors` is present in the context stack, the rule is ignored.
+This allows restricting the applicability of a rule, in case a same HTML element should be interpreted differently
+depending on the context. For example "A \<p\> element should open a TEXT context, but only
+if we are in a book introduction".
+- The `contexts` property contains a sequence of context extractors, meaning a sequence of contexts to be built from
+the selected HTML element and instructions to read the contents from the element. Each context extractor has the
+following properties.
+  - The `type` property designates which [context type](src/main/java/com/github/unaszole/bible/datamodel/ContextType.java) is opened by this extractor.
+  If this context types requires a context value, the following properties specify how to read the context value from the
+  HTML element.
+  - The `selector` property is an optional [JSoup CSS selector](https://jsoup.org/apidocs/org/jsoup/select/Selector.html), evaluated from the rule's selected HTML element,
+  to fetch one of its descendants. If unspecified, the following properties apply directly to the rule's selected element.
+  - The `linkTargetSelector` property is an optional [JSoup CSS selector](https://jsoup.org/apidocs/org/jsoup/select/Selector.html), evaluated from the target of the
+  previously selected HTML element, assuming it was a link to an anchor in the same page. This is typically used to
+  resolve footnotes, for which the marker in the original text is usually a link to a separate container.
+  - The `op` property is an operator to extract the context value from the selected element. May be one of
+    - `text`: Full text contents of the element and its descendants.
+    - `ownText`: Text contents of only this element excluding its descendants.
+    - `attribute=<attributeName>`: Text value of an HTML attribute of the element.
+    - `literal=<value>`: Hardcoded text value.
+  - The `regexp` property allows using a [Java regular expression](https://dev.java/learn/regex/), containing a single
+  capturing group, to extract only a portion of the text returned by the operator.
+- The `descendants` property is a sequence of similar context extractors to create other contexts within this one, based
+on the same element selected by the rule.
 
 Elements which text nodes need to be processed in order can be managed using the `nodeParsers` list.
-Each node parser contains :
-- A `selector` that determines which elements will use this specific parser.
-- Optional `withAncestor`/`withoutAncestor` directives that enable this specific parsing method conditionally depending 
-on the current context.
-- A list of `textNodeExtractors`, to extract contexts from text nodes of the selected element. Each extractor specifies:
-  - The `type` property designates which context type is extracted.
-  - Optional `withAncestor`/`withoutAncestor` directives that allow ignoring the text node based on current context.
-  - A `regexp` that determines if the extractor matches the text node. If the regexp matches, a context will be created;
-if the regexp contains a capturing group, then the value of this group will be the context value.
-- A list of `elementExtractors`, to extract contexts from the selected element or any of its descendants. These elements
-will be examined in order : the selected element first, then all descendants in document order, with all text nodes
-being examined at the correct positions in between.
+Each node parser has the following contents :
+- The `selector` property is a [JSoup CSS selector](https://jsoup.org/apidocs/org/jsoup/select/Selector.html), evaluated from the root of the HTML document, that determines
+which elements will use this specific parser.
+- The `withAncestors`/`withoutAncestors` directives that enable this specific parsing method conditionally depending 
+on the current position in the context tree.
+- The `elements` property is a list of element parsing rules. The structure is identical to that defined above for the
+root level `elements` property.
+- The `nodes` property is a list of text node parsing rules. Each text node parsing rule has the following contents:
+  - The `whitespaceProcessing` optional property defines how whitespaces in the text node will be treated for this rule.
+  The value `CSS` (default) will attempt to remove all whitespaces that would not be displayed in the web browser as
+  specified in the CSS3 specifications, whereas the value `PRESERVE` will keep all whitespaces that are present in the
+  source document.
+  - The optional `regexp` property is a regular expression evaluated on the node's text content. If the regexp does not
+  match, the rule is ignored. If the regexp matches and contains a capturing group, only the content of this capturing
+  group will be sent to the context extractors.
+  - The `contexts` property contains a sequence of context extractors, meaning a sequence of contexts to be built from
+    the selected text node and instructions to read the contents from the node. Each context extractor has the
+    following properties.
+    - The `type` property designates which [context type](src/main/java/com/github/unaszole/bible/datamodel/ContextType.java) is opened by this extractor.
+    - The `regexp` property to select which part of the contents to use as context value. To use the full text contents
+    of the text node (or the portion given by the regexp at rule level), you should use `(.*)`.
+    - The `descendants` property is a sequence of similar context extractors to create other contexts within this one,
+    based on the same text node selected by the rule.
 
 #### Limitations
 

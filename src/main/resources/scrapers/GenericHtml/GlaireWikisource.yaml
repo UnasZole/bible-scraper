@@ -1,0 +1,461 @@
+description: "Glaire Wikisource"
+patterns:
+  bookUrl: "https://fr.wikisource.org/wiki/La_sainte_Bible_selon_la_Vulgate_(J.-B._Glaire)/{BOOK}"
+
+books:
+  - osis: Gen
+    pages:
+      - args: { BOOK: Introduction au Pentateuque }
+      - args: { BOOK: Appendice_(Ancien_Testament) }
+      - args: { BOOK: Genèse }
+
+  - osis: Exod
+    args: { BOOK: Exode }
+
+  - osis: Lev
+    args: { BOOK: Lévitique }
+
+  - osis: Num
+    args: { BOOK: Nombres }
+
+  - osis: Deut
+    args: { BOOK: Deutéronome }
+
+  - osis: Josh
+    pages:
+      - args: { BOOK: Josué (Introduction) }
+      - args: { BOOK: Josué }
+
+  - osis: Judg
+    pages:
+      - args: { BOOK: Les Juges (Introduction) }
+      - args: { BOOK: Juges }
+
+  - osis: Ruth
+    pages:
+      - args: { BOOK: Ruth (Introduction) }
+      - args: { BOOK: Ruth }
+
+  - osis: 1Sam
+    pages:
+      - args: { BOOK: Les Rois }
+      - args: { BOOK: I_Rois }
+
+  - osis: 2Sam
+    args: { BOOK: II_Rois }
+
+  - osis: 1Kgs
+    args: { BOOK: III Rois }
+
+  - osis: 2Kgs
+    args: { BOOK: IV Rois }
+
+  - osis: 1Chr
+    pages:
+      - args: { BOOK: Les Paralipomènes (Introduction) }
+      - args: { BOOK: I Paralipomènes }
+
+  - osis: 2Chr
+    args: { BOOK: II Paralipomènes }
+
+  - osis: Ezra
+    pages:
+      - args: { BOOK: I Esdras (Introduction) }
+      - args: { BOOK: I Esdras }
+
+  - osis: Neh
+    pages:
+      - args: { BOOK: II Esdras (Introduction) }
+      - args: { BOOK: II Esdras }
+
+  - osis: Tob
+    pages:
+      - args: { BOOK: Tobie (Introduction) }
+      - args: { BOOK: Tobie }
+
+  - osis: Jdt
+    pages:
+      - args: { BOOK: Judith (Introduction) }
+      - args: { BOOK: Judith }
+
+  - osis: Esth
+    pages:
+      - args: { BOOK: Esther (Introduction) }
+      - args: { BOOK: Esther }
+
+  - osis: 1Macc
+    pages:
+      - args: { BOOK: I Machabées (Introduction) }
+      - args: { BOOK: I Machabées }
+
+  - osis: 2Macc
+    pages:
+      - args: { BOOK: II Machabées (Introduction) }
+      - args: { BOOK: II Machabées }
+
+  - osis: Job
+    pages:
+      - args: { BOOK: Job (Introduction) }
+      - args: { BOOK: Job }
+
+  - osis: Ps
+    pages:
+      - args: { BOOK: Les Psaumes (Introduction) }
+      - args: { BOOK: Les Psaumes (observations préliminaires) }
+      - args: { BOOK: Psaumes }
+
+  - osis: Prov
+    pages:
+      - args: { BOOK: Les Proverbes de Salomon (Introduction) }
+      - args: { BOOK: Proverbes }
+
+  - osis: Eccl
+    pages:
+      - args: { BOOK: L’Ecclésiaste (Introduction) }
+      - args: { BOOK: Ecclésiaste }
+
+  - osis: Song
+    pages:
+      - args: { BOOK: Cantique des cantiques (observations préliminaires) }
+      - args: { BOOK: Cantique }
+
+  - osis: Wis
+    pages:
+      - args: { BOOK: La Sagesse (observations préliminaires) }
+      - args: { BOOK: Sagesse }
+
+  - osis: Sir
+    pages:
+      - args: { BOOK: L’Ecclésiastique (observations préliminaires) }
+      - args: { BOOK: L’Ecclésiastique (Prologue) }
+      - args: { BOOK: Ecclésiastique }
+
+  - osis: Isa
+    pages:
+      - args: { BOOK: Les Prophètes }
+      - args: { BOOK: Isaïe (Introduction) }
+      - args: { BOOK: Isaïe }
+
+  - osis: Jer
+    pages:
+      - args: { BOOK: Jérémie (Introduction) }
+      - args: { BOOK: Jérémie }
+
+  - osis: Lam
+    pages:
+      - args: { BOOK: Lamentations de Jérémie (Introduction) }
+      - args: { BOOK: Lamentations }
+
+  - osis: Bar
+    pages:
+      - args: { BOOK: Baruch (observations générales) }
+      - args: { BOOK: Baruch }
+
+  - osis: Ezek
+    pages:
+      - args: { BOOK: Ezéchiel (Introduction) }
+      - args: { BOOK: Ézéchiel }
+
+  - osis: Dan
+    pages:
+      - args: { BOOK: Daniel (Introduction) }
+      - args: { BOOK: Daniel }
+
+  - osis: Hos
+    pages:
+      - args: { BOOK: Osée (Introduction) }
+      - args: { BOOK: Osée }
+
+  - osis: Joel
+    pages:
+      - args: { BOOK: Joël (Introduction) }
+      - args: { BOOK: Joël }
+
+  - osis: Amos
+    pages:
+      - args: { BOOK: Amos (Introduction) }
+      - args: { BOOK: Amos }
+
+  - osis: Obad
+    pages:
+      - args: { BOOK: Abdias (Introduction) }
+      - args: { BOOK: Abdias }
+
+  - osis: Jonah
+    pages:
+      - args: { BOOK: Jonas_(Introduction) }
+      - args: { BOOK: Jonas }
+
+  - osis: Mic
+    pages:
+     - args: { BOOK: Michée_(Introduction) }
+     - args: { BOOK: Michée }
+
+  - osis: Nah
+    pages:
+      - args: { BOOK: Nahum_(Introduction) }
+      - args: { BOOK: Nahum }
+
+
+  - osis: Hab
+    pages:
+      - args: { BOOK: Habacuc (Introduction) }
+      - args: { BOOK: Habacuc }
+
+  - osis: Zeph
+    pages:
+      - args: { BOOK: Sophonie (Introduction) }
+      - args: { BOOK: Sophonie }
+
+  - osis: Hag
+    pages:
+      - args: { BOOK: Aggée (Introduction) }
+      - args: { BOOK: Aggée }
+
+  - osis: Zech
+    pages:
+      - args: { BOOK: Zacharie (Introduction) }
+      - args: { BOOK: Zacharie }
+
+  - osis: Mal
+    pages:
+      - args: { BOOK: Malachie (Introduction) }
+      - args: { BOOK: Malachie }
+
+  - osis: Matt
+    pages:
+      - args: { BOOK: Appendice_(Nouveau_Testament) }
+      - args: { BOOK: Les Évangiles }
+      - args: { BOOK: Évangile selon saint Matthieu (Introduction) }
+      - args: { BOOK: Matthieu }
+
+  - osis: Mark
+    pages:
+      - args: { BOOK: Évangile selon saint Marc (Introduction) }
+      - args: { BOOK: Marc }
+
+  - osis: Luke
+    pages:
+      - args: { BOOK: Évangile selon saint Luc (Introduction) }
+      - args: { BOOK: Luc }
+
+  - osis: John
+    pages:
+      - args: { BOOK: Évangile selon saint Jean (Introduction) }
+      - args: { BOOK: Jean }
+
+  - osis: Acts
+    pages:
+      - args: { BOOK: Actes des Apôtres (Introduction) }
+      - args: { BOOK: Actes des Apôtres }
+
+
+  - osis: Rom
+    pages:
+      - args: { BOOK: L’Épitre de saint Paul }
+      - args: { BOOK: Épitre de saint Paul aux Romains (Introduction) }
+      - args: { BOOK: Romains }
+
+  - osis: 1Cor
+    pages:
+      - args: { BOOK: Première épitre de saint Paul aux Corinthiens (Introduction) }
+      - args: { BOOK: I Corinthiens }
+
+  - osis: 2Cor
+    pages:
+      - args: { BOOK: Deuxième épitre de saint Paul aux Corinthiens (Introduction) }
+      - args: { BOOK: II Corinthiens }
+
+  - osis: Gal
+    pages:
+      - args: { BOOK: Épitre de saint Paul aux Galates (Introduction) }
+      - args: { BOOK: Galates }
+
+  - osis: Eph
+    pages:
+      - args: { BOOK: Épitre de saint Paul aux Éphésiens (Introduction) }
+      - args: { BOOK: Éphésiens }
+
+  - osis: Phil
+    pages:
+      - args: { BOOK: Épitre de saint Paul aux Philippiens  (Introduction) }
+      - args: { BOOK: Philippiens }
+
+  - osis: Col
+    pages:
+      - args: { BOOK: Épitre de saint Paul aux Colossiens (Introduction) }
+      - args: { BOOK: Colossiens }
+
+  - osis: 1Thess
+    pages:
+      - args: { BOOK: Épitre de saint Paul aux Thessaloniciens (Introduction) }
+      - args: { BOOK: I Thessaloniciens }
+
+  - osis: 2Thess
+    args: { BOOK: II Thessaloniciens }
+
+  - osis: 1Tim
+    pages:
+      - args: { BOOK: Les Épitres Pastorales }
+      - args: { BOOK: Première épitre de saint Paul à Timothée (Introduction) }
+      - args: { BOOK: I Timothée }
+
+  - osis: 2Tim
+    pages:
+      - args: { BOOK: Deuxième épitre de saint Paul à Timothée (Introduction) }
+      - args: { BOOK: II Timothée }
+
+  - osis: Titus
+    pages:
+      - args: { BOOK: Épitre de saint Paul à Tite (Introduction) }
+      - args: { BOOK: Tite }
+
+  - osis: Phlm
+    pages:
+      - args: { BOOK: Épitre de saint Paul à Philémon (Introduction) }
+      - args: { BOOK: Philémon }
+
+  - osis: Heb
+    pages:
+      - args: { BOOK: Épitre de saint Paul aux Hébreux (Introduction) }
+      - args: { BOOK: Hébreux }
+
+  - osis: Jas
+    pages:
+      - args: { BOOK: Les Épitres catholiques }
+      - args: { BOOK: Épitre de saint Jacques (Introduction) }
+      - args: { BOOK: Jacques }
+
+  - osis: 1Pet
+    pages:
+      - args: { BOOK: Première Épitre de saint Pierre (Introduction) }
+      - args: { BOOK: I Pierre }
+
+  - osis: 2Pet
+    pages:
+      - args: { BOOK: Deuxième Épitre de saint Pierre (Introduction) }
+      - args: { BOOK: II Pierre }
+
+  - osis: 1John
+    pages:
+      - args: { BOOK: I Jean (Introduction) }
+      - args: { BOOK: I Jean }
+
+  - osis: 2John
+    pages:
+      - args: { BOOK: Deuxième et troisième épitres de saint Jean (Introduction) }
+      - args: { BOOK: II Jean }
+
+  - osis: 3John
+    args: { BOOK: III Jean }
+
+  - osis: Jude
+    pages:
+      - args: { BOOK: Épitre de saint Jude (Introduction) }
+      - args: { BOOK: Jude }
+
+  - osis: Rev
+    pages:
+      - args: { BOOK: Apocalypse de saint Jean (Introduction) }
+      - args: { BOOK: Apocalypse }
+
+elements:
+  - selector: "h2 > span > span"
+    contexts:
+      - type: BOOK_TITLE
+        descendants:
+          - type: TEXT
+            op: text
+
+  - selector: ".prp-pages-output h2"
+    contexts:
+      - type: BOOK_INTRO_TITLE
+        descendants:
+          - type: TEXT
+            op: text
+
+  - selector: ".prp-pages-output h3"
+    withAncestors: [ BOOK_INTRO ]
+    contexts:
+      - type: MAJOR_SECTION_TITLE
+        descendants:
+          - type: TEXT
+            op: text
+
+  - selector: ".prp-pages-output h4:not(:matches((?:Chapitre|CHAPITRE|Psaume|PSAUME) .*))"
+    withAncestors: [ BOOK_INTRO ]
+    contexts:
+      - type: SECTION_TITLE
+        descendants:
+          - type: TEXT
+            op: text
+
+  - selector: ".prp-pages-output h5"
+    withAncestors: [ BOOK_INTRO ]
+    contexts:
+      - type: MINOR_SECTION_TITLE
+        descendants:
+          - type: TEXT
+            op: text
+
+  - selector: ".prp-pages-output p:matches(.+)"
+    withAncestors: [ BOOK_INTRO ]
+    contexts:
+      - type: FLAT_TEXT
+        descendants:
+          - type: TEXT
+            op: text
+
+  - selector: "h4 > span:matches((?:CHAPITRE|Psaume|PSAUME) (\\d+|PREMIER|Premier|[CLXVI0-9]+)\\.?)"
+    contexts:
+      - type: CHAPTER
+        op: text
+        regexp: (?:CHAPITRE|Psaume|PSAUME) (\d+|PREMIER|Premier|[CLXVI0-9]+)\.?.*
+
+  - selector: "div.alinea"
+    withAncestors: [ CHAPTER_INTRO ]
+    withoutAncestors: [ NOTE ]
+    contexts:
+      - type: TEXT
+        op: text
+
+  - selector: "sup.reference > a"
+    contexts:
+      - type: NOTE
+        descendants:
+          - type: TEXT
+            linkTargetSelector: "> span.reference-text"
+            op: text
+
+nodeParsers:
+  # A paragraph starting with number+dot+space is a verse and must be parsed node-per-node.
+  - selector: "p:matches(^\\d+\\.\\s+.*$)"
+    withAncestors: [ CHAPTER ]
+    nodes:
+      # Text node that starts with number+dot+space marks the start and first words of a new verse.
+      - regexp: ^\d+\.\s+.*$
+        contexts:
+          - type: VERSE
+            regexp: ^(\d+)\.\s+.*$
+            descendants:
+              - type: TEXT
+                regexp: ^\d+\.\s+(.*)$
+      # Other text nodes (that don't start by a number) are just simple text.
+      - regexp: ^[^\d].*$
+        withoutAncestors: [ ANNOTATION ]
+        contexts:
+          - type: TEXT
+            regexp: (.*)
+    elements:
+      # Italic texts shorter than 20 characters are assumed to be translation additions.
+      - selector: "p > i:matches(^.{0,20}$)"
+        contexts:
+          - type: TRANSLATION_ADD
+            descendants:
+              - type: TEXT
+                op: ownText
+      # Italic longer than 20 is regular text.
+      - selector: "p > i:matches(^.{20,}$)"
+        contexts:
+          - type: TEXT
+            op: ownText
