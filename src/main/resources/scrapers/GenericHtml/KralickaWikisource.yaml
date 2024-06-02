@@ -248,7 +248,7 @@ elements:
     contexts:
       - type: CHAPTER
         op: text
-        regexp: "Kapitola ([CLXVI0-9]+)."
+        regexp: "(?:Kapitola|Žalm) ([CLXVI0-9]+).?"
   # Main books : intro paragraph does not contain chapter title.
   - selector: ".prp-pages-output > div.intro > p:not(:matches(^Kapitola\\s+))"
     contexts:
