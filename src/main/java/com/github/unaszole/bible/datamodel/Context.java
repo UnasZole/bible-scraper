@@ -16,7 +16,7 @@ public class Context {
 
 	private Context(ContextMetadata metadata, String value, List<Context> children, long contextUniqueId) {
 		this.metadata = metadata;
-		this.value = value;
+		this.value = metadata.type.valueType.normalise(value);
 		this.children = children;
 		this.contextUniqueId = contextUniqueId;
 	}

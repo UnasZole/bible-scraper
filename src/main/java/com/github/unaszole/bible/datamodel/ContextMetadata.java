@@ -3,6 +3,7 @@ package com.github.unaszole.bible.datamodel;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ContextMetadata {
@@ -27,9 +28,9 @@ public class ContextMetadata {
 	
 	public ContextMetadata(ContextType type, BibleBook book, int chapter, int[] verses) {
 		this.type = type;
-		this.book = book;
-		this.chapter = chapter;
-		this.verses = verses;
+		this.book = type.metaType.hasBook ? book : null;
+		this.chapter = type.metaType.hasChapter ? chapter : 0;
+		this.verses = type.metaType.hasVerses ? verses : null;
 	}
 
 	public ContextMetadata(ContextType type, BibleBook book, int chapter, int verse) {
@@ -126,6 +127,35 @@ public class ContextMetadata {
 
 	public static ContextMetadata forText() {
 		return new ContextMetadata(ContextType.TEXT);
+	}
+
+	public Optional<ContextMetadata> getImplicitChildOfType(ContextType implicitType, ContextMetadata previousOfType) {
+		BibleBook implicitBook = this.book;
+		if(implicitType.metaType.hasBook && implicitBook == null) {
+			// Can't guess a book implicitly, as there is no natural ordering of books.
+			return Optional.empty();
+		}
+
+		int implicitChapter = this.chapter;
+		if(implicitType.metaType.hasChapter && implicitChapter == 0) {
+			if(previousOfType == null) {
+				// If no chapter has been found yet, allow an implicit first chapter.
+				// (To handle books with a single unmarked chapter).
+				implicitChapter = 1;
+			}
+			else {
+				// No guessing of more chapters.
+				return Optional.empty();
+			}
+		}
+
+		int[] implicitVerses = this.verses;
+		if(implicitType.metaType.hasVerses && implicitVerses == null) {
+			// Can't guess a verse number, as those should always be explicitly written.
+			return Optional.empty();
+		}
+
+		return Optional.of(new ContextMetadata(implicitType, implicitBook, implicitChapter, implicitVerses));
 	}
 	
 	public static ContextMetadata fromParent(ContextType type, ContextMetadata parent) {

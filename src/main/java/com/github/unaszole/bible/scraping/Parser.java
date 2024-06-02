@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -116,11 +115,13 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 
 		// Loop through all allowed types for the next child of the head context.
 		for(ContextType eltType: baseContext.getAllowedTypesForNextChild()) {
+			ContextMetadata previousOfType = baseContext.getLastChildOfTypeMeta(eltType);
+
 			// Try to extract a real context of this type.
 			ParserCore.PositionParseOutput out = core.readContext(baseState.contextStack.stream()
 							.map(c -> c.metadata)
 							.collect(Collectors.toCollection(LinkedList::new)),
-					eltType, baseState.contextStack.get(0).getLastChildOfTypeMeta(eltType), position);
+					eltType, previousOfType, position);
 
 			if(out.parsedContext != null) {
 				// Found a matching context : return a new state with it.
@@ -131,11 +132,12 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 				return resultState;
 			}
 
-			if(eltType.implicitAllowed) {
+			Optional<ContextMetadata> implicitMeta = baseContext.metadata.getImplicitChildOfType(eltType, previousOfType);
+			if(implicitMeta.isPresent()) {
 				// If this element type can be created implicitly, build one and look recursively.
 
 				// Build an implicit context for this element.
-				Context newContext = new Context(ContextMetadata.fromParent(eltType, baseContext.metadata));
+				Context newContext = new Context(implicitMeta.get(), eltType.valueType.implicitValue);
 
 				// Call recursively until we get a real state.
 				ContextState reachedState = parseDescendantContext(baseState.openChildContext(newContext), position);

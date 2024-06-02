@@ -271,7 +271,6 @@ elements:
 
 nodeParsers:
   - selector: ".prp-pages-output > div.text > p:not(:matches(^\\s+$))"
-    withAncestors: [ CHAPTER ]
 
     nodes:
       # All text nodes within the paragraph must be taken entirely as normal verse text.
