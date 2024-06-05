@@ -224,8 +224,8 @@ books:
   - osis: Rev
     args: { BOOK: Apocalypsis }
 
-  #- osis: PrMan
-  #  args: { BOOK: Oratio_Manasse }
+  - osis: PrMan
+    args: { BOOK: Oratio_Manasse }
 
   - osis: 1Esd
     args: { BOOK: Liber_Tertius_Esdrae }
@@ -251,10 +251,10 @@ elements:
 
 nodeParsers:
   - selector: "div.text > p"
-    withAncestors: [ CHAPTER ]
     nodes:
       # All text nodes within the paragraph must be taken entirely as normal text.
-      - withoutAncestors: [ STRUCTURE_MARKER, ANNOTATION ]
+      - withAncestors: [ CHAPTER ]
+        withoutAncestors: [ CHAPTER_TITLE, CHAPTER_INTRO, STRUCTURE_MARKER, ANNOTATION ]
         contexts:
           - type: TEXT
             regexp: " ?(.*)"
