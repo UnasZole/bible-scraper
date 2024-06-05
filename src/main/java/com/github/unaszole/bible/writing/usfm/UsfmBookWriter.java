@@ -96,6 +96,9 @@ public class UsfmBookWriter implements BookWriter {
         OSIS_TO_USFM.put(BibleBook.MACC1, "1MA");
         OSIS_TO_USFM.put(BibleBook.MACC2, "2MA");
         OSIS_TO_USFM.put(BibleBook.ADD_DAN, "DAG");
+        OSIS_TO_USFM.put(BibleBook.PR_MAN, "MAN");
+        OSIS_TO_USFM.put(BibleBook.ESD1, "1ES");
+        OSIS_TO_USFM.put(BibleBook.ESD2, "2ES");
     }
 
     private final PrintWriter out;
