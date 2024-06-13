@@ -12,16 +12,19 @@ import org.jsoup.nodes.TextNode;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 public class NodeParserConfig extends ExternalParserConfig {
 
     public List<TextNodeParser> nodes;
     public List<ElementParser> elements;
+    public List<NodeParserConfig> nodeParsers;
 
     private List<PositionBufferedParserCore.ContextReader> parseElement(Deque<ContextMetadata> ancestorStack,
-                                                                        ContextType type, Element e) {
+                                                                        ContextType type, Element e,
+                                                                        ContextualData contextualData) {
         for(ElementParser eltParser: elements) {
-            List<PositionBufferedParserCore.ContextReader> result = eltParser.parse(e, ancestorStack, type);
+            List<PositionBufferedParserCore.ContextReader> result = eltParser.parse(e, ancestorStack, type, contextualData);
             if(result != null) {
                 return result;
             }
@@ -30,10 +33,11 @@ public class NodeParserConfig extends ExternalParserConfig {
     }
 
     private List<PositionBufferedParserCore.ContextReader> parseTextNode(Deque<ContextMetadata> ancestorStack,
-                                                                         ContextType type, TextNode t) {
+                                                                         ContextType type, TextNode t,
+                                                                         ContextualData contextualData) {
 
         for(TextNodeParser nodeParser: nodes) {
-            List<PositionBufferedParserCore.ContextReader> result = nodeParser.parse(t, ancestorStack, type);
+            List<PositionBufferedParserCore.ContextReader> result = nodeParser.parse(t, ancestorStack, type, contextualData);
             if(result != null) {
                 return result;
             }
@@ -88,15 +92,36 @@ public class NodeParserConfig extends ExternalParserConfig {
     }
 
     @Override
-    public Parser<?> getParser(Element e, Deque<Context> currentContextStack) {
+    public Parser<?> getParser(Element e, Deque<Context> currentContextStack, final ContextualData contextualData) {
         return new Parser<Node>(new PositionBufferedParserCore<Node>() {
+
             @Override
-            protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type, ContextMetadata previousOfType, Node n) {
+            public Parser<?> parseExternally(Node n, Deque<Context> currentContextStack) {
+                if(nodeParsers == null || !(n instanceof Element)) {
+                    return null;
+                }
+                Element e = (Element) n;
+
+                for(NodeParserConfig nodeParserConfig: nodeParsers) {
+                    Optional<Parser<?>> parser = nodeParserConfig.getParserIfApplicable(e, currentContextStack,
+                            contextualData);
+                    if(parser.isPresent()) {
+                        return parser.get();
+                    }
+                }
+
+                // The current element did not trigger any parser.
+                return null;
+            }
+
+            @Override
+            protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
+                                                       ContextMetadata previousOfType, Node n) {
                 if(n instanceof Element) {
-                    return parseElement(ancestorStack, type, (Element) n);
+                    return parseElement(ancestorStack, type, (Element) n, contextualData);
                 }
                 else if(n instanceof TextNode) {
-                    return parseTextNode(ancestorStack, type, (TextNode) n);
+                    return parseTextNode(ancestorStack, type, (TextNode) n, contextualData);
                 }
                 return null;
             }

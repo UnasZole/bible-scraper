@@ -4,11 +4,13 @@ import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.ContextReaderListBuilder;
 import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
+import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Evaluator;
 
 import java.util.Deque;
 import java.util.List;
+import java.util.Map;
 
 public class ElementParser extends ContextStackAware {
 
@@ -35,11 +37,12 @@ public class ElementParser extends ContextStackAware {
     }
 
     public List<PositionBufferedParserCore.ContextReader> parse(final Element e, Deque<ContextMetadata> ancestorStack,
-                                                                ContextType nextContextType) {
+                                                                ContextType nextContextType,
+                                                                ContextualData contextualData) {
         if(canParse(e, ancestorStack, nextContextType)) {
             if(!contexts.isEmpty()) {
                 final ContextReaderListBuilder builder = new ContextReaderListBuilder();
-                contexts.forEach(ex -> ex.appendTo(builder, e));
+                contexts.forEach(ex -> ex.appendTo(builder, e, contextualData));
                 return builder.build();
             }
 

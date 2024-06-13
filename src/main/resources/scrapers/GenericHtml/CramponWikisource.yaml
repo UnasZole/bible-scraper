@@ -9,48 +9,62 @@ books:
     args: { BOOK: Genèse }
 
   - osis: Exod
+    names: [ Exode, Ex ]
     args: { BOOK: Exode }
 
   - osis: Lev
+    names: [ Lévit, Lév, Lévitique ]
     args: { BOOK: Lévitique }
 
   - osis: Num
+    names: [ Nombr, Nomb ]
     args: { BOOK: Nombres }
 
   - osis: Deut
+    names: [ Deutér ]
     args: { BOOK: Deutéronome }
 
   - osis: Josh
+    names: [ Jos ]
     args: { BOOK: Josué }
 
   - osis: Judg
+    names: [ Jug ]
     args: { BOOK: Juges }
 
   - osis: Ruth
     args: { BOOK: Ruth }
 
   - osis: 1Sam
+    names: [ I Sam ]
     args: { BOOK: 1_Samuel }
 
   - osis: 2Sam
+    names: [ II Sam ]
     args: { BOOK: 2_Samuel }
 
   - osis: 1Kgs
+    names: [ I Rois ]
     args: { BOOK: 1_Rois }
 
   - osis: 2Kgs
+    names: [ II Rois ]
     args: { BOOK: 2_Rois }
 
   - osis: 1Chr
+    names: [ I Chron, I Par, I Paral, I. Paral, I ] # Approx: "I" is assumed to be 1Chr due to one usage in 2Sam 7,15
     args: { BOOK: 1_Chroniques }
 
   - osis: 2Chr
+    names: [ II Chron, II Par, II Parai, II Paral ]
     args: { BOOK: 2_Chroniques }
 
   - osis: Ezra
+    names: [ Esdr, I Esdr ]
     args: { BOOK: Esdras }
 
   - osis: Neh
+    names: [ Néh ]
     args: { BOOK: Néhémie }
 
   - osis: Tob
@@ -63,15 +77,18 @@ books:
     args: { BOOK: Esther }
 
   - osis: 1Macc
+    names: [ I Mach ]
     args: { BOOK: 1 Machabées }
 
   - osis: 2Macc
+    names: [ II Mach, II ] # Approx: "II" is assumed to refer to 2Macc due to one usage in Dan 11,31
     args: { BOOK: 2 Machabées }
 
   - osis: Job
     args: { BOOK: Job }
 
   - osis: Ps
+    names: [ Ps. ii ] # FIXME: The name "Ps. ii" is wrong, workaround to avoid crash on Acts 4,27
     pages:
       - args: { BOOK: Psaumes_1 }
       - args: { BOOK: Psaumes_2 }
@@ -89,33 +106,42 @@ books:
     args: { BOOK: Cantique }
 
   - osis: Wis
+    names: [ Sag ]
     args: { BOOK: Sagesse }
 
   - osis: Sir
+    names: [ Eccli ]
     args: { BOOK: Ecclésiastique }
 
   - osis: Isa
+    names: [ Is, Isaie, Isaïe ]
     args: { BOOK: Isaïe }
 
   - osis: Jer
+    names: [ Jér, Jérémie, Jérém ]
     args: { BOOK: Jérémie }
 
   - osis: Lam
     args: { BOOK: Lamentations }
 
   - osis: Bar
+    names: [ Baruch ]
     args: { BOOK: Baruch }
 
   - osis: Ezek
+    names: [ Ezéch, Ezech, Ez ]
     args: { BOOK: Ézéchiel }
 
   - osis: Dan
+    names: [ Daniel ]
     args: { BOOK: Daniel }
 
   - osis: Hos
+    names: [ Os, Osée ]
     args: { BOOK: Osée }
 
   - osis: Joel
+    names: [ Joël ]
     args: { BOOK: Joël }
 
   - osis: Amos
@@ -125,9 +151,11 @@ books:
     args: { BOOK: Abdias }
 
   - osis: Jonah
+    names: [ Jon ]
     args: { BOOK: Jonas }
 
   - osis: Mic
+    names: [ Mich, Michée ]
     args: { BOOK: Michée }
 
   - osis: Nah
@@ -137,84 +165,108 @@ books:
     args: { BOOK: Habacuc }
 
   - osis: Zeph
+    names: [ Soph ]
     args: { BOOK: Sophonie }
 
   - osis: Hag
+    names: [ Agg ]
     args: { BOOK: Aggée }
 
   - osis: Zech
+    names: [ Zach ]
     args: { BOOK: Zacharie }
 
   - osis: Mal
+    names: [ Malach ]
     args: { BOOK: Malachie }
 
   - osis: Matt
+    names: [ Matth ]
     args: { BOOK: Matthieu }
 
   - osis: Mark
+    names: [ Marc ]
     args: { BOOK: Marc }
 
   - osis: Luke
+    names: [ Luc, S. Luc ]
     args: { BOOK: Luc }
 
   - osis: John
+    names: [ Jean ]
     args: { BOOK: Jean }
 
   - osis: Acts
+    names: [ Act, Actes ]
     args: { BOOK: Actes }
 
   - osis: Rom
     args: { BOOK: Romains }
 
   - osis: 1Cor
+    names: [ I Cor ]
     args: { BOOK: 1_Corinthiens }
 
   - osis: 2Cor
+    names: [ 2 Cor, II Cor ]
     args: { BOOK: 2_Corinthiens }
 
   - osis: Gal
     args: { BOOK: Galates }
 
   - osis: Eph
-    args: { BOOK: Éphesiens }
+    names: [ Ep, Ephés ]
+    args: { BOOK: Éphésiens }
 
   - osis: Phil
+    names: [ Philipp, Philip ]
     args: { BOOK: Philippiens }
 
   - osis: Col
+    names: [ Colos ]
     args: { BOOK: Colossiens }
 
   - osis: 1Thess
+    names: [ I Thess ]
     args: { BOOK: 1_Thessaloniciens }
 
   - osis: 2Thess
+    names: [ II Thess ]
     args: { BOOK: 2_Thessaloniciens }
 
   - osis: 1Tim
+    names: [ I Tim ]
     args: { BOOK: 1_Timothée }
 
   - osis: 2Tim
+    names: [ II Tim ]
     args: { BOOK: 1_Timothée }
 
   - osis: Titus
+    names: [ Tit ]
     args: { BOOK: Tite }
 
   - osis: Phlm
     args: { BOOK: Philémon }
 
   - osis: Heb
+    names: [ Hebr, Hébr ]
     args: { BOOK: Hébreux }
 
   - osis: Jas
+    names: [ Jac, Jacq ]
     args: { BOOK: Jacques }
 
   - osis: 1Pet
+    names: [ I Pierre, I Petr, I Pier ]
     args: { BOOK: 1_Pierre }
 
   - osis: 2Pet
+    names: [ II Pier ]
     args: { BOOK: 2_Pierre }
 
   - osis: 1John
+    names: [ I Jean ]
     args: { BOOK: 1_Jean }
 
   - osis: 2John
@@ -227,6 +279,7 @@ books:
     args: { BOOK: Jude }
 
   - osis: Rev
+    names: [ Apoc ]
     args: { BOOK: Apocalypse }
 
 
@@ -278,9 +331,11 @@ elements:
 nodeParsers:
   - selector: ".prp-pages-output p"
     withAncestors: [ CHAPTER ]
+
     nodes:
       # All text nodes within the paragraph must be taken entirely as normal text.
-      - withoutAncestors: [ STRUCTURE_MARKER, ANNOTATION ]
+      - withAncestors: [ INLINE_TEXT ]
+        withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
         contexts:
           - type: TEXT
             regexp: (.*)
@@ -310,12 +365,14 @@ nodeParsers:
 
       # Lettrine and small caps must be taken as normal text.
       - selector: "span.lettrine + span"
-        withoutAncestors: [ STRUCTURE_MARKER, ANNOTATION ]
+        withAncestors: [ INLINE_TEXT ]
+        withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
         contexts:
           - type: TEXT
             op: text
       - selector: "span.sc"
-        withoutAncestors: [ STRUCTURE_MARKER, ANNOTATION ]
+        withAncestors: [ INLINE_TEXT ]
+        withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
         contexts:
           - type: TEXT
             op: text
@@ -327,10 +384,80 @@ nodeParsers:
               - type: TEXT
                 op: text
 
+    nodeParsers:
       - selector: "sup.reference > a"
-        contexts:
-          - type: NOTE
-            descendants:
+        linkTargetSelector: "> span.reference-text"
+        nodes:
+          # All text nodes within the note must be taken entirely as normal text.
+          - withoutAncestors: [ MARKUP ]
+            contexts:
               - type: TEXT
-                linkTargetSelector: "> span.reference-text"
+                regexp: (.*)
+        elements:
+          # The opening span marks the opening of the note context.
+          - selector: "span.reference-text"
+            contexts:
+              - type: NOTE
+          # Other spans, sups and such are just formatting, register the text.
+          - selector: "span.reference-text > :is(span, sup)"
+            contexts:
+              - type: TEXT
                 op: text
+          # i elements in notes indicate quoted text.
+          - selector: "span.reference-text > i"
+            contexts:
+              - type: QUOTE
+                descendants:
+                  - type: TEXT
+                    op: text
+
+          # Links are references to parse.
+          # Note that the "voy" or "comp" prefixes are sometimes included in the link and must be ignored.
+          # First, full reference with book and verse.
+          - selector: "a:matches(^.*?(?![Vv]oy|[Cc]omp)\\b[\\p{L}\\d. ]+?[.,]{1,2}\\s*[MmDdCcLlXxVvIi]+,\\s+\\d+(?:\\s*,\\s*\\d+)*$)"
+            contexts:
+              - type: REFERENCE
+                descendants:
+                  - type: FULL_REF
+                    descendants:
+                      - type: REF_BOOK
+                        op: text
+                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b([\\p{L}\\d. ]+?)[.,]{1,2}\\s*[MmDdCcLlXxVvIi]+,\\s+\\d+(?:\\s*,\\s*\\d+)*$"
+                      - type: REF_CHAPTER
+                        op: text
+                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b[\\p{L}\\d. ]+?[.,]{1,2}\\s*([MmDdCcLlXxVvIi]+),\\s+\\d+(?:\\s*,\\s*\\d+)*$"
+                      - type: REF_VERSES
+                        op: text
+                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b[\\p{L}\\d. ]+?[.,]{1,2}\\s*[MmDdCcLlXxVvIi]+,\\s+(\\d+(?:\\s*,\\s*\\d+)*)$"
+                  - type: TEXT
+                    op: text
+          # Reference without a book, if there was another reference before : continued.
+          - selector: "a ~ a:matches(^.*?(?![Vv]oy|[Cc]omp)\\b([MmDdCcLlXxVvIi]+),\\s+\\d+(?:\\s*,\\s*\\d+)*$)"
+            contexts:
+              - type: REFERENCE
+                descendants:
+                  - type: CONTINUED_REF
+                    descendants:
+                      - type: REF_CHAPTER
+                        op: text
+                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b([MmDdCcLlXxVvIi]+),\\s+\\d+(?:\\s*,\\s*\\d+)*$"
+                      - type: REF_VERSES
+                        op: text
+                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b[MmDdCcLlXxVvIi]+,\\s+(\\d+(?:\\s*,\\s*\\d+)*)$"
+                      - type: TEXT
+                        op: text
+          # Reference without a book, if there was no reference before : local.
+          - selector: "a:matches(^.*?(?![Vv]oy|[Cc]omp)\\b[MmDdCcLlXxVvIi]+,\\s+\\d+(?:\\s*,\\s*\\d+)*$)"
+            contexts:
+              - type: REFERENCE
+                descendants:
+                  - type: LOCAL_REF
+                    descendants:
+                      - type: REF_CHAPTER
+                        op: text
+                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b([MmDdCcLlXxVvIi]+),\\s+\\d+(?:\\s*,\\s*\\d+)*$"
+                      - type: REF_VERSES
+                        op: text
+                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b[MmDdCcLlXxVvIi]+,\\s+(\\d+(?:\\s*,\\s*\\d+)*)$"
+                      - type: TEXT
+                        op: text

@@ -1,15 +1,17 @@
 package com.github.unaszole.bible.writing;
 
+import com.github.unaszole.bible.datamodel.BibleRef;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.stream.ContextEvent;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
+import org.crosswire.jsword.versification.BibleBook;
 
-import java.util.Iterator;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -71,25 +73,114 @@ public class ContextStreamWriter {
         throw new IllegalStateException("Did not find " + metadata + " closing event.");
     }
 
-    private <W extends TextWriter> void writeFlatText(W w) {
+    private Map<ContextType, List<String>> consumeAndListValuesByType(ContextMetadata metadata) {
+        Map<ContextType, List<String>> values = new HashMap<>();
+
         while(hasNext()) {
             ContextEvent event = next();
 
-            if(isOpen(ContextType.NOTE, event)) {
-                w.note(consumeAndAggregateValues(event.metadata));
+            if(event.type == ContextEvent.Type.OPEN) {
+                if(!values.containsKey(event.metadata.type)) {
+                    values.put(event.metadata.type, new ArrayList<>());
+                }
+
+                if(event.value != null) {
+                    values.get(event.metadata.type).add(event.value);
+                }
             }
+
+            if(event.type == ContextEvent.Type.CLOSE && Objects.equals(event.metadata, metadata)) {
+                // Event closes the context.
+                return values;
+            }
+        }
+
+        throw new IllegalStateException("Did not find " + metadata + " closing event.");
+    }
+
+    BibleRef currentFullRef = null;
+    BibleRef currentLocalRef = null;
+
+    private BibleRef[] buildRefs(Map<ContextType, List<String>> values, BibleRef inheritFrom) {
+        BibleBook book = inheritFrom != null ? inheritFrom.book : null;
+        if(values.containsKey(ContextType.REF_BOOK)) {
+            book = BibleBook.fromOSIS(values.get(ContextType.REF_BOOK).get(0));
+        }
+
+        int chapter = inheritFrom != null ? inheritFrom.chapter : 0;
+        if(values.containsKey(ContextType.REF_CHAPTER)) {
+            chapter = ParsingUtils.parseInt(values.get(ContextType.REF_CHAPTER).get(0));
+        }
+
+        int firstVerse = 0;
+        int lastVerse = 0;
+        if(values.containsKey(ContextType.REF_VERSES)) {
+            String[] verseRange = values.get(ContextType.REF_VERSES).get(0).split("[^a-zA-Z0-9]+");
+            firstVerse = ParsingUtils.parseInt(verseRange[0]);
+            if(verseRange.length > 1) {
+                lastVerse = ParsingUtils.parseInt(verseRange[1]);
+            }
+        }
+
+        if(lastVerse == 0) {
+            return new BibleRef[] { new BibleRef(book, chapter, firstVerse) };
+        }
+        else {
+            return new BibleRef[] {
+                    new BibleRef(book, chapter, firstVerse),
+                    new BibleRef(book, chapter, lastVerse)
+            };
+        }
+    }
+
+    private <W extends TextWriter> void writeText(W w, ContextType endCtx) {
+        while(hasNext()) {
+            ContextEvent event = next();
+
             if(isOpen(ContextType.TRANSLATION_ADD, event)) {
                 w.translationAdd(consumeAndAggregateValues(event.metadata));
+            }
+            if(isOpen(ContextType.QUOTE, event)) {
+                w.quote(consumeAndAggregateValues(event.metadata));
             }
             if(isClose(ContextType.TEXT, event)) {
                 w.text(textTransformer.apply(event.value));
             }
+            if(isOpen(ContextType.NOTE, event)) {
+                w.note(iw -> writeText(iw, ContextType.NOTE));
+            }
 
+            if(isOpen(ContextType.REFERENCE, event)) {
+                Map<ContextType, List<String>> values = consumeAndListValuesByType(event.metadata);
 
-            if(isClose(ContextType.FLAT_TEXT, event)) {
+                BibleRef[] refs = null;
+                if(values.containsKey(ContextType.FULL_REF)) {
+                    refs = buildRefs(values, null);
+                    currentFullRef = refs[0];
+                }
+                else if(values.containsKey(ContextType.CONTINUED_REF)) {
+                    refs = buildRefs(values, currentFullRef);
+                }
+                else if(values.containsKey(ContextType.LOCAL_REF)) {
+                    refs = buildRefs(values, currentLocalRef);
+                }
+                else {
+                    throw new IllegalArgumentException("REFERENCE is missing actual FULL_REF/CONTINUED_REF/LOCAL_REF child");
+                }
+
+                w.reference(refs[0], refs.length > 1 ? refs[1] : null,
+                        String.join("", values.get(ContextType.TEXT))
+                );
+            }
+
+            if(isClose(endCtx, event)) {
                 return;
             }
         }
+    }
+
+    private <W extends TextWriter> void writeFlatText(W w) {
+        writeText(w, ContextType.FLAT_TEXT);
     }
 
     private <W extends StructuredTextWriter> void writeStructuredText(W w, BiPredicate<W, ContextEvent> specialisedBehaviour) {
@@ -146,11 +237,13 @@ public class ContextStreamWriter {
 
     public void writeBookContents(StructuredTextWriter.BookContentsWriter writer) {
         if(isOpen(ContextType.CHAPTER, getCurrent())) {
+            currentLocalRef = new BibleRef(getCurrent().metadata.book, getCurrent().metadata.chapter, 0);
             writer.chapter(getCurrent().metadata.chapter, getCurrent().value);
         }
 
         writeStructuredText(writer, (w, event) -> {
             if(isOpen(ContextType.CHAPTER, event)) {
+                currentLocalRef = new BibleRef(event.metadata.book, event.metadata.chapter, 0);
                 w.chapter(event.metadata.chapter, event.value);
             }
             if(isOpen(ContextType.CHAPTER_TITLE, event)) {
@@ -195,6 +288,7 @@ public class ContextStreamWriter {
             ContextEvent event = next();
 
             if(isOpen(ContextType.BOOK, event)) {
+                currentLocalRef = new BibleRef(event.metadata.book, 0, 0);
                 w.book(event.metadata.book, this::writeBook);
             }
         }

@@ -20,6 +20,11 @@ public class Book extends PagesContainer {
     public BibleBook osis;
 
     /**
+     * The names under which this book is referenced within the bible. This is used when parsing cross-references.
+     */
+    public List<String> names;
+
+    /**
      * Description of this book's contents as a sequence of chapters.
      * May be left empty if the {@link #pages} already contain all chapters of the book.
      */

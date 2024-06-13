@@ -9,6 +9,7 @@ import org.jsoup.nodes.Element;
 
 import java.util.Deque;
 import java.util.List;
+import java.util.Optional;
 
 public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
 
@@ -16,10 +17,14 @@ public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
 
     private final List<NodeParserConfig> nodeParsers;
 
+    private final ContextualData contextualData;
+
     public ConfiguredHtmlParser(List<ElementParser> elements,
-                                List<NodeParserConfig> nodeParsers) {
+                                List<NodeParserConfig> nodeParsers,
+                                ContextualData contextualData) {
         this.elements = elements;
         this.nodeParsers = nodeParsers;
+        this.contextualData = contextualData;
     }
 
     @Override
@@ -29,9 +34,9 @@ public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
         }
 
         for(NodeParserConfig nodeParserConfig: nodeParsers) {
-            if(nodeParserConfig.canTriggerAtPosition(e, currentContextStack)) {
-                // The current element triggers an external node parser.
-                return nodeParserConfig.getParser(e, currentContextStack);
+            Optional<Parser<?>> parser = nodeParserConfig.getParserIfApplicable(e, currentContextStack, contextualData);
+            if(parser.isPresent()) {
+                return parser.get();
             }
         }
 
@@ -47,7 +52,7 @@ public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
         }
 
         for(ElementParser eltParser: elements) {
-            List<ContextReader> result = eltParser.parse(e, ancestorStack, type);
+            List<ContextReader> result = eltParser.parse(e, ancestorStack, type, contextualData);
             if(result != null) {
                 return result;
             }

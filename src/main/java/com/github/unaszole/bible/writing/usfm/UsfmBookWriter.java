@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 public class UsfmBookWriter implements BookWriter {
 
-    private static final Map<BibleBook, String> OSIS_TO_USFM = new HashMap<>();
+    public static final Map<BibleBook, String> OSIS_TO_USFM = new HashMap<>();
     static {
         OSIS_TO_USFM.put(BibleBook.GEN, "GEN");
         OSIS_TO_USFM.put(BibleBook.EXOD, "EXO");

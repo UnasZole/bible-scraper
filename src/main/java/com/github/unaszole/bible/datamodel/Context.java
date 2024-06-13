@@ -15,8 +15,11 @@ public class Context {
 	public final long contextUniqueId;
 
 	private Context(ContextMetadata metadata, String value, List<Context> children, long contextUniqueId) {
+		if(!metadata.type.valueType.isValid(value)) {
+			throw new IllegalArgumentException("Invalid value " + value + " for context of type " + metadata.type);
+		}
 		this.metadata = metadata;
-		this.value = metadata.type.valueType.normalise(value);
+		this.value = value;
 		this.children = children;
 		this.contextUniqueId = contextUniqueId;
 	}

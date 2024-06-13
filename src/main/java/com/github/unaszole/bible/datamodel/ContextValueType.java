@@ -1,49 +1,36 @@
 package com.github.unaszole.bible.datamodel;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.crosswire.jsword.versification.BibleBook;
 
-import java.util.regex.Matcher;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public enum ContextValueType {
-    NO_VALUE(null, null),
-    INTEGER(Pattern.compile("^\\s*(\\d+)\\s*$"), "1"),
-    STRING(Pattern.compile("^(.*)$"), "");
+    NO_VALUE(Objects::isNull, true, null),
+    INTEGER(Pattern.compile("^\\d+$").asPredicate(), true, "1"),
+    STRING(Pattern.compile("^.*$").asPredicate(), true, ""),
+    INTEGER_OR_ROMAN(Pattern.compile("^(\\d+|[MmDdCcLlXxVvIi]+)$").asPredicate(), true, "1"),
+    INTEGER_OR_ROMAN_LIST(Pattern.compile("^((\\d+|[MmDdCcLlXxVvIi]+)[^\\w]*)+$").asPredicate(), true, "1"),
+    BOOK_ID(b -> b != null && BibleBook.fromOSIS(b) != null, false, null);
 
-    private static final Logger LOG = LoggerFactory.getLogger(ContextValueType.class);
-
-    private final Pattern extractor;
+    private final Predicate<String> validator;
+    public final boolean implicitAllowed;
     public final String implicitValue;
 
-    ContextValueType(Pattern extractor, String implicitValue) {
-        this.extractor = extractor;
+    ContextValueType(Predicate<String> validator, boolean implicitAllowed, String implicitValue) {
+        this.validator = validator;
+        this.implicitAllowed = implicitAllowed;
         this.implicitValue = implicitValue;
     }
 
     /**
      *
-     * @param value The context value as read from the parser.
-     * @return The normalised context value for this value type.
-     * Print error logs for unexpected values, but return in best-effort.
+     *
+     * @param value The value to validate.
+     * @return True if the given value is valid, false otherwise.
      */
-    public String normalise(String value) {
-        if((value == null) != (extractor == null)) {
-            LOG.error("Context value {} provided when expecting {}", value, extractor);
-        }
-
-        if(extractor == null || value == null) {
-            return null;
-        }
-
-        Matcher matcher = extractor.matcher(value);
-        if(!matcher.matches()) {
-            LOG.error("Context value {} provided when expecting {}", value, extractor);
-            return value;
-        }
-        if(matcher.groupCount() >= 1) {
-            return matcher.group(1);
-        }
-        return matcher.group();
+    public boolean isValid(String value) {
+        return validator.test(value);
     }
 }

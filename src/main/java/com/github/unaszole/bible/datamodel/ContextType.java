@@ -16,18 +16,59 @@ public enum ContextType {
 	TEXT(NO_META, STRING),
 
 	/**
-	 * An inline note, that may be inserted at any point in a flat text.
+	 * An addition by the translator for easier understanding, not present in the original text.
 	 */
-	NOTE(NO_META, NO_VALUE, atLeastOne(TEXT)),
 	TRANSLATION_ADD(NO_META, NO_VALUE, atLeastOne(TEXT)),
-	ANNOTATION(NO_META, NO_VALUE, one(NOTE, TRANSLATION_ADD)),
+	QUOTE(NO_META, NO_VALUE, atLeastOne(TEXT)),
+	/**
+	 * Book reference : context value must be a valid OSIS book ID.
+	 */
+	REF_BOOK(NO_META, BOOK_ID),
+	/**
+	 * Chapter reference : context value must be a valid chapter number, either integer or a roman numeral.
+	 */
+	REF_CHAPTER(NO_META, INTEGER_OR_ROMAN),
+	REF_VERSES(NO_META, INTEGER_OR_ROMAN_LIST),
+	/**
+	 * Full reference data unambiguously references a target text, by providing at least a book and chapter.
+	 * Verses can be omitted to refer to a full chapter.
+	 */
+	FULL_REF(NO_META, NO_VALUE, one(REF_BOOK), one(REF_CHAPTER), atMostOne(REF_VERSES)),
+	/**
+	 * Continued reference may omit the book or chapter, that should be inherited from the previous
+	 * reference. Should only be used if there is a FULL_REF reference shortly before in the same text.
+	 */
+	CONTINUED_REF(NO_META, NO_VALUE, atMostOne(REF_BOOK), atMostOne(REF_CHAPTER), atMostOne(REF_VERSES)),
+	/**
+	 * Local reference may omit the book or chapter, that should be the one of the container where this reference is
+	 * being written.
+	 */
+	LOCAL_REF(NO_META, NO_VALUE, atMostOne(REF_BOOK), atMostOne(REF_CHAPTER), atMostOne(REF_VERSES)),
+	/**
+	 * A reference to another location in the text.
+	 * The REF_DATA child specifies exactly which text is targeted.
+	 * The TEXT children contain the actual text of the reference to be rendered.
+	 */
+	REFERENCE(NO_META, NO_VALUE, one(FULL_REF, CONTINUED_REF, LOCAL_REF), atLeastOne(TEXT)),
+
+	MARKUP(NO_META, NO_VALUE, one(TRANSLATION_ADD, QUOTE, REFERENCE)),
+	/**
+	 * An inline text, ie. a text that does not have any structure or any note whatsoever.
+	 * It may only contain semantic or formatting markup around portions of the text.
+	 */
+	INLINE_TEXT(NO_META, NO_VALUE, atLeastOne(TEXT, MARKUP)),
+
+	/**
+	 * A note that may be inserted at any point in a flat text.
+	 */
+	NOTE(NO_META, NO_VALUE, atLeastOne(INLINE_TEXT)),
 
 	/**
 	 * A flat text, ie. a text that does not have any structure - but may contain notes.
 	 * All its contents should be considered as a single string, with the notes either rendered directly in-place or
 	 * via an in-place reference to an external rendering (eg. footnote).
 	 */
-	FLAT_TEXT(NO_META, NO_VALUE, atLeastOne(TEXT, ANNOTATION)),
+	FLAT_TEXT(NO_META, NO_VALUE, atLeastOne(INLINE_TEXT, NOTE)),
 	/**
 	 * An explicit paragraph break.
 	 */

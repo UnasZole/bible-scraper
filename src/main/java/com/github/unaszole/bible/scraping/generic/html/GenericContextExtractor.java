@@ -4,8 +4,10 @@ import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.ContextReaderListBuilder;
 import com.github.unaszole.bible.scraping.ParsingUtils;
+import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.List;
+import java.util.Map;
 
 public abstract class GenericContextExtractor<Position> {
     /**
@@ -33,19 +35,21 @@ public abstract class GenericContextExtractor<Position> {
         }
     }
 
-    public void appendTo(ContextReaderListBuilder builder, Position position) {
+    public void appendTo(ContextReaderListBuilder builder, Position position, ContextualData contextualData) {
         ContextReaderListBuilder descendantsBuilder = new ContextReaderListBuilder();
         if(getDescendants() != null) {
             for (GenericContextExtractor<Position> descendantExtractor : getDescendants()) {
-                descendantExtractor.appendTo(descendantsBuilder, position);
+                descendantExtractor.appendTo(descendantsBuilder, position, contextualData);
             }
         }
 
-        final String value = extractValue(position);
+        String value = extractValue(position);
+        final String actualValue = (type == ContextType.REF_BOOK && contextualData.bookRefs.containsKey(value))
+                ? contextualData.bookRefs.get(value).getOSIS() : value;
 
         builder.followedBy(
-                (as, pot) -> getContextMetadata(as.peekFirst(), pot, value),
-                value,
+                (as, pot) -> getContextMetadata(as.peekFirst(), pot, actualValue),
+                actualValue,
                 descendantsBuilder
         );
     }

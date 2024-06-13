@@ -1,31 +1,41 @@
 package com.github.unaszole.bible.writing;
 
+import com.github.unaszole.bible.datamodel.BibleRef;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class BufferedTextWrites implements Consumer<TextWriter> {
 
-    private final List<Map.Entry<String, String>> actions = new ArrayList<>();
+    private final List<Consumer<TextWriter>> actions = new ArrayList<>();
 
     public BufferedTextWrites(Consumer<TextWriter> sourceWrites) {
         sourceWrites.accept(new TextWriter() {
             @Override
             public void text(String str) {
-                actions.add(Map.entry("text", str));
-            }
-
-            @Override
-            public void note(String str) {
-                actions.add(Map.entry("note", str));
+                actions.add(w -> w.text(str));
             }
 
             @Override
             public void translationAdd(String str) {
-                actions.add(Map.entry("translationAdd", str));
+                actions.add(w -> w.translationAdd(str));
+            }
+
+            @Override
+            public void quote(String str) {
+                actions.add(w -> w.quote(str));
+            }
+
+            @Override
+            public void reference(BibleRef rangeStart, BibleRef rangeEnd, String text) {
+                actions.add(w -> w.reference(rangeStart, rangeEnd, text));
+            }
+
+            @Override
+            public void note(Consumer<TextWriter> writes) {
+                actions.add(w -> w.note(writes));
             }
 
             @Override
@@ -37,16 +47,8 @@ public class BufferedTextWrites implements Consumer<TextWriter> {
 
     @Override
     public void accept(TextWriter t) {
-        for(Map.Entry<String, String> action: actions) {
-            if("text".equals(action.getKey())) {
-                t.text(action.getValue());
-            }
-            else if("note".equals(action.getKey())) {
-                t.note(action.getValue());
-            }
-            else if("translationAdd".equals(action.getKey())) {
-                t.translationAdd(action.getValue());
-            }
+        for(Consumer<TextWriter> action: actions) {
+            action.accept(t);
         }
     }
 }

@@ -14,10 +14,7 @@ import com.github.unaszole.bible.scraping.CachedDownloader;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.scraping.generic.*;
-import com.github.unaszole.bible.scraping.generic.html.ConfiguredHtmlParser;
-import com.github.unaszole.bible.scraping.generic.html.ElementContextExtractor;
-import com.github.unaszole.bible.scraping.generic.html.ElementParser;
-import com.github.unaszole.bible.scraping.generic.html.NodeParserConfig;
+import com.github.unaszole.bible.scraping.generic.html.*;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
 import com.github.unaszole.bible.stream.StreamUtils;
@@ -109,6 +106,18 @@ public class GenericHtml extends Scraper {
                     .filter(b -> b.osis == book)
                     .findAny()
                     .orElse(null);
+        }
+
+        public Map<String, BibleBook> getBookReferences() {
+            return books.stream()
+                    .filter(b -> b.names != null)
+                    .flatMap(b -> b.names.stream().map(
+                            n -> Map.entry(n, b.osis)
+                    ))
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            Map.Entry::getValue
+                    ));
         }
 
         public void setArgsFromFlags(List<String> inputValues) {
@@ -240,7 +249,8 @@ public class GenericHtml extends Scraper {
 
                     // Prepare parser
                     Context chapterCtx = new Context(rootContextMeta, chapterValue);
-                    ContextStream.Single chapterStream = new Parser.TerminalParser<>(new ConfiguredHtmlParser(config.elements, config.nodeParsers),
+                    ContextStream.Single chapterStream = new Parser.TerminalParser<>(
+                            new ConfiguredHtmlParser(config.elements, config.nodeParsers, new ContextualData(config.getBookReferences())),
                             getDocStream(downloader, chapterUrls).iterator(),
                             chapterCtx
                     ).asContextStream();
@@ -293,7 +303,7 @@ public class GenericHtml extends Scraper {
                 List<URL> bookUrls = book.getUrls(bookPatterns);
                 if(!bookUrls.isEmpty()) {
                     // We have pages for this book, prepare a parser.
-                    bookStream = new Parser.TerminalParser<>(new ConfiguredHtmlParser(config.elements, config.nodeParsers),
+                    bookStream = new Parser.TerminalParser<>(new ConfiguredHtmlParser(config.elements, config.nodeParsers, new ContextualData(config.getBookReferences())),
                             getDocStream(downloader, bookUrls).iterator(), bookCtx
                     ).asContextStream().edit().inject(
                             ContextStreamEditor.InjectionPosition.AT_END, rootContextMeta, chapterStreams
