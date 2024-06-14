@@ -9,7 +9,7 @@ books:
     args: { BOOK: Genèse }
 
   - osis: Exod
-    names: [ Exode, Ex ]
+    names: [ Exode, Ex, Exod. xxx ] # FIXME: The name "Exod. xxx" is wrong, workaround to avoid crash on Heb 9,4
     args: { BOOK: Exode }
 
   - osis: Lev
