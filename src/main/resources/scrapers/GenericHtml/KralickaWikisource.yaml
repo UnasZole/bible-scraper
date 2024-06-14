@@ -275,7 +275,7 @@ nodeParsers:
     nodes:
       # All text nodes within the paragraph must be taken entirely as normal verse text.
       - withAncestors: [ VERSE ]
-        withoutAncestors: [ STRUCTURE_MARKER, ANNOTATION ]
+        withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
         contexts:
           - type: TEXT
             regexp: (.*)
@@ -297,7 +297,7 @@ nodeParsers:
 
       # Initial is to be taken as normal text.
       - selector: "span.iniciala"
-        withoutAncestors: [ STRUCTURE_MARKER, ANNOTATION ]
+        withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
         contexts:
           - type: TEXT
             op: text

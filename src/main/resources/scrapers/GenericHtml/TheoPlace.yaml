@@ -356,7 +356,7 @@ elements:
 nodeParsers:
   - selector: "#logos > span[data-verset]"
     withAncestors: [ VERSE ]
-    withoutAncestors: [ ANNOTATION ]
+    withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
     nodes:
       - contexts:
           - type: TEXT
