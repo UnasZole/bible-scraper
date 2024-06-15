@@ -35,5 +35,5 @@ public interface TextWriter extends AutoCloseable {
      * Write a note.
      * @param writes Logic to write the contents of the note.
      */
-    void note(Consumer<TextWriter> writes);
+    void note(Consumer<NoteTextWriter> writes);
 }

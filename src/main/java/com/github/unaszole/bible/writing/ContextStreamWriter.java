@@ -5,10 +5,7 @@ import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.stream.ContextEvent;
-import com.github.unaszole.bible.writing.interfaces.BibleWriter;
-import com.github.unaszole.bible.writing.interfaces.BookWriter;
-import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
-import com.github.unaszole.bible.writing.interfaces.TextWriter;
+import com.github.unaszole.bible.writing.interfaces.*;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.*;
@@ -171,6 +168,17 @@ public class ContextStreamWriter {
                 w.reference(refs[0], refs.length > 1 ? refs[1] : null,
                         String.join("", values.get(ContextType.TEXT))
                 );
+            }
+
+            // If inside a note, we have other specific markup available.
+            if(endCtx == ContextType.NOTE) {
+                NoteTextWriter nw = (NoteTextWriter) w;
+                if(isOpen(ContextType.CATCHPHRASE, event)) {
+                    nw.catchphraseQuote(consumeAndAggregateValues(event.metadata));
+                }
+                if(isOpen(ContextType.ALTERNATE_TRANSLATION, event)) {
+                    nw.alternateTranslationQuote(consumeAndAggregateValues(event.metadata));
+                }
             }
 
             if(isClose(endCtx, event)) {

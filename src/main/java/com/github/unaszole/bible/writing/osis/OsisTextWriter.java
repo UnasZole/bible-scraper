@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.writing.osis;
 
 import com.github.unaszole.bible.datamodel.BibleRef;
+import com.github.unaszole.bible.writing.interfaces.NoteTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import javax.xml.stream.XMLStreamWriter;
@@ -55,10 +56,10 @@ public class OsisTextWriter extends BaseXmlWriter implements TextWriter {
     }
 
     @Override
-    public void note(Consumer<TextWriter> writes) {
+    public void note(Consumer<NoteTextWriter> writes) {
         // <note>
         writeStartElement("note");
-        writes.accept(this);
+        writes.accept(new OsisNoteTextWriter(xmlWriter));
         writeEndElement();
         // </note>
     }

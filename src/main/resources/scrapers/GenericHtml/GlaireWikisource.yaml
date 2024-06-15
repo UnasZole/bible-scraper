@@ -521,7 +521,7 @@ nodeParsers:
       - selector: "sup.reference > a"
         linkTargetSelector: "> span.reference-text"
         nodes:
-          - withoutAncestors: [ MARKUP ]
+          - withoutAncestors: [ NOTE_MARKUP ]
             contexts:
               - type: TEXT
                 regexp: (.*)

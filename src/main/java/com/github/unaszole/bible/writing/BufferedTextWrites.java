@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.writing;
 
 import com.github.unaszole.bible.datamodel.BibleRef;
+import com.github.unaszole.bible.writing.interfaces.NoteTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class BufferedTextWrites implements Consumer<TextWriter> {
             }
 
             @Override
-            public void note(Consumer<TextWriter> writes) {
+            public void note(Consumer<NoteTextWriter> writes) {
                 actions.add(w -> w.note(writes));
             }
 

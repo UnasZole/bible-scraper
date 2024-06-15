@@ -389,7 +389,7 @@ nodeParsers:
         linkTargetSelector: "> span.reference-text"
         nodes:
           # All text nodes within the note must be taken entirely as normal text.
-          - withoutAncestors: [ MARKUP ]
+          - withoutAncestors: [ NOTE_MARKUP ]
             contexts:
               - type: TEXT
                 regexp: (.*)
@@ -403,10 +403,17 @@ nodeParsers:
             contexts:
               - type: TEXT
                 op: text
-          # i elements in notes indicate quoted text.
-          - selector: "span.reference-text > i"
+          # Italic elements in notes are usually quotes.
+          - selector: "span.reference-text > i ~ i"
             contexts:
               - type: QUOTE
+                descendants:
+                  - type: TEXT
+                    op: text
+          # But the first italic element of the note is the catchphrase.
+          - selector: "span.reference-text > i"
+            contexts:
+              - type: CATCHPHRASE
                 descendants:
                   - type: TEXT
                     op: text

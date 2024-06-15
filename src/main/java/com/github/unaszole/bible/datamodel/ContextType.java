@@ -58,10 +58,15 @@ public enum ContextType {
 	 */
 	INLINE_TEXT(NO_META, NO_VALUE, atLeastOne(TEXT, MARKUP)),
 
+	CATCHPHRASE(NO_META, NO_VALUE, atLeastOne(TEXT)),
+	ALTERNATE_TRANSLATION(NO_META, NO_VALUE, atLeastOne(TEXT)),
+	NOTE_MARKUP(NO_META, NO_VALUE, one(MARKUP, CATCHPHRASE, ALTERNATE_TRANSLATION)),
+	NOTE_TEXT(NO_META, NO_VALUE, atLeastOne(TEXT, NOTE_MARKUP)),
+
 	/**
-	 * A note that may be inserted at any point in a flat text.
+	 * A note that may be inserted at any point in a flat text, and has access to specific markup.
 	 */
-	NOTE(NO_META, NO_VALUE, atLeastOne(INLINE_TEXT)),
+	NOTE(NO_META, NO_VALUE, atLeastOne(NOTE_TEXT)),
 
 	/**
 	 * A flat text, ie. a text that does not have any structure - but may contain notes.
