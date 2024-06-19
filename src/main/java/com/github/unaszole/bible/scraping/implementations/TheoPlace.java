@@ -3,6 +3,7 @@ package com.github.unaszole.bible.scraping.implementations;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.scraping.*;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
@@ -271,6 +272,12 @@ public class TheoPlace extends Scraper {
     }
 
     @Override
+    public DocumentMetadata getMeta() {
+        return new DocumentMetadata("fr", "fre" + bible.toUpperCase() + "tp",
+                bible.toUpperCase() + " extraite de TheoPlace", "Bible");
+    }
+
+    @Override
     public ContextStream.Single getContextStreamFor(ContextMetadata rootContextMeta) {
         BookRef bookRef;
         switch(rootContextMeta.type) {
@@ -281,7 +288,7 @@ public class TheoPlace extends Scraper {
 
             case BOOK:
                 bookRef = BOOKS.get(rootContextMeta.book);
-                Context bookCtx = new Context(rootContextMeta);
+                Context bookCtx = new Context(rootContextMeta, rootContextMeta.book.getOSIS());
 
                 ContextStream.Single bookStream = getContextStream(downloader, bookRef.getBookIntroUrl(bible), bookCtx);
                 List<ContextStream.Single> chapterStreams = new ArrayList<>();

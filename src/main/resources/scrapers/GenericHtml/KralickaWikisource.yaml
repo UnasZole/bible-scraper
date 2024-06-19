@@ -1,4 +1,9 @@
 description: "Bible kralická (1918) Wikisource"
+metadata:
+  language: cs
+  systemName: czeBKRws
+  title: Bible kralická (1918)
+
 patterns:
   bookUrl: "https://cs.wikisource.org/wiki/Bible_kralick%C3%A1_(1918)/{BOOK}"
 

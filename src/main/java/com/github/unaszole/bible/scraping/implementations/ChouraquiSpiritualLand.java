@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.scraping.implementations;
 
+import com.github.unaszole.bible.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.scraping.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
@@ -352,11 +353,17 @@ public class ChouraquiSpiritualLand extends Scraper {
 	}
 
 	private interface Variant {
+		String getRefSystem();
 		BibleBook getMappedBook(BibleBook books);
 		ContextStreamEditor<ContextStream.Single> editBook(BibleBook book, ContextStreamEditor<ContextStream.Single> editor);
 	}
 
 	private static class DefaultVariant implements Variant {
+		@Override
+		public String getRefSystem() {
+			return "Bible";
+		}
+
 		@Override
 		public BibleBook getMappedBook(BibleBook book) {
 			// Keep all books as-is.
@@ -371,6 +378,11 @@ public class ChouraquiSpiritualLand extends Scraper {
 	}
 
 	private class CatholicVariant implements Variant {
+		@Override
+		public String getRefSystem() {
+			return "Bible.Catholic";
+		}
+
 		@Override
 		public BibleBook getMappedBook(BibleBook book) {
 			switch(book) {
@@ -457,10 +469,15 @@ public class ChouraquiSpiritualLand extends Scraper {
 	}
 
 	private ContextStream.Single getBookStream(BibleBook book) {
-		Context bookCtx = new Context(ContextMetadata.forBook(book));
+		Context bookCtx = new Context(ContextMetadata.forBook(book), book.getOSIS());
 		return variant.editBook(book,
 				new Parser.TerminalParser<>(new ElementParser(), getDocStream(book).iterator(), bookCtx).asContextStream().edit()
 		).process();
+	}
+
+	@Override
+	public DocumentMetadata getMeta() {
+		return new DocumentMetadata("fr", "freCHUsl", "Bible d'André Chouraqui", variant.getRefSystem());
 	}
 
 	@Override

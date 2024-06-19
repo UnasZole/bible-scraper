@@ -1,7 +1,14 @@
 package com.github.unaszole.bible.scraping.generic;
 
+import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.stream.ContextStream;
+import com.github.unaszole.bible.stream.ContextStreamEditor;
+
 import java.net.URL;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -78,13 +85,47 @@ public class ChapterSeq extends PagesContainer {
         throw new IllegalArgumentException("Invalid expression " + arg);
     }
 
-    public List<String> getPageValues(PatternContainer seqDefaults, String patternName, final int chapterNb) {
+    public List<String> getChapterNumbers(PatternContainer bookDefaults, final int chapterNb) {
         assert containsChapter(chapterNb);
-        return getPageValues(seqDefaults, patternName, a -> evalChapterArg(a, chapterNb));
+        return getPageValues(bookDefaults, "chapterPublishedNumber", a -> evalChapterArg(a, chapterNb));
     }
 
-    public List<URL> getPageUrls(PatternContainer seqDefaults, final int chapterNb) {
+    public List<URL> getChapterUrls(PatternContainer bookDefaults, final int chapterNb) {
         assert containsChapter(chapterNb);
-        return getPageUrls(seqDefaults, a -> evalChapterArg(a, chapterNb));
+        return getPageUrls(bookDefaults, "chapterUrl", a -> evalChapterArg(a, chapterNb));
+    }
+
+    public ContextStream.Single streamChapter(PatternContainer bookDefaults, ContextMetadata chapterCtxMeta,
+                                              BiFunction<Context, List<URL>, ContextStream.Single> ctxStreamer) {
+        assert chapterCtxMeta.type == ContextType.CHAPTER && containsChapter(chapterCtxMeta.chapter);
+
+        List<URL> chapterUrls = getChapterUrls(bookDefaults, chapterCtxMeta.chapter);
+
+        if(!chapterUrls.isEmpty()) {
+            // We have pages for this chapter, proceed.
+
+            // Compute chapter value
+            String chapterValue = String.join("-",
+                    getChapterNumbers(bookDefaults, chapterCtxMeta.chapter)
+            );
+
+            // Prepare context with the provided filler.
+            Context chapterCtx = new Context(chapterCtxMeta, chapterValue);
+            ContextStream.Single chapterStream = ctxStreamer.apply(chapterCtx, chapterUrls);
+
+            // Configure editor if provided.
+            if(edit != null) {
+                ContextStreamEditor<ContextStream.Single> editor = chapterStream.edit();
+                for(StreamEditorConfig cfg: edit) {
+                    cfg.configureEditor(editor, chapterCtxMeta.book, chapterCtxMeta.chapter);
+                }
+                chapterStream = editor.process();
+            }
+
+            return chapterStream;
+        }
+
+        // No page to retrieve for the chapter : no context to return.
+        return null;
     }
 }

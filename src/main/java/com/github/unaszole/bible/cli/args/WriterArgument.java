@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.cli.args;
 
+import com.github.unaszole.bible.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.writing.Typography;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import com.github.unaszole.bible.writing.osis.OsisBibleWriter;
@@ -37,13 +38,11 @@ public class WriterArgument {
         return Typography.getFixer(typographyFixer);
     }
 
-    public BibleWriter get() throws Exception {
+    public BibleWriter get(DocumentMetadata docMeta) throws Exception {
         switch(writer) {
             case OSIS:
                 OutputStream os = outputPath.isPresent() ? Files.newOutputStream(outputPath.get()) : System.out;
-                return new OsisBibleWriter(os,
-                        "",
-                        "plop", "gnu", "fr");
+                return new OsisBibleWriter(os, docMeta);
 
             case USFM:
                 if(outputPath.isPresent()) {

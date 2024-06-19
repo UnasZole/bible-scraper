@@ -4,6 +4,7 @@ import com.github.unaszole.bible.ScraperEntrypoint;
 import com.github.unaszole.bible.cli.args.ScraperArgument;
 import com.github.unaszole.bible.cli.args.WantedMetadataArgument;
 import com.github.unaszole.bible.cli.args.WriterArgument;
+import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.writing.ContextStreamWriter;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import picocli.CommandLine;
@@ -36,20 +37,22 @@ public class ScrapeCommand implements Callable<Integer> {
         Path cachePath = entrypoint.getCachePath();
         Files.createDirectories(cachePath);
 
+        Scraper scraperInstance = scraper.get(cachePath);
+
         if(writer.isDebugEvents()) {
-            scraper.get(cachePath).stream(wantedMetadata.get()).getStream().forEachOrdered(
+            scraperInstance.stream(wantedMetadata.get()).getStream().forEachOrdered(
                     System.out::println
             );
         }
         else if(writer.isDebugCtx()) {
-            System.out.println(scraper.get(cachePath).stream(wantedMetadata.get()).extractContext());
+            System.out.println(scraperInstance.stream(wantedMetadata.get()).extractContext());
         }
         else {
             ContextStreamWriter streamWriter = new ContextStreamWriter(
-                    scraper.get(cachePath).stream(wantedMetadata.get()).getStream(),
+                    scraperInstance.stream(wantedMetadata.get()).getStream(),
                     writer.getTypographyFixer()
             );
-            try(BibleWriter bibleWriter = writer.get()) {
+            try(BibleWriter bibleWriter = writer.get(scraperInstance.getMeta())) {
                 streamWriter.writeBibleSubset(bibleWriter, wantedMetadata.get());
             }
         }

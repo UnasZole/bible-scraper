@@ -6,6 +6,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
+import com.github.unaszole.bible.datamodel.DocumentMetadata;
+import com.github.unaszole.bible.scraping.generic.BibleMetadata;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
@@ -28,8 +30,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 				.createXMLStreamWriter(outputStream, "UTF-8"));
 	}
 
-	public OsisBibleWriter(OutputStream outputStream, String versification,
-						   String osisIDWork, String title, String ietfLanguage) throws XMLStreamException {
+	public OsisBibleWriter(OutputStream outputStream, DocumentMetadata meta) throws XMLStreamException {
 		super(getXmlStreamWriter(outputStream));
 
 		// <osis>
@@ -37,15 +38,16 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 		
 			// <osisText>
 			writeStartElement("osisText");
-			writeAttribute("osisRefWork", "Bible");
-			writeAttribute("osisIDWork", osisIDWork);
-			writeAttribute("xml:lang", ietfLanguage);
+			writeAttribute("osisRefWork", meta.systemName);
+			writeAttribute("osisIDWork", meta.systemName);
+			writeAttribute("xml:lang", meta.language);
 			
 				// <header>
 				writeStartElement("header");
 				
 					// <revisionDesc>
 					writeStartElement("revisionDesc");
+					writeAttribute("resp", "bible-scraper");
 					
 						// <date>
 						writeStartElement("date");
@@ -55,7 +57,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 				
 						// <p>
 						writeStartElement("p");
-						writeCharacters("Blabla");
+						writeCharacters("Scraped the bible.");
 						writeEndElement();
 						// </p>
 					
@@ -64,37 +66,31 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 					
 					// <work>
 					writeStartElement("work");
+					writeAttribute("osisWork", meta.systemName);
 					
 						// <title>
 						writeStartElement("title");
-						writeCharacters(title);
+						writeCharacters(meta.title);
 						writeEndElement();
 						// </title>
-				
-						// <type>
-						writeStartElement("type");
-						writeAttribute("type", "OSIS");
-						writeCharacters("Bible");
-						writeEndElement();
-						// </type>
 						
 						// <identifier>
 						writeStartElement("identifier");
 						writeAttribute("type", "OSIS");
-						writeCharacters(osisIDWork);
+						writeCharacters(meta.systemName);
 						writeEndElement();
 						// </identifier>
 						
 						// <language>
 						writeStartElement("language");
 						writeAttribute("type", "IETF");
-						writeCharacters(ietfLanguage);
+						writeCharacters(meta.language);
 						writeEndElement();
 						// </language>
 						
 						// <refSystem>
 						writeStartElement("refSystem");
-						writeCharacters("Bible" + (versification.isEmpty() ? "" : "." + versification));
+						writeCharacters(meta.refSystem);
 						writeEndElement();
 						// </refSystem>
 					

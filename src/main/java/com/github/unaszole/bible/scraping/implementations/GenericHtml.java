@@ -10,13 +10,13 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.unaszole.bible.cli.commands.HelpCommand;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.scraping.CachedDownloader;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.scraping.generic.*;
 import com.github.unaszole.bible.scraping.generic.html.*;
 import com.github.unaszole.bible.stream.ContextStream;
-import com.github.unaszole.bible.stream.ContextStreamEditor;
 import com.github.unaszole.bible.stream.StreamUtils;
 import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.Jsoup;
@@ -94,33 +94,14 @@ public class GenericHtml extends Scraper {
             })
     );
 
-    private static class Config extends PatternContainer {
+    private static class Config extends Bible {
+
         public String description;
         public List<String> inputs;
-        public List<Book> books;
         public List<ElementParser> elements;
         public List<NodeParserConfig> nodeParsers;
 
-        public Book getBook(BibleBook book) {
-            return books.stream()
-                    .filter(b -> b.osis == book)
-                    .findAny()
-                    .orElse(null);
-        }
-
-        public Map<String, BibleBook> getBookReferences() {
-            return books.stream()
-                    .filter(b -> b.names != null)
-                    .flatMap(b -> b.names.stream().map(
-                            n -> Map.entry(n, b.osis)
-                    ))
-                    .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            Map.Entry::getValue
-                    ));
-        }
-
-        public void setArgsFromFlags(List<String> inputValues) {
+        public PatternContainer getGlobalDefaults(List<String> inputValues) {
             int nbExpectedFlags = inputs == null ? 0 : inputs.size();
             int nbGivenFlags = inputValues.size();
             if(nbGivenFlags != nbExpectedFlags) {
@@ -129,13 +110,12 @@ public class GenericHtml extends Scraper {
                 );
             }
 
-            if(args == null) {
-                args = new HashMap<>();
-            }
-
+            PatternContainer globalDefaults = new PatternContainer();
+            globalDefaults.args = new HashMap<>();
             for(int i = 0; i < inputValues.size(); i++) {
-                args.put(inputs.get(i), inputValues.get(i));
+                globalDefaults.args.put(inputs.get(i), inputValues.get(i));
             }
+            return globalDefaults;
         }
 
         @Override
@@ -181,16 +161,12 @@ public class GenericHtml extends Scraper {
 
     private final CachedDownloader downloader;
     private final Config config;
+    private final List<String> flagValues;
 
     public GenericHtml(Path cachePath, String[] inputs) throws IOException {
-        List<String> flagValues = Arrays.stream(inputs).skip(1).collect(Collectors.toList());
+        this.flagValues = Arrays.stream(inputs).skip(1).collect(Collectors.toList());
         this.config = getConfig(inputs[0]);
-        this.config.setArgsFromFlags(flagValues);
         this.downloader = new CachedDownloader(getCacheSubPath(cachePath, inputs));
-    }
-
-    private List<BibleBook> getBooks() {
-        return config.books.stream().map(b -> b.osis).collect(Collectors.toList());
     }
 
     private Document downloadAndParse(final CachedDownloader downloader, URL url) {
@@ -211,14 +187,30 @@ public class GenericHtml extends Scraper {
         );
     }
 
+    private ContextStream.Single contextStreamer(Context ctx, List<URL> urls) {
+        return new Parser.TerminalParser<>(
+                new ConfiguredHtmlParser(config.elements, config.nodeParsers, new ContextualData(config.getBookReferences())),
+                getDocStream(downloader, urls).iterator(),
+                ctx
+        ).asContextStream();
+    }
+
+    private PatternContainer globalDefaults() {
+        return config.getGlobalDefaults(flagValues);
+    }
+
+    @Override
+    public DocumentMetadata getMeta() {
+        return config.getDocMeta(globalDefaults());
+    }
+
     @Override
     protected ContextStream.Single getContextStreamFor(final ContextMetadata rootContextMeta) {
         Book book;
         ChapterSeq seq;
         switch (rootContextMeta.type) {
             case CHAPTER:
-                // Fetch book and chapter sequence to access the relevant source variables and args.
-                // If we can't find them, nothing to load, return null.
+                // Fetch book and chapter sequence. If we can't find them, nothing to load, return null.
                 book = config.getBook(rootContextMeta.book);
                 if(book == null) {
                     return null;
@@ -228,105 +220,21 @@ public class GenericHtml extends Scraper {
                     return null;
                 }
 
-                // If the requested chapter is explicitly listed in the book structure, load the patterns.
-                PatternContainer seqPatterns = seq.defaultedBy(book.defaultedBy(config));
-                if(seqPatterns.pagePattern == null) {
-                    seqPatterns.pagePattern = "chapterUrl";
-                }
-                if(seqPatterns.valuePattern == null) {
-                    seqPatterns.valuePattern = "chapterPublishedNumber";
-                }
-
-                List<URL> chapterUrls = seq.getPageUrls(seqPatterns, rootContextMeta.chapter);
-
-                if(!chapterUrls.isEmpty()) {
-                    // We have pages for this chapter, proceed.
-
-                    // Compute chapter value
-                    String chapterValue = String.join("-",
-                            seq.getPageValues(seqPatterns, seqPatterns.valuePattern, rootContextMeta.chapter)
-                    );
-
-                    // Prepare parser
-                    Context chapterCtx = new Context(rootContextMeta, chapterValue);
-                    ContextStream.Single chapterStream = new Parser.TerminalParser<>(
-                            new ConfiguredHtmlParser(config.elements, config.nodeParsers, new ContextualData(config.getBookReferences())),
-                            getDocStream(downloader, chapterUrls).iterator(),
-                            chapterCtx
-                    ).asContextStream();
-
-                    // Configure editor if provided.
-                    if(seq.edit != null) {
-                        ContextStreamEditor<ContextStream.Single> editor = chapterStream.edit();
-                        for(StreamEditorConfig cfg: seq.edit) {
-                            cfg.configureEditor(editor, rootContextMeta.book, rootContextMeta.chapter);
-                        }
-                        chapterStream = editor.process();
-                    }
-                    return chapterStream;
-                }
-
-                // No page to retrieve for the chapter : no context to return.
-                return null;
+                // Stream the requested chapter.
+                return seq.streamChapter(book.defaultedBy(config.defaultedBy(globalDefaults())), rootContextMeta, this::contextStreamer);
 
             case BOOK:
-                // Fetch book to access relevant source variables and args.
+                // Fetch book. If we can't find it, nothing to load, return null.
                 book = config.getBook(rootContextMeta.book);
                 if(book == null) {
                     return null;
                 }
 
-                // If the book is present, load the patterns.
-                PatternContainer bookPatterns = book.defaultedBy(config);
-                if(bookPatterns.pagePattern == null) {
-                    bookPatterns.pagePattern = "bookUrl";
-                }
-
-                // Build the list of context streams for all chapters, to append to the book page stream.
-                List<ContextStream.Single> chapterStreams;
-                if(book.chapters != null && book.chapters.size() > 0) {
-                    // If we have a chapter structure defined, build context streams for each.
-                    chapterStreams = book.chapters.stream()
-                            .flatMap(ChapterSeq::listChapters)
-                            .map(chapterNb -> getContextStreamFor(ContextMetadata.forChapter(book.osis, chapterNb)))
-                            .collect(Collectors.toList());
-                }
-                else {
-                    // No information on chapters, nothing to append to the book page stream.
-                    chapterStreams = List.of();
-                }
-
-                // Build the book stream.
-                Context bookCtx = new Context(rootContextMeta);
-                ContextStream.Single bookStream = null;
-
-                List<URL> bookUrls = book.getUrls(bookPatterns);
-                if(!bookUrls.isEmpty()) {
-                    // We have pages for this book, prepare a parser.
-                    bookStream = new Parser.TerminalParser<>(new ConfiguredHtmlParser(config.elements, config.nodeParsers, new ContextualData(config.getBookReferences())),
-                            getDocStream(downloader, bookUrls).iterator(), bookCtx
-                    ).asContextStream().edit().inject(
-                            ContextStreamEditor.InjectionPosition.AT_END, rootContextMeta, chapterStreams
-                    ).process();
-                }
-                else if(!chapterStreams.isEmpty()) {
-                    // If we don't have a book page but we have chapter contents, just aggregate them.
-                    bookStream = ContextStream.fromContents(bookCtx, chapterStreams);
-                }
-
-                // Configure editor if provided and we have a book to return.
-                if(bookStream != null && book.edit != null) {
-                    ContextStreamEditor<ContextStream.Single> editor = bookStream.edit();
-                    for(StreamEditorConfig cfg: book.edit) {
-                        cfg.configureEditor(editor, rootContextMeta.book, 0);
-                    }
-                    bookStream = editor.process();
-                }
-
-                return bookStream;
+                // Stream the requested book.
+                return book.streamBook(config.defaultedBy(globalDefaults()), rootContextMeta, this::contextStreamer);
 
             case BIBLE:
-                return autoGetBibleStream(getBooks());
+                return config.streamBible(globalDefaults(), rootContextMeta, this::contextStreamer);
         }
 
         return null;

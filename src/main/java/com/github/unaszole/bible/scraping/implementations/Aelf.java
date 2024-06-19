@@ -3,6 +3,7 @@ package com.github.unaszole.bible.scraping.implementations;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.scraping.*;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.StreamUtils;
@@ -267,6 +268,11 @@ public class Aelf extends Scraper {
 
     public Aelf(Path cachePath, String[] inputs) throws IOException {
         this.downloader = new CachedDownloader(cachePath.resolve("Aelf"));
+    }
+
+    @Override
+    public DocumentMetadata getMeta() {
+        return new DocumentMetadata("fr", "freAELF", "Nouvelle Traduction Liturgique", "Bible.Catholic3");
     }
 
     @Override

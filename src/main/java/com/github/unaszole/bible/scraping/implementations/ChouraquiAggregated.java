@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.scraping.implementations;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.stream.ContextStream;
 import org.crosswire.jsword.versification.BibleBook;
@@ -33,6 +34,11 @@ public class ChouraquiAggregated extends Scraper {
         List<BibleBook> bookList = spiritualLand.getBookList();
         bookList.add(bookList.indexOf(BibleBook.SONG), BibleBook.JOB);
         return bookList;
+    }
+
+    @Override
+    public DocumentMetadata getMeta() {
+        return new DocumentMetadata("fr", "freCHUagg", "Bible d'André Chouraqui", spiritualLand.getMeta().refSystem);
     }
 
     @Override

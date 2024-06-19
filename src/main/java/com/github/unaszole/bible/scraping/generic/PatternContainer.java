@@ -2,14 +2,15 @@ package com.github.unaszole.bible.scraping.generic;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Element that sets or overrides some patterns, or some arguments used in these patterns.
- * This element may override sets or patterns provided by its containers, and be overridden by any of its children.
- * It's possible to evaluate a pattern at this level, using the current arguments, with the {@link #getValue} method.
+ * This element may override args or patterns provided by its containers, and be overridden by any of its children.
+ * It's possible to evaluate a pattern at this level, using the current arguments, with the {@link #evaluate} method.
  */
 public class PatternContainer {
     /**
@@ -21,14 +22,6 @@ public class PatternContainer {
      * Arguments set or overridden at this level.
      */
     public Map<String, String> args;
-    /**
-     * Name of the pattern to use to resolve page URLs for this container and its children (until overridden).
-     */
-    public String pagePattern;
-    /**
-     * Name of the pattern to use to resolve context values for this container and its children (until overridden).
-     */
-    public String valuePattern;
 
     private <K, V> void putAllIfNotNull(Map<K, V> target, Map<K,V> source) {
         assert target != null;
@@ -37,7 +30,14 @@ public class PatternContainer {
         }
     }
 
-    public PatternContainer defaultedBy(PatternContainer other) {
+    /**
+     * Return a combination of this container defaulted by another - meaning that patterns and arguments of the other
+     * container will be used when no pattern or argument of the same name exists in this container.
+     *
+     * @param other The container with default values.
+     * @return The new container with values defaulted by the given container.
+     */
+    public final PatternContainer defaultedBy(PatternContainer other) {
         Map<String, String> newPatterns = new HashMap<>();
         putAllIfNotNull(newPatterns, other.patterns);
         putAllIfNotNull(newPatterns, patterns);
@@ -49,8 +49,6 @@ public class PatternContainer {
         PatternContainer newContainer = new PatternContainer();
         newContainer.patterns = newPatterns;
         newContainer.args = newArgs;
-        newContainer.pagePattern = pagePattern != null ? pagePattern : other.pagePattern;
-        newContainer.valuePattern = valuePattern != null ? valuePattern : other.valuePattern;
         return newContainer;
     }
 
@@ -59,33 +57,28 @@ public class PatternContainer {
     }
 
     private static final Pattern ARG_REFERENCE = Pattern.compile("\\{([A-Z0-9_]+)}");
-    private String substituteArgs(String str, final Function<String, String> argGetter) {
+    public static String substituteArgs(String str, final Function<String, String> argGetter) {
         Matcher argRefs = ARG_REFERENCE.matcher(str);
         return argRefs.replaceAll(r -> argGetter.apply(r.group(1)));
     }
 
-    /**
-     * Evaluate a pattern at this level, defaulting to a parent level where needed, and evaluating
-     * the arguments.
-     * @param patternName Name of the pattern to substitute.
-     * @param argEvaluator A function to evaluate argument values before feeding them to the pattern.
-     * @return The final value of the source variable.
-     */
-    public String getValue(String patternName, Function<String, String> argEvaluator) {
-        String pattern = patterns.get(patternName);
-        if(pattern == null) {
-            return null;
-        }
-        return substituteArgs(pattern, a -> argEvaluator.apply(args.get(a)));
+    public final boolean hasPattern(String patternName) {
+        return patterns != null && patterns.containsKey(patternName);
     }
 
     /**
-     * Evaluate a pattern at this level, defaulting to a parent level where needed, and evaluating
-     * the arguments.
-     * @param patternName Name of the pattern to substitute.
-     * @return The final value of the source variable.
+     * Evaluate a pattern from this container, using the argument values contained in this container.
+     * @param patternName Name of the pattern to evaluate.
+     * @param argEvaluator A function to evaluate argument values before feeding them to the pattern.
+     *                     Can be the identity function if the arguments at this level are provided as literals,
+     *                     or can be an expression evaluation function.
+     * @return The result of pattern evaluation, or an empty optional if no pattern of the requested name exists.
      */
-    public String getValue(String patternName) {
-        return getValue(patternName, s -> s);
+    public final Optional<String> evaluate(String patternName, Function<String, String> argEvaluator) {
+        String pattern = patterns.get(patternName);
+        if(pattern == null) {
+            return Optional.empty();
+        }
+        return Optional.of(substituteArgs(pattern, a -> argEvaluator.apply(args.get(a))));
     }
 }

@@ -1,4 +1,10 @@
 description: "Bibles multiples de recatho.com"
+metadata:
+  language: fr
+  systemName: "fre{BIBLE}rc"
+  title: "{BIBLE} extraite de ReCatho"
+  versification: Catholic2
+
 patterns:
   bookUrl: "https://www.recatho.com/sainte-bible/{BIBLE}/{BOOK}"
 

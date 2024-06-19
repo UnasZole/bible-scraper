@@ -1,4 +1,10 @@
 description: "Nouvelle traduction liturgique francophone (aelf.org)"
+metadata:
+  language: fr
+  systemName: freAELF
+  title: Nouvelle traduction liturgique
+  versification: Catholic3
+
 patterns:
   chapterUrl: "https://www.aelf.org/bible/{BOOK}/{CHAPTER}"
   chapterPublishedNumber: "{CHAPTER}"

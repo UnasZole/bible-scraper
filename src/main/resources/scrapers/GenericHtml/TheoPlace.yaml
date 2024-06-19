@@ -8,6 +8,11 @@
 # For these reasons, when extracting bibles for actual use, the native TheoPlace scraper should be used instead !
 
 description: "Bibles multiples de theo.place"
+metadata:
+  language: fr
+  systemName: "fre{BIBLE}tp"
+  title: "{BIBLE} extraite de TheoPlace"
+
 patterns:
   # By using the default name "bookUrl" and leaving the pagePattern unset, this pattern will be implicitly used at book level.
   bookUrl: "https://theo.place/intro-livre-{BIBLE}-{BOOK_NB}-{BOOK_NAME}"

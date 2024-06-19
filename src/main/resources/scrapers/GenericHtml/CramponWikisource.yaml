@@ -1,4 +1,10 @@
 description: "Crampon Wikisource"
+metadata:
+  language: fr
+  systemName: freCRAws
+  title: La Sainte Bible de l'abbé Augustin Crampon
+  versification: Catholic2
+
 patterns:
   bookUrl: "https://fr.wikisource.org/wiki/Bible_Crampon_1923/{BOOK}"
 

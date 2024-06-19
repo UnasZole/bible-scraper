@@ -44,7 +44,8 @@ public abstract class GenericContextExtractor<Position> {
         }
 
         String value = extractValue(position);
-        final String actualValue = (type == ContextType.REF_BOOK && contextualData.bookRefs.containsKey(value))
+        final String actualValue = ((type == ContextType.REF_BOOK || type == ContextType.BOOK)
+                && contextualData.bookRefs.containsKey(value))
                 ? contextualData.bookRefs.get(value).getOSIS() : value;
 
         builder.followedBy(

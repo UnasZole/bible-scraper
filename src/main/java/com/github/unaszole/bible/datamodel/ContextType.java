@@ -121,13 +121,15 @@ public enum ContextType {
 	 * Has a context value : the string representation of the chapter number in the source document.
 	 */
 	CHAPTER(CHAPTER_LEVEL, STRING, atMostOne(CHAPTER_TITLE), atMostOne(CHAPTER_INTRO), atMostOne(STRUCTURED_TEXT), atLeastOne(VERSE)),
-	
-	// Book must be built from a lexeme that provides a book identifier.
-	// The contained book title and intro can be derived implicitly.
+
 	BOOK_INTRO_TITLE(BOOK_LEVEL, NO_VALUE, one(FLAT_TEXT)),
 	BOOK_INTRO(BOOK_LEVEL, NO_VALUE, atMostOne(BOOK_INTRO_TITLE), one(STRUCTURED_TEXT)),
 	BOOK_TITLE(BOOK_LEVEL, NO_VALUE, one(FLAT_TEXT)),
-	BOOK(BOOK_LEVEL, NO_VALUE, atMostOne(BOOK_TITLE), atMostOne(BOOK_INTRO), atLeastOne(CHAPTER)),
+	/**
+	 * A book.
+	 * Has a context value : the OSIS ID of the book.
+	 */
+	BOOK(BOOK_LEVEL, BOOK_ID, atMostOne(BOOK_TITLE), atMostOne(BOOK_INTRO), atLeastOne(CHAPTER)),
 	
 	// Bible is the root element, it does not contain any metadata nor data.
 	BIBLE(NO_META, NO_VALUE, atLeastOne(BOOK));

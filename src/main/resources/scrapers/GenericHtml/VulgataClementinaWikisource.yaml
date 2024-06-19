@@ -1,4 +1,10 @@
 description: "Vulgata Clementina (The Clementine Vulgate Project)"
+metadata:
+  language: la
+  systemName: latVLCws
+  title: Vulgata Clementina
+  versification: Catholic2
+
 patterns:
   bookUrl: "https://la.wikisource.org/wiki/Vulgata_Clementina/{BOOK}"
 
