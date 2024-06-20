@@ -43,7 +43,7 @@ public abstract class Scraper {
 	 * @return The context stream for the book containing all these chapters.
 	 */
 	protected ContextStream.Single autoGetBookStream(BibleBook book, int nbChapters) {
-		Context bookCtx = new Context(ContextMetadata.forBook(book));
+		Context bookCtx = new Context(ContextMetadata.forBook(book), book.getOSIS());
 		List<ContextStream.Single> contextStreams = new ArrayList<>();
 		for(int i = 1; i <= nbChapters; i++) {
 			contextStreams.add(getContextStreamFor(ContextMetadata.forChapter(book, i)));

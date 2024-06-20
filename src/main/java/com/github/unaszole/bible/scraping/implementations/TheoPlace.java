@@ -230,7 +230,8 @@ public class TheoPlace extends Scraper {
                             ).build() : List.of();
 
                 case FLAT_TEXT:
-                    if(ParsingUtils.hasAncestor(ContextType.BOOK_INTRO, ancestors)) {
+                    if(ParsingUtils.hasAncestor(ContextType.BOOK_INTRO, ancestors)
+                            && !ParsingUtils.hasAncestor(ContextType.BOOK_INTRO_TITLE, ancestors)) {
                         return e.is(BOOK_INTRO_PARAGRAPH_SELECTOR) ? parseFlatText(e) : List.of();
                     }
                     if(ParsingUtils.hasAncestor(ContextType.VERSE, ancestors)) {

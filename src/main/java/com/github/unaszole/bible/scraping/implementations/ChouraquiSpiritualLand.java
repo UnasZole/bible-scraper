@@ -260,7 +260,9 @@ public class ChouraquiSpiritualLand extends Scraper {
 						return List.of();
 					}
 
-					if(ParsingUtils.hasAncestor(ContextType.BOOK_INTRO, ancestors) && ParsingUtils.hasAncestor(ContextType.FLAT_TEXT, ancestors)) {
+					if(ParsingUtils.hasAncestor(ContextType.BOOK_INTRO, ancestors)
+							&& !ParsingUtils.hasAncestor(ContextType.BOOK_INTRO_TITLE, ancestors)
+							&& ParsingUtils.hasAncestor(ContextType.FLAT_TEXT, ancestors)) {
 						// Trying to find flat text within a book intro.
 						return e.is(BOOK_INTRO_SELECTOR) ?
 								context(ContextMetadata.forText(), e.text()).build() : List.of();
