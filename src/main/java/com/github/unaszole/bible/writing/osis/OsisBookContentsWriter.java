@@ -17,9 +17,6 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     private final BibleBook book;
     private int currentChapter = -1;
     private String[] currentChapterSourceNb = null;
-    private boolean inActiveChapter = false;
-    private Consumer<TextWriter> pendingChapterTitle = null;
-    private Consumer<TextWriter> pendingChapterIntro = null;
     private int[] currentVerse = null;
 
     public OsisBookContentsWriter(XMLStreamWriter xmlWriter, BibleBook book) {
@@ -46,25 +43,13 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
         return getCurrentVerseOsisIds().get(0);
     }
 
-    private void writeChapterTitle(Consumer<TextWriter> writes) {
-        // <title type="chapter">
-        writeStartElement("title");
-        writeAttribute("type", "chapter");
-        writeText(writes);
-        writeEndElement();
-        // </title>
-    }
+    private void openChapter(int chapterNb, String... sourceNb) {
+        // Close the current chapter if any.
+        closeCurrentChapter();
 
-    private void writeChapterIntro(Consumer<TextWriter> writes) {
-        // <div type="introduction">
-        writeStartElement("div");
-        writeAttribute("type", "introduction");
-        writeText(writes);
-        writeEndElement();
-        // </title>
-    }
+        this.currentChapter = chapterNb;
+        this.currentChapterSourceNb = sourceNb;
 
-    private void openChapter() {
         // <chapter sID>
         writeEmptyElement("chapter");
         writeAttribute("sID", getCurrentChapterMilestoneId());
@@ -73,23 +58,6 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
             writeAttribute("n", currentChapterSourceNb[0]);
         }
         // </chapter>
-
-        this.inActiveChapter = true;
-
-        if(pendingChapterTitle != null) {
-            writeChapterTitle(pendingChapterTitle);
-            pendingChapterTitle = null;
-        }
-        if(pendingChapterIntro != null) {
-            writeChapterIntro(pendingChapterIntro);
-            pendingChapterIntro = null;
-        }
-    }
-    protected final void ensureInActiveChapter() {
-        if(!inActiveChapter) {
-            // If we're not in a chapter, or an inactive one, we need to open a new chapter.
-            openChapter();
-        }
     }
 
     private void openVerse(int[] verseNbs, String... sourceNb) {
@@ -98,9 +66,8 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
 
         this.currentVerse = verseNbs;
 
-        // Make sure we're in an active paragraph and chapter for the verse start.
+        // Make sure we're in an active paragraph for the verse start.
         ensureInActiveParagraph();
-        ensureInActiveChapter();
 
         // <verse sID>
         writeEmptyElement("verse");
@@ -140,34 +107,28 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
 
     @Override
     public void chapter(int chapterNb, String... sourceNb) {
-        // Close the current chapter if any.
-        closeCurrentChapter();
-
-        // Set the new chapter number, but inactive yet.
-        // (To be printed on first verse).
-        this.currentChapter = chapterNb;
-        this.currentChapterSourceNb = sourceNb;
-        this.inActiveChapter = false;
+        // Open the new chapter.
+        openChapter(chapterNb, sourceNb);
     }
 
     @Override
     public void chapterTitle(Consumer<TextWriter> writes) {
-        if(inActiveChapter) {
-            writeChapterTitle(writes);
-        }
-        else {
-            this.pendingChapterTitle = new BufferedTextWrites(writes);
-        }
+        // <title type="chapter">
+        writeStartElement("title");
+        writeAttribute("type", "chapter");
+        writeText(writes);
+        writeEndElement();
+        // </title>
     }
 
     @Override
     public void chapterIntro(Consumer<TextWriter> writes) {
-        if(inActiveChapter) {
-            writeChapterIntro(writes);
-        }
-        else {
-            this.pendingChapterIntro = new BufferedTextWrites(writes);
-        }
+        // <div type="introduction">
+        writeStartElement("div");
+        writeAttribute("type", "introduction");
+        writeText(writes);
+        writeEndElement();
+        // </div>
     }
 
     @Override

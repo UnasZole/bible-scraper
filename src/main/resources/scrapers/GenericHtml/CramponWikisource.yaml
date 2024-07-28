@@ -221,7 +221,7 @@ books:
     args: { BOOK: Galates }
 
   - osis: Eph
-    names: [ Ep, Ephés ]
+    names: [ Ep, Ephés, Ephes ]
     args: { BOOK: Éphésiens }
 
   - osis: Phil
@@ -246,7 +246,7 @@ books:
 
   - osis: 2Tim
     names: [ II Tim ]
-    args: { BOOK: 1_Timothée }
+    args: { BOOK: 2_Timothée }
 
   - osis: Titus
     names: [ Tit ]
@@ -285,7 +285,7 @@ books:
     args: { BOOK: Jude }
 
   - osis: Rev
-    names: [ Apoc ]
+    names: [ Apoc, Ap ]
     args: { BOOK: Apocalypse }
 
 
@@ -335,7 +335,7 @@ elements:
 
 
 nodeParsers:
-  - selector: ".prp-pages-output p"
+  - selector: ".prp-pages-output p:matches(^.*[^\\s].*$)"
     withAncestors: [ CHAPTER ]
 
     nodes:
