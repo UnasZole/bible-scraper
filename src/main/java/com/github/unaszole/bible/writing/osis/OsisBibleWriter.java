@@ -7,12 +7,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
 import com.github.unaszole.bible.datamodel.DocumentMetadata;
-import com.github.unaszole.bible.scraping.generic.BibleMetadata;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import org.crosswire.jsword.versification.BibleBook;
-import org.crosswire.jsword.versification.Versification;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -26,8 +24,9 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 	private static final Logger LOG = LoggerFactory.getLogger(OsisBibleWriter.class);
 
 	private static XMLStreamWriter getXmlStreamWriter(OutputStream outputStream) throws XMLStreamException {
-		return new IndentingXMLStreamWriter(XMLOutputFactory.newInstance()
-				.createXMLStreamWriter(outputStream, "UTF-8"));
+		XMLOutputFactory factory = XMLOutputFactory.newInstance();
+		factory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
+		return new IndentingXMLStreamWriter(factory.createXMLStreamWriter(outputStream, "UTF-8"));
 	}
 
 	public OsisBibleWriter(OutputStream outputStream, DocumentMetadata meta) throws XMLStreamException {

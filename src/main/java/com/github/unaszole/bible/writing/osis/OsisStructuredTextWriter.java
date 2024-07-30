@@ -76,7 +76,7 @@ public abstract class OsisStructuredTextWriter
 
         // <div>
         writeStartElement("div");
-        writeAttribute("type", "minorSection");
+        writeAttribute("type", "subSection");
 
         // <title>
         writeStartElement("title");
