@@ -12,6 +12,7 @@ args:
 
 books:
   - osis: Gen
+    names: [ Gen%C3%A8se ]
     args: { BOOK: Genèse }
 
   - osis: Exod
@@ -19,82 +20,85 @@ books:
     args: { BOOK: Exode }
 
   - osis: Lev
-    names: [ Lévit, Lév, Lévitique ]
+    names: [ Lévit, Lév, Lévitique, L%C3%A9vitique ]
     args: { BOOK: Lévitique }
 
   - osis: Num
-    names: [ Nombr, Nomb ]
+    names: [ Nombr, Nomb, Nombres ]
     args: { BOOK: Nombres }
 
   - osis: Deut
-    names: [ Deutér ]
+    names: [ Deutér, Deut%C3%A9ronome ]
     args: { BOOK: Deutéronome }
 
   - osis: Josh
-    names: [ Jos ]
+    names: [ Jos, Josu%C3%A9 ]
     args: { BOOK: Josué }
 
   - osis: Judg
-    names: [ Jug ]
+    names: [ Jug, Juges ]
     args: { BOOK: Juges }
 
   - osis: Ruth
     args: { BOOK: Ruth }
 
   - osis: 1Sam
-    names: [ I Sam ]
+    names: [ I Sam, 1_Samuel ]
     args: { BOOK: 1_Samuel }
 
   - osis: 2Sam
-    names: [ II Sam ]
+    names: [ II Sam, 2_Samuel ]
     args: { BOOK: 2_Samuel }
 
   - osis: 1Kgs
-    names: [ I Rois ]
+    names: [ I Rois, 1_Rois ]
     args: { BOOK: 1_Rois }
 
   - osis: 2Kgs
-    names: [ II Rois ]
+    names: [ II Rois, 2_Rois ]
     args: { BOOK: 2_Rois }
 
   - osis: 1Chr
-    names: [ I Chron, I Par, I Paral, I. Paral, I ] # Approx: "I" is assumed to be 1Chr due to one usage in 2Sam 7,15
+    names: [ I Chron, I Par, I Paral, I. Paral, 1_Chroniques]
     args: { BOOK: 1_Chroniques }
 
   - osis: 2Chr
-    names: [ II Chron, II Par, II Parai, II Paral ]
+    names: [ II Chron, II Par, II Parai, II Paral, 2_Chroniques ]
     args: { BOOK: 2_Chroniques }
 
   - osis: Ezra
-    names: [ Esdr, I Esdr ]
+    names: [ Esdr, I Esdr, Esdras ]
     args: { BOOK: Esdras }
 
   - osis: Neh
-    names: [ Néh ]
+    names: [ Néh, N%C3%A9h%C3%A9mie ]
     args: { BOOK: Néhémie }
 
   - osis: Tob
+    names: [ Tobie ]
     args: { BOOK: Tobie }
 
   - osis: Jdt
+    names: [ Judith ]
     args: { BOOK: Judith }
 
   - osis: Esth
+    names: [ Esther ]
     args: { BOOK: Esther }
 
   - osis: 1Macc
-    names: [ I Mach ]
+    names: [ I Mach, 1_Machab%C3%A9es ]
     args: { BOOK: 1 Machabées }
 
   - osis: 2Macc
-    names: [ II Mach, II ] # Approx: "II" is assumed to refer to 2Macc due to one usage in Dan 11,31
+    names: [ II Mach, 2_Machab%C3%A9es ]
     args: { BOOK: 2 Machabées }
 
   - osis: Job
     args: { BOOK: Job }
 
   - osis: Ps
-    names: [ Ps. ii ] # FIXME: The name "Ps. ii" is wrong, workaround to avoid crash on Acts 4,27
+    names: [ Psaumes, Psaumes_1, Psaumes_2, Psaumes_3, Psaumes_4, Psaumes_5 ]
     pages:
       - args: { BOOK: Psaumes_1 }
       - args: { BOOK: Psaumes_2 }
@@ -103,6 +107,7 @@ books:
       - args: { BOOK: Psaumes_5 }
 
   - osis: Prov
+    names: [ Proverbes ]
     args: { BOOK: Proverbes }
 
   - osis: Eccl
@@ -112,22 +117,23 @@ books:
     args: { BOOK: Cantique }
 
   - osis: Wis
-    names: [ Sag ]
+    names: [ Sag, Sagesse ]
     args: { BOOK: Sagesse }
 
   - osis: Sir
-    names: [ Eccli ]
+    names: [ Eccli, Eccl%C3%A9siastique ]
     args: { BOOK: Ecclésiastique }
 
   - osis: Isa
-    names: [ Is, Isaie, Isaïe ]
+    names: [ Is, Isaie, Isaïe, Isa%C3%AFe ]
     args: { BOOK: Isaïe }
 
   - osis: Jer
-    names: [ Jér, Jérémie, Jérém ]
+    names: [ Jér, Jérémie, Jérém, J%C3%A9r%C3%A9mie ]
     args: { BOOK: Jérémie }
 
   - osis: Lam
+    names: [ Lamentations ]
     args: { BOOK: Lamentations }
 
   - osis: Bar
@@ -135,7 +141,7 @@ books:
     args: { BOOK: Baruch }
 
   - osis: Ezek
-    names: [ Ezéch, Ezech, Ez ]
+    names: [ Ezéch, Ezech, Ez, "%C3%89z%C3%A9chiel" ]
     args: { BOOK: Ézéchiel }
 
   - osis: Dan
@@ -143,51 +149,54 @@ books:
     args: { BOOK: Daniel }
 
   - osis: Hos
-    names: [ Os, Osée ]
+    names: [ Os, Osée, Os%C3%A9e ]
     args: { BOOK: Osée }
 
   - osis: Joel
-    names: [ Joël ]
+    names: [ Joël, Jo%C3%ABl ]
     args: { BOOK: Joël }
 
   - osis: Amos
     args: { BOOK: Amos }
 
   - osis: Obad
+    names: [ Abdias ]
     args: { BOOK: Abdias }
 
   - osis: Jonah
-    names: [ Jon ]
+    names: [ Jon, Jonas ]
     args: { BOOK: Jonas }
 
   - osis: Mic
-    names: [ Mich, Michée ]
+    names: [ Mich, Michée, Mich%C3%A9e ]
     args: { BOOK: Michée }
 
   - osis: Nah
+    names: [ Nahum ]
     args: { BOOK: Nahum }
 
   - osis: Hab
+    names: [ Habacuc ]
     args: { BOOK: Habacuc }
 
   - osis: Zeph
-    names: [ Soph ]
+    names: [ Soph, Sophonie ]
     args: { BOOK: Sophonie }
 
   - osis: Hag
-    names: [ Agg ]
+    names: [ Agg, Agg%C3%A9e ]
     args: { BOOK: Aggée }
 
   - osis: Zech
-    names: [ Zach ]
+    names: [ Zach, Zacharie ]
     args: { BOOK: Zacharie }
 
   - osis: Mal
-    names: [ Malach ]
+    names: [ Malach, Malachie ]
     args: { BOOK: Malachie }
 
   - osis: Matt
-    names: [ Matth ]
+    names: [ Matth, Matthieu ]
     args: { BOOK: Matthieu }
 
   - osis: Mark
@@ -207,72 +216,74 @@ books:
     args: { BOOK: Actes }
 
   - osis: Rom
+    names: [ Romains ]
     args: { BOOK: Romains }
 
   - osis: 1Cor
-    names: [ I Cor ]
+    names: [ I Cor, 1_Corinthiens ]
     args: { BOOK: 1_Corinthiens }
 
   - osis: 2Cor
-    names: [ 2 Cor, II Cor ]
+    names: [ 2 Cor, II Cor, 2_Corinthiens ]
     args: { BOOK: 2_Corinthiens }
 
   - osis: Gal
+    names: [ Galates ]
     args: { BOOK: Galates }
 
   - osis: Eph
-    names: [ Ep, Ephés, Ephes ]
+    names: [ Ep, Ephés, Ephes, "%C3%89ph%C3%A9siens" ]
     args: { BOOK: Éphésiens }
 
   - osis: Phil
-    names: [ Philipp, Philip ]
+    names: [ Philipp, Philip, Philippiens ]
     args: { BOOK: Philippiens }
 
   - osis: Col
-    names: [ Colos ]
+    names: [ Colos, Colossiens ]
     args: { BOOK: Colossiens }
 
   - osis: 1Thess
-    names: [ I Thess ]
+    names: [ I Thess, 1_Thessaloniciens ]
     args: { BOOK: 1_Thessaloniciens }
 
   - osis: 2Thess
-    names: [ II Thess ]
+    names: [ II Thess, 2_Thessaloniciens ]
     args: { BOOK: 2_Thessaloniciens }
 
   - osis: 1Tim
-    names: [ I Tim ]
+    names: [ I Tim, 1_Timoth%C3%A9e ]
     args: { BOOK: 1_Timothée }
 
   - osis: 2Tim
-    names: [ II Tim ]
+    names: [ II Tim, 2_Timoth%C3%A9e ]
     args: { BOOK: 2_Timothée }
 
   - osis: Titus
-    names: [ Tit ]
+    names: [ Tit, Tite ]
     args: { BOOK: Tite }
 
   - osis: Phlm
     args: { BOOK: Philémon }
 
   - osis: Heb
-    names: [ Hebr, Hébr ]
+    names: [ Hebr, Hébr, H%C3%A9breux ]
     args: { BOOK: Hébreux }
 
   - osis: Jas
-    names: [ Jac, Jacq ]
+    names: [ Jac, Jacq, Jacques ]
     args: { BOOK: Jacques }
 
   - osis: 1Pet
-    names: [ I Pierre, I Petr, I Pier ]
+    names: [ I Pierre, I Petr, I Pier, 1_Pierre ]
     args: { BOOK: 1_Pierre }
 
   - osis: 2Pet
-    names: [ II Pier ]
+    names: [ II Pier, 2_Pierre ]
     args: { BOOK: 2_Pierre }
 
   - osis: 1John
-    names: [ I Jean ]
+    names: [ I Jean, 1_Jean ]
     args: { BOOK: 1_Jean }
 
   - osis: 2John
@@ -285,7 +296,7 @@ books:
     args: { BOOK: Jude }
 
   - osis: Rev
-    names: [ Apoc, Ap ]
+    names: [ Apoc, Ap, Apocalypse ]
     args: { BOOK: Apocalypse }
 
 
@@ -425,52 +436,62 @@ nodeParsers:
                     op: text
 
           # Links are references to parse.
-          # Note that the "voy" or "comp" prefixes are sometimes included in the link and must be ignored.
-          # First, full reference with book and verse.
-          - selector: "a:matches(^.*?(?![Vv]oy|[Cc]omp)\\b[\\p{L}\\d. ]+?[.,]{1,2}\\s*[MmDdCcLlXxVvIi]+,\\s+\\d+(?:\\s*,\\s*\\d+)*$)"
+
+          # Links containing a path followed by a "#Bible_Crampon_1923" anchor, with text containing a sequence of numbers, are full references to verses.
+          - selector: "a[href~=^.*/[^/]+#Bible_Crampon_1923/.+CH\\d+$]:matches(^.*\\d[\\d-]*.*$)"
             contexts:
               - type: REFERENCE
                 descendants:
                   - type: FULL_REF
                     descendants:
                       - type: REF_BOOK
-                        op: text
-                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b([\\p{L}\\d. ]+?)[.,]{1,2}\\s*[MmDdCcLlXxVvIi]+,\\s+\\d+(?:\\s*,\\s*\\d+)*$"
+                        op: attribute=href
+                        regexp: "^.*/([^/]+)#Bible_Crampon_1923/.+CH\\d+$"
                       - type: REF_CHAPTER
-                        op: text
-                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b[\\p{L}\\d. ]+?[.,]{1,2}\\s*([MmDdCcLlXxVvIi]+),\\s+\\d+(?:\\s*,\\s*\\d+)*$"
+                        op: attribute=href
+                        regexp: "^.*/[^/]+#Bible_Crampon_1923/.+CH(\\d+)$"
                       - type: REF_VERSES
                         op: text
-                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b[\\p{L}\\d. ]+?[.,]{1,2}\\s*[MmDdCcLlXxVvIi]+,\\s+(\\d+(?:\\s*,\\s*\\d+)*)$"
+                        regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
                   - type: TEXT
                     op: text
-          # Reference without a book, if there was another reference before : continued.
-          - selector: "a ~ a:matches(^.*?(?![Vv]oy|[Cc]omp)\\b([MmDdCcLlXxVvIi]+),\\s+\\d+(?:\\s*,\\s*\\d+)*$)"
+          # Links containing a path followed by a "#Bible_Crampon_1923" anchor, with text not containing a sequence of numbers, are full references to chapters.
+          - selector: "a[href~=^.*/[^/]+#Bible_Crampon_1923/.+CH\\d+$]:not(:matches(^.*\\d[\\d-]*.*$))"
             contexts:
               - type: REFERENCE
                 descendants:
-                  - type: CONTINUED_REF
+                  - type: FULL_REF
                     descendants:
+                      - type: REF_BOOK
+                        op: attribute=href
+                        regexp: "^.*/([^/]+)#Bible_Crampon_1923/.+CH\\d+$"
                       - type: REF_CHAPTER
-                        op: text
-                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b([MmDdCcLlXxVvIi]+),\\s+\\d+(?:\\s*,\\s*\\d+)*$"
-                      - type: REF_VERSES
-                        op: text
-                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b[MmDdCcLlXxVvIi]+,\\s+(\\d+(?:\\s*,\\s*\\d+)*)$"
-                      - type: TEXT
-                        op: text
-          # Reference without a book, if there was no reference before : local.
-          - selector: "a:matches(^.*?(?![Vv]oy|[Cc]omp)\\b[MmDdCcLlXxVvIi]+,\\s+\\d+(?:\\s*,\\s*\\d+)*$)"
+                        op: attribute=href
+                        regexp: "^.*/[^/]+#Bible_Crampon_1923/.+CH(\\d+)$"
+                  - type: TEXT
+                    op: text
+
+          # Links containing a path followed by a #1-2 anchor are full references to a verse.
+          - selector: "a[href~=^.*Bible_Crampon_1923/[^/]+#\\d+-\\d+$]"
             contexts:
               - type: REFERENCE
                 descendants:
-                  - type: LOCAL_REF
+                  - type: FULL_REF
                     descendants:
+                      - type: REF_BOOK
+                        op: attribute=href
+                        regexp: "^.*Bible_Crampon_1923/([^/]+)#\\d+-\\d+$"
                       - type: REF_CHAPTER
-                        op: text
-                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b([MmDdCcLlXxVvIi]+),\\s+\\d+(?:\\s*,\\s*\\d+)*$"
+                        op: attribute=href
+                        regexp: "^.*Bible_Crampon_1923/[^/]+#(\\d+)-\\d+$"
                       - type: REF_VERSES
-                        op: text
-                        regexp: "^.*?(?![Vv]oy|[Cc]omp)\\b[MmDdCcLlXxVvIi]+,\\s+(\\d+(?:\\s*,\\s*\\d+)*)$"
-                      - type: TEXT
-                        op: text
+                        op: attribute=href
+                        regexp: "^.*Bible_Crampon_1923/[^/]+#\\d+-(\\d+)$"
+                  - type: TEXT
+                    op: text
+
+          # Links that are not inside Crampon should be taken as just text.
+          - selector: "a:not([href~=^.*Bible_Crampon_1923.*$])"
+            contexts:
+              - type: TEXT
+                op: text
