@@ -1,8 +1,8 @@
 description: "Crampon Wikisource"
 metadata:
   language: fr
-  systemName: freCRAws
-  title: La Sainte Bible de l'abbé Augustin Crampon
+  systemName: FreCrampon
+  title: La Bible d’Augustin Crampon 1923
   versification: Catholic2
 
 patterns:
@@ -264,6 +264,7 @@ books:
     args: { BOOK: Tite }
 
   - osis: Phlm
+    names: [ Philém, Philémon, Phil%C3%A9mon ]
     args: { BOOK: Philémon }
 
   - osis: Heb

@@ -1,9 +1,9 @@
 description: "Glaire Wikisource"
 metadata:
   language: fr
-  systemName: freGLAws
-  title: La sainte Bible selon la Vulgate de l'abbé J-B Glaire
-  versification: Catholic2
+  systemName: freVulgGlaire
+  title: La sainte Bible selon la Vulgate de l’abbé J-B Glaire
+  versification: Vulg
 
 patterns:
   bookUrl: "https://fr.wikisource.org/wiki/La_sainte_Bible_selon_la_Vulgate_(J.-B._Glaire)/{BOOK}"
