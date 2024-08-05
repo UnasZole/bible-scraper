@@ -572,8 +572,8 @@ nodeParsers:
                   - type: TEXT
                     op: text
 
-          # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing a sequence of numbers, are full references to verses.
-          - selector: "a[href~=^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*[\\d-]+.*$)"
+          # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing numbers, are full references to verses.
+          - selector: "a[href~=^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*\\d+.*$)"
             contexts:
               - type: REFERENCE
                 descendants:
@@ -590,8 +590,8 @@ nodeParsers:
                         regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
                   - type: TEXT
                     op: text
-          # Links containing a path followed by a "#CHAPITRE_" anchor, with text not containing a sequence of numbers, are full references to chapters.
-          - selector: "a[href~=^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*[\\d-]+.*$))"
+          # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing no number, are full references to chapters.
+          - selector: "a[href~=^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*\\d+.*$))"
             contexts:
               - type: REFERENCE
                 descendants:
@@ -605,8 +605,8 @@ nodeParsers:
                         regexp: "^.*/[^/]+#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
                   - type: TEXT
                     op: text
-          # Links containing only a "#CHAPITRE_" anchor, with text containing a sequence of numbers, are local references to verses.
-          - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*[\\d-]+.*$)"
+          # Links containing only a "#CHAPITRE_" anchor, with text containing numbers, are local references to verses.
+          - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*\\d+.*$)"
             contexts:
               - type: REFERENCE
                 descendants:
@@ -620,8 +620,8 @@ nodeParsers:
                         regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
                   - type: TEXT
                     op: text
-          # Links containing only a "#CHAPITRE_" anchor, with text containing no sequence of numbers, are local references to chapters.
-          - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*[\\d-]+.*$))"
+          # Links containing only a "#CHAPITRE_" anchor, with text containing no number, are local references to chapters.
+          - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*\\d+.*$))"
             contexts:
               - type: REFERENCE
                 descendants:
