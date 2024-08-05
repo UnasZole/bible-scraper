@@ -11,7 +11,9 @@ import com.github.unaszole.bible.cli.commands.HelpCommand;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.DocumentMetadata;
-import com.github.unaszole.bible.scraping.CachedDownloader;
+import com.github.unaszole.bible.downloading.CachedDownloader;
+import com.github.unaszole.bible.downloading.SourceFile;
+import com.github.unaszole.bible.downloading.HttpSourceFile;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.scraping.generic.*;
@@ -30,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -169,28 +170,28 @@ public class GenericHtml extends Scraper {
         this.downloader = new CachedDownloader(getCacheSubPath(cachePath, inputs));
     }
 
-    private Document downloadAndParse(final CachedDownloader downloader, URL url) {
+    private Document downloadAndParse(final CachedDownloader downloader, SourceFile file) {
         try {
-            return Jsoup.parse(downloader.getFile(url).toFile());
+            return Jsoup.parse(downloader.getFile(file).toFile());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Stream<Element> getDocStream(final CachedDownloader downloader, List<URL> urls) {
+    private Stream<Element> getDocStream(final CachedDownloader downloader, List<SourceFile> files) {
         return StreamUtils.concatStreams(
-                urls.stream()
-                        .map(pageUrl -> StreamUtils.deferredStream(
-                                () -> downloadAndParse(downloader, pageUrl).stream()
+                files.stream()
+                        .map(pageFile -> StreamUtils.deferredStream(
+                                () -> downloadAndParse(downloader, pageFile).stream()
                         ))
                         .collect(Collectors.toList())
         );
     }
 
-    private ContextStream.Single contextStreamer(Context ctx, List<URL> urls) {
+    private ContextStream.Single contextStreamer(Context ctx, List<SourceFile> files) {
         return new Parser.TerminalParser<>(
                 new ConfiguredHtmlParser(config.elements, config.nodeParsers, new ContextualData(config.getBookReferences())),
-                getDocStream(downloader, urls).iterator(),
+                getDocStream(downloader, files).iterator(),
                 ctx
         ).asContextStream();
     }
@@ -221,7 +222,8 @@ public class GenericHtml extends Scraper {
                 }
 
                 // Stream the requested chapter.
-                return seq.streamChapter(book.defaultedBy(config.defaultedBy(globalDefaults())), rootContextMeta, this::contextStreamer);
+                return seq.streamChapter(book.defaultedBy(config.defaultedBy(globalDefaults())), rootContextMeta,
+                        new HttpSourceFile.Builder(), this::contextStreamer);
 
             case BOOK:
                 // Fetch book. If we can't find it, nothing to load, return null.
@@ -231,10 +233,12 @@ public class GenericHtml extends Scraper {
                 }
 
                 // Stream the requested book.
-                return book.streamBook(config.defaultedBy(globalDefaults()), rootContextMeta, this::contextStreamer);
+                return book.streamBook(config.defaultedBy(globalDefaults()), rootContextMeta,
+                        new HttpSourceFile.Builder(), this::contextStreamer);
 
             case BIBLE:
-                return config.streamBible(globalDefaults(), rootContextMeta, this::contextStreamer);
+                return config.streamBible(globalDefaults(), rootContextMeta,
+                        new HttpSourceFile.Builder(), this::contextStreamer);
         }
 
         return null;

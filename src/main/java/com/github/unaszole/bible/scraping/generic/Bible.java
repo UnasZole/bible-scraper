@@ -4,11 +4,11 @@ import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.DocumentMetadata;
+import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
 import org.crosswire.jsword.versification.BibleBook;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -52,12 +52,13 @@ public class Bible extends PagesContainer {
                 ));
     }
 
-    public List<URL> getBibleUrls(PatternContainer bibleDefaults) {
-        return getPageUrls(bibleDefaults, "bibleUrl", a -> a);
+    public List<SourceFile> getBibleFiles(PatternContainer bibleDefaults, SourceFile.Builder sourceFileBuilder) {
+        return getPageFiles(bibleDefaults, a -> a, "bible", sourceFileBuilder);
     }
 
     public ContextStream.Single streamBible(PatternContainer globalDefaults, ContextMetadata bibleCtxMeta,
-                                            final BiFunction<Context, List<URL>, ContextStream.Single> ctxStreamer) {
+                                            final SourceFile.Builder sourceFileBuilder,
+                                            final BiFunction<Context, List<SourceFile>, ContextStream.Single> ctxStreamer) {
         assert bibleCtxMeta.type == ContextType.BIBLE;
         final PatternContainer bibleDefaults = this.defaultedBy(globalDefaults);
 
@@ -66,7 +67,8 @@ public class Bible extends PagesContainer {
         if(books != null && !books.isEmpty()) {
             // If we have a books defined, build context streams for each.
             bookStreams = books.stream()
-                    .map(book -> book.streamBook(bibleDefaults, ContextMetadata.forBook(book.osis), ctxStreamer))
+                    .map(book -> book.streamBook(bibleDefaults, ContextMetadata.forBook(book.osis),
+                            sourceFileBuilder, ctxStreamer))
                     .collect(Collectors.toList());
         }
         else {
@@ -78,10 +80,10 @@ public class Bible extends PagesContainer {
         Context bibleCtx = new Context(bibleCtxMeta);
         ContextStream.Single bibleStream = null;
 
-        List<URL> bibleUrls = getBibleUrls(bibleDefaults);
-        if(!bibleUrls.isEmpty()) {
+        List<SourceFile> bibleFiles = getBibleFiles(bibleDefaults, sourceFileBuilder);
+        if(!bibleFiles.isEmpty()) {
             // We have pages for this bible, prepare a context with the given streamer and append books at the end.
-            bibleStream = ctxStreamer.apply(bibleCtx, bibleUrls).edit().inject(
+            bibleStream = ctxStreamer.apply(bibleCtx, bibleFiles).edit().inject(
                     ContextStreamEditor.InjectionPosition.AT_END, bibleCtxMeta, bookStreams
             ).process();
         }

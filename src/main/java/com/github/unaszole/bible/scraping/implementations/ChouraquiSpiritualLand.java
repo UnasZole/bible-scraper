@@ -1,7 +1,7 @@
 package com.github.unaszole.bible.scraping.implementations;
 
 import com.github.unaszole.bible.datamodel.DocumentMetadata;
-import com.github.unaszole.bible.scraping.CachedDownloader;
+import com.github.unaszole.bible.downloading.CachedDownloader;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.stream.ContextStream;

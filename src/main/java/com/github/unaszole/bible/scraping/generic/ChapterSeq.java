@@ -3,10 +3,10 @@ package com.github.unaszole.bible.scraping.generic;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
 
-import java.net.URL;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
@@ -90,18 +90,20 @@ public class ChapterSeq extends PagesContainer {
         return getPageValues(bookDefaults, "chapterPublishedNumber", a -> evalChapterArg(a, chapterNb));
     }
 
-    public List<URL> getChapterUrls(PatternContainer bookDefaults, final int chapterNb) {
+    public List<SourceFile> getChapterFiles(PatternContainer bookDefaults, final int chapterNb,
+                                            SourceFile.Builder sourceFileBuilder) {
         assert containsChapter(chapterNb);
-        return getPageUrls(bookDefaults, "chapterUrl", a -> evalChapterArg(a, chapterNb));
+        return getPageFiles(bookDefaults, a -> evalChapterArg(a, chapterNb), "chapter", sourceFileBuilder);
     }
 
     public ContextStream.Single streamChapter(PatternContainer bookDefaults, ContextMetadata chapterCtxMeta,
-                                              BiFunction<Context, List<URL>, ContextStream.Single> ctxStreamer) {
+                                              SourceFile.Builder sourceFileBuilder,
+                                              BiFunction<Context, List<SourceFile>, ContextStream.Single> ctxStreamer) {
         assert chapterCtxMeta.type == ContextType.CHAPTER && containsChapter(chapterCtxMeta.chapter);
 
-        List<URL> chapterUrls = getChapterUrls(bookDefaults, chapterCtxMeta.chapter);
+        List<SourceFile> chapterFiles = getChapterFiles(bookDefaults, chapterCtxMeta.chapter, sourceFileBuilder);
 
-        if(!chapterUrls.isEmpty()) {
+        if(!chapterFiles.isEmpty()) {
             // We have pages for this chapter, proceed.
 
             // Compute chapter value
@@ -111,7 +113,7 @@ public class ChapterSeq extends PagesContainer {
 
             // Prepare context with the provided filler.
             Context chapterCtx = new Context(chapterCtxMeta, chapterValue);
-            ContextStream.Single chapterStream = ctxStreamer.apply(chapterCtx, chapterUrls);
+            ContextStream.Single chapterStream = ctxStreamer.apply(chapterCtx, chapterFiles);
 
             // Configure editor if provided.
             if(edit != null) {

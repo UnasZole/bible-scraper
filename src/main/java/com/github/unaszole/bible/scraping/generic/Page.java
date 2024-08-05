@@ -1,29 +1,11 @@
 package com.github.unaszole.bible.scraping.generic;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import com.github.unaszole.bible.downloading.SourceFile;
+
 import java.util.Optional;
 import java.util.function.Function;
 
 public class Page extends PatternContainer {
-
-    public static URL toUrl(String str) {
-        try {
-            // Try to fix the URL almost as a browser would do, so that users can input URLs like visible
-            // in their browser, even if not properly encoded.
-            // Taken from https://stackoverflow.com/a/30640843
-            URL rawUrl = new URL(str);
-            return new URL(
-                    new URI(rawUrl.getProtocol(), rawUrl.getUserInfo(), rawUrl.getHost(), rawUrl.getPort(),
-                            rawUrl.getPath(), rawUrl.getQuery(), rawUrl.getRef()
-                    ).toString().replace("%25", "%")
-            );
-        } catch (URISyntaxException | MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     /**
      * Evaluate a pattern for this page.
@@ -35,5 +17,21 @@ public class Page extends PatternContainer {
     public Optional<String> evaluate(PatternContainer defaults, String patternName, Function<String, String> argEvaluator) {
         PatternContainer finalContainer = this.defaultedBy(defaults);
         return finalContainer.evaluate(patternName, argEvaluator);
+    }
+
+    /**
+     * Try to build a source file by evaluating the patterns of this container.
+     * @param defaults The parent context to default to for patterns and arguments.
+     * @param argEvaluator A function to evaluate arguments before substituting them in the pattern.
+     * @param patternPrefix A prefix for the properties expected by the sourceFileBuilder.
+     * @param sourceFileBuilder Logic to extract a source file from a set of properties.
+     * @return The built source file, or empty optional if no source file could be found from the given properties.
+     */
+    public Optional<SourceFile> evaluateFile(PatternContainer defaults, Function<String, String> argEvaluator,
+                                             String patternPrefix, SourceFile.Builder sourceFileBuilder) {
+        final PatternContainer finalContainer = this.defaultedBy(defaults);
+        return sourceFileBuilder.buildFrom(
+                patternName -> finalContainer.evaluate(patternPrefix + patternName, argEvaluator)
+        );
     }
 }

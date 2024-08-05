@@ -3,11 +3,11 @@ package com.github.unaszole.bible.scraping.generic;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
 import org.crosswire.jsword.versification.BibleBook;
 
-import java.net.URL;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -53,12 +53,13 @@ public class Book extends PagesContainer {
         return null;
     }
 
-    public List<URL> getBookUrls(PatternContainer bookDefaults) {
-        return getPageUrls(bookDefaults, "bookUrl", a -> a);
+    public List<SourceFile> getBookFiles(PatternContainer bookDefaults, SourceFile.Builder sourceFileBuilder) {
+        return getPageFiles(bookDefaults, a -> a, "book", sourceFileBuilder);
     }
 
     public ContextStream.Single streamBook(PatternContainer bibleDefaults, ContextMetadata bookCtxMeta,
-                                           final BiFunction<Context, List<URL>, ContextStream.Single> ctxStreamer) {
+                                           final SourceFile.Builder sourceFileBuilder,
+                                           final BiFunction<Context, List<SourceFile>, ContextStream.Single> ctxStreamer) {
         assert bookCtxMeta.type == ContextType.BOOK && bookCtxMeta.book == osis;
         final PatternContainer bookDefaults = this.defaultedBy(bibleDefaults);
 
@@ -67,14 +68,13 @@ public class Book extends PagesContainer {
         if(chapters != null && !chapters.isEmpty()) {
             // If we have a chapter structure defined, build context streams for each.
             chapterStreams = chapters.stream()
-                    .flatMap(seq -> {
-                        return seq.listChapters()
-                                .map(chapterNb -> seq.streamChapter(
-                                        bookDefaults,
-                                        ContextMetadata.forChapter(osis, chapterNb),
-                                        ctxStreamer
-                                ));
-                    })
+                    .flatMap(seq -> seq.listChapters()
+                            .map(chapterNb -> seq.streamChapter(
+                                    bookDefaults,
+                                    ContextMetadata.forChapter(osis, chapterNb),
+                                    sourceFileBuilder,
+                                    ctxStreamer
+                            )))
                     .collect(Collectors.toList());
         }
         else {
@@ -86,10 +86,10 @@ public class Book extends PagesContainer {
         Context bookCtx = new Context(bookCtxMeta, bookCtxMeta.book.getOSIS());
         ContextStream.Single bookStream = null;
 
-        List<URL> bookUrls = getBookUrls(bookDefaults);
-        if(!bookUrls.isEmpty()) {
+        List<SourceFile> bookFiles = getBookFiles(bookDefaults, sourceFileBuilder);
+        if(!bookFiles.isEmpty()) {
             // We have pages for this book, prepare a context with the given streamer and append chapters at the end.
-            bookStream = ctxStreamer.apply(bookCtx, bookUrls).edit().inject(
+            bookStream = ctxStreamer.apply(bookCtx, bookFiles).edit().inject(
                     ContextStreamEditor.InjectionPosition.AT_END, bookCtxMeta, chapterStreams
             ).process();
         }
