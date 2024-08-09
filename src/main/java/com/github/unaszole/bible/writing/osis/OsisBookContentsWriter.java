@@ -113,6 +113,9 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
 
     @Override
     public void chapterTitle(Consumer<TextWriter> writes) {
+        // If there is a chapter title, then this chapter will be a new paragraph.
+        closeCurrentParagraph();
+
         // <title type="chapter">
         writeStartElement("title");
         writeAttribute("type", "chapter");
@@ -123,6 +126,9 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
 
     @Override
     public void chapterIntro(Consumer<TextWriter> writes) {
+        // If there is a chapter intro, then this chapter will be a new paragraph.
+        closeCurrentParagraph();
+
         // <div type="introduction">
         writeStartElement("div");
         writeAttribute("type", "introduction");

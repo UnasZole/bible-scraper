@@ -166,7 +166,7 @@ public abstract class OsisStructuredTextWriter
         }
     }
 
-    private void closeCurrentParagraph() {
+    protected void closeCurrentParagraph() {
         // Always close the stanza when closing a paragraph.
         closeCurrentStanza();
 
