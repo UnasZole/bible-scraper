@@ -1,4 +1,4 @@
-package com.github.unaszole.bible.scraping.generic;
+package com.github.unaszole.bible.scraping.generic.data;
 
 import java.util.HashMap;
 import java.util.Map;

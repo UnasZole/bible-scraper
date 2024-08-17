@@ -1,10 +1,11 @@
-package com.github.unaszole.bible.scraping.generic.html;
+package com.github.unaszole.bible.scraping.generic.parsing.html;
 
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.Parser;
+import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import org.jsoup.nodes.Element;
 
 import java.util.Deque;
@@ -15,26 +16,26 @@ public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
 
     private final List<ElementParser> elements;
 
-    private final List<NodeParserConfig> nodeParsers;
+    private final List<ExternalParserConfig> externalParsers;
 
     private final ContextualData contextualData;
 
     public ConfiguredHtmlParser(List<ElementParser> elements,
-                                List<NodeParserConfig> nodeParsers,
+                                List<ExternalParserConfig> externalParsers,
                                 ContextualData contextualData) {
         this.elements = elements;
-        this.nodeParsers = nodeParsers;
+        this.externalParsers = externalParsers;
         this.contextualData = contextualData;
     }
 
     @Override
     public Parser<?> parseExternally(Element e, Deque<Context> currentContextStack) {
-        if(nodeParsers == null) {
+        if(externalParsers == null) {
             return null;
         }
 
-        for(NodeParserConfig nodeParserConfig: nodeParsers) {
-            Optional<Parser<?>> parser = nodeParserConfig.getParserIfApplicable(e, currentContextStack, contextualData);
+        for(ExternalParserConfig externalParserConfig: externalParsers) {
+            Optional<Parser<?>> parser = externalParserConfig.getParserIfApplicable(e, currentContextStack, contextualData);
             if(parser.isPresent()) {
                 return parser.get();
             }

@@ -1,9 +1,6 @@
-package com.github.unaszole.bible.scraping.generic.html;
+package com.github.unaszole.bible.scraping.generic.parsing.html;
 
-import com.github.unaszole.bible.datamodel.Context;
-import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.scraping.ContextReaderListBuilder;
-import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
+import com.github.unaszole.bible.scraping.generic.parsing.GenericContextExtractor;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Evaluator;
 import org.slf4j.Logger;

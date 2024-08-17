@@ -1,4 +1,4 @@
-package com.github.unaszole.bible.scraping.generic.html;
+package com.github.unaszole.bible.scraping.generic.parsing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

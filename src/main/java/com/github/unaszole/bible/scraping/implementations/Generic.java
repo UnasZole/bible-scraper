@@ -14,16 +14,17 @@ import com.github.unaszole.bible.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.CachedDownloader;
 import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.downloading.HttpSourceFile;
-import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.Scraper;
-import com.github.unaszole.bible.scraping.generic.*;
-import com.github.unaszole.bible.scraping.generic.html.*;
+import com.github.unaszole.bible.scraping.generic.data.Bible;
+import com.github.unaszole.bible.scraping.generic.data.Book;
+import com.github.unaszole.bible.scraping.generic.data.ChapterSeq;
+import com.github.unaszole.bible.scraping.generic.data.PatternContainer;
+import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
+import com.github.unaszole.bible.scraping.generic.parsing.TextParser;
+import com.github.unaszole.bible.scraping.generic.parsing.html.ElementParser;
+import com.github.unaszole.bible.scraping.generic.parsing.html.NodeParserConfig;
 import com.github.unaszole.bible.stream.ContextStream;
-import com.github.unaszole.bible.stream.StreamUtils;
 import org.crosswire.jsword.versification.BibleBook;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;
 import org.slf4j.Logger;
@@ -35,11 +36,10 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class GenericHtml extends Scraper {
+public class Generic extends Scraper {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GenericHtml.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Generic.class);
 
     public static Help getHelp(String[] inputs) throws Exception {
         Config config = null;
@@ -50,12 +50,12 @@ public class GenericHtml extends Scraper {
             }
         }
 
-        String title = "Generic HTML scraper";
+        String title = "Generic scraper";
         if(config == null) {
             return new Help(title, List.of(
                     Map.entry("config (required)",
                             "Path to a YAML file configuring the generic scraper, or one of " +
-                                    HelpCommand.listResources("scrapers/GenericHtml")
+                                    HelpCommand.listResources("scrapers/Generic")
                                             .map(Path::getFileName)
                                             .map(Path::toString)
                                             .map(s -> s.substring(0, s.lastIndexOf(".")))
@@ -95,10 +95,11 @@ public class GenericHtml extends Scraper {
             })
     );
 
-    private static class Config extends Bible {
+    private static class Config extends TextParser {
 
         public String description;
         public List<String> inputs;
+        public Bible bible;
         public List<ElementParser> elements;
         public List<NodeParserConfig> nodeParsers;
 
@@ -137,7 +138,7 @@ public class GenericHtml extends Scraper {
         }
 
         // Else, try to load one from the embedded resources.
-        try(InputStream is = GenericHtml.class.getResourceAsStream("/scrapers/GenericHtml/" + flag + ".yaml")) {
+        try(InputStream is = Generic.class.getResourceAsStream("/scrapers/Generic/" + flag + ".yaml")) {
             return MAPPER.readValue(is, Config.class);
         }
     }
@@ -164,35 +165,15 @@ public class GenericHtml extends Scraper {
     private final Config config;
     private final List<String> flagValues;
 
-    public GenericHtml(Path cachePath, String[] inputs) throws IOException {
+    public Generic(Path cachePath, String[] inputs) throws IOException {
         this.flagValues = Arrays.stream(inputs).skip(1).collect(Collectors.toList());
         this.config = getConfig(inputs[0]);
         this.downloader = new CachedDownloader(getCacheSubPath(cachePath, inputs));
     }
 
-    private Document downloadAndParse(final CachedDownloader downloader, SourceFile file) {
-        try {
-            return Jsoup.parse(downloader.getFile(file).toFile());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private Stream<Element> getDocStream(final CachedDownloader downloader, List<SourceFile> files) {
-        return StreamUtils.concatStreams(
-                files.stream()
-                        .map(pageFile -> StreamUtils.deferredStream(
-                                () -> downloadAndParse(downloader, pageFile).stream()
-                        ))
-                        .collect(Collectors.toList())
-        );
-    }
-
     private ContextStream.Single contextStreamer(Context ctx, List<SourceFile> files) {
-        return new Parser.TerminalParser<>(
-                new ConfiguredHtmlParser(config.elements, config.nodeParsers, new ContextualData(config.getBookReferences())),
-                getDocStream(downloader, files).iterator(),
-                ctx
+        return config.getFileParser(downloader, files, ctx,
+                new ContextualData(config.bible.getBookReferences())
         ).asContextStream();
     }
 
@@ -202,7 +183,7 @@ public class GenericHtml extends Scraper {
 
     @Override
     public DocumentMetadata getMeta() {
-        return config.getDocMeta(globalDefaults());
+        return config.bible.getDocMeta(globalDefaults());
     }
 
     @Override
@@ -212,7 +193,7 @@ public class GenericHtml extends Scraper {
         switch (rootContextMeta.type) {
             case CHAPTER:
                 // Fetch book and chapter sequence. If we can't find them, nothing to load, return null.
-                book = config.getBook(rootContextMeta.book);
+                book = config.bible.getBook(rootContextMeta.book);
                 if(book == null) {
                     return null;
                 }
@@ -222,22 +203,22 @@ public class GenericHtml extends Scraper {
                 }
 
                 // Stream the requested chapter.
-                return seq.streamChapter(book.defaultedBy(config.defaultedBy(globalDefaults())), rootContextMeta,
+                return seq.streamChapter(book.defaultedBy(config.bible.defaultedBy(globalDefaults())), rootContextMeta,
                         new HttpSourceFile.Builder(), this::contextStreamer);
 
             case BOOK:
                 // Fetch book. If we can't find it, nothing to load, return null.
-                book = config.getBook(rootContextMeta.book);
+                book = config.bible.getBook(rootContextMeta.book);
                 if(book == null) {
                     return null;
                 }
 
                 // Stream the requested book.
-                return book.streamBook(config.defaultedBy(globalDefaults()), rootContextMeta,
+                return book.streamBook(config.bible.defaultedBy(globalDefaults()), rootContextMeta,
                         new HttpSourceFile.Builder(), this::contextStreamer);
 
             case BIBLE:
-                return config.streamBible(globalDefaults(), rootContextMeta,
+                return config.bible.streamBible(globalDefaults(), rootContextMeta,
                         new HttpSourceFile.Builder(), this::contextStreamer);
         }
 

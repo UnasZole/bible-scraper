@@ -1,16 +1,16 @@
-package com.github.unaszole.bible.scraping.generic.html;
+package com.github.unaszole.bible.scraping.generic.parsing.html;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.ContextReaderListBuilder;
 import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
-import org.crosswire.jsword.versification.BibleBook;
+import com.github.unaszole.bible.scraping.generic.parsing.ContextStackAware;
+import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Evaluator;
 
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 
 public class ElementParser extends ContextStackAware {
 

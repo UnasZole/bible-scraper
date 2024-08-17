@@ -1,0 +1,326 @@
+description: "Bible kralická (1918) Wikisource"
+bible:
+  metadata:
+    language: cs
+    systemName: czeBKRws
+    title: Bible kralická (1918)
+
+  patterns:
+    bookUrl: "https://cs.wikisource.org/wiki/Bible_kralick%C3%A1_(1918)/{BOOK}"
+
+  args:
+
+  books:
+    - osis: Gen
+      args: { BOOK: Genesis }
+
+    - osis: Exod
+      args: { BOOK: Exodus }
+
+    - osis: Lev
+      args: { BOOK: Leviticus }
+
+    - osis: Num
+      args: { BOOK: Numeri }
+
+    - osis: Deut
+      args: { BOOK: Deuteronomium }
+
+    - osis: Josh
+      args: { BOOK: Jozue }
+
+    - osis: Judg
+      args: { BOOK: Soudců }
+
+    - osis: Ruth
+      args: { BOOK: Rut }
+
+    - osis: 1Sam
+      args: { BOOK: I_Samuelova }
+
+    - osis: 2Sam
+      args: { BOOK: II_Samuelova }
+
+    - osis: 1Kgs
+      args: { BOOK: I_Královská }
+
+    - osis: 2Kgs
+      args: { BOOK: II_Královská }
+
+    - osis: 1Chr
+      args: { BOOK: I_Paralipomenon }
+
+    - osis: 2Chr
+      args: { BOOK: II_Paralipomenon }
+
+    - osis: Ezra
+      args: { BOOK: Ezdráš }
+
+    - osis: Neh
+      args: { BOOK: Nehemiáš }
+
+    - osis: Esth
+      args: { BOOK: Ester }
+
+    - osis: Job
+      args: { BOOK: Job }
+
+    - osis: Ps
+      args: { BOOK: Žalmy }
+
+    - osis: Prov
+      args: { BOOK: Přísloví }
+
+    - osis: Eccl
+      args: { BOOK: Kazatel }
+
+    - osis: Song
+      args: { BOOK: Píseň_Šalamounova }
+
+    - osis: Isa
+      args: { BOOK: Izaiáš }
+
+    - osis: Jer
+      args: { BOOK: Jeremiáš }
+
+    - osis: Lam
+      args: { BOOK: Pláč_Jeremiášův }
+
+    - osis: Ezek
+      args: { BOOK: Ezechiel }
+
+    - osis: Dan
+      args: { BOOK: Daniel }
+
+    - osis: Hos
+      args: { BOOK: Ozeáš }
+
+    - osis: Joel
+      args: { BOOK: Joel }
+
+    - osis: Amos
+      args: { BOOK: Amos }
+
+    - osis: Obad
+      args: { BOOK: Abdiáš }
+
+    - osis: Jonah
+      args: { BOOK: Jonáš }
+
+    - osis: Mic
+      args: { BOOK: Micheáš }
+
+    - osis: Nah
+      args: { BOOK: Nahum }
+
+    - osis: Hab
+      args: { BOOK: Abakuk }
+
+    - osis: Zeph
+      args: { BOOK: Sofoniáš }
+
+    - osis: Hag
+      args: { BOOK: Aggeus }
+
+    - osis: Zech
+      args: { BOOK: Zachariáš }
+
+    - osis: Mal
+      args: { BOOK: Malachiáš }
+
+    #- osis: Tob
+    #  args: { BOOK: Tobiáš }
+    - osis: PrMan
+      patterns: { bookUrl: "https://cs.wikisource.org/wiki/Bible_kralick%C3%A1_(1613,_modern%C3%AD_pravopis)/{BOOK}" }
+      args: { BOOK: Modlitba_Manassesova }
+    #- osis: Jdt
+    #  args: { BOOK: Judit }
+    #- osis: Bar
+    #  args: { BOOK: Báruch }
+    #- osis: AddDan
+    #  args: { BOOK: Přídavkové_k_proroctví_Danielovu }
+    #- osis: 1Esd
+    #  args: { BOOK: První_kniha_Ezdrášova }
+    #- osis: 2Esd
+    #  args: { BOOK: Druhá_kniha_Ezdrášova }
+    #- osis: AddEsth
+    #  args: { BOOK: Přídavkové_ke_knize_Ester }
+    - osis: 1Macc
+      patterns: { bookUrl: "https://cs.wikisource.org/wiki/Bible_kralick%C3%A1_(1613,_modern%C3%AD_pravopis)/{BOOK}" }
+      args: { BOOK: První_kniha_Machabejská }
+    - osis: 2Macc
+      patterns: { bookUrl: "https://cs.wikisource.org/wiki/Bible_kralick%C3%A1_(1613,_modern%C3%AD_pravopis)/{BOOK}" }
+      args: { BOOK: Druhá_kniha_Machabejská }
+    #- osis: 3Macc
+    #  args: { BOOK: Třetí_kniha_Machabejská }
+    #- osis: Wis
+    #  args: { BOOK: Kniha_Moudrosti }
+    #- osis: Sir
+    #  args: { BOOK: Kniha_Sírach }
+
+    - osis: Matt
+      args: { BOOK: Matouš }
+
+    - osis: Mark
+      args: { BOOK: Marek }
+
+    - osis: Luke
+      args: { BOOK: Lukáš }
+
+    - osis: John
+      args: { BOOK: Jan }
+
+    - osis: Acts
+      args: { BOOK: Skutky }
+
+    - osis: Rom
+      args: { BOOK: Římanům }
+
+    - osis: 1Cor
+      args: { BOOK: I_Korintským }
+
+    - osis: 2Cor
+      args: { BOOK: II_Korintským }
+
+    - osis: Gal
+      args: { BOOK: Galatským }
+
+    - osis: Eph
+      args: { BOOK: Efezským }
+
+    - osis: Phil
+      args: { BOOK: Filipenským }
+
+    - osis: Col
+      args: { BOOK: Kolossenským }
+
+    - osis: 1Thess
+      args: { BOOK: I_Tessalonicenským }
+
+    - osis: 2Thess
+      args: { BOOK: II_Tessalonicenským }
+
+    - osis: 1Tim
+      args: { BOOK: I_Timoteovi }
+
+    - osis: 2Tim
+      args: { BOOK: II_Timoteovi }
+
+    - osis: Titus
+      args: { BOOK: Titovi }
+
+    - osis: Phlm
+      args: { BOOK: Filemonovi }
+
+    - osis: Heb
+      args: { BOOK: Židům }
+
+    - osis: Jas
+      args: { BOOK: Jakub }
+
+    - osis: 1Pet
+      args: { BOOK: I_Petrova }
+
+    - osis: 2Pet
+      args: { BOOK: II_Petrova }
+
+    - osis: 1John
+      args: { BOOK: I_Janova }
+
+    - osis: 2John
+      args: { BOOK: II_Janova }
+
+    - osis: 3John
+      args: { BOOK: III_Janova }
+
+    - osis: Jude
+      args: { BOOK: Judova }
+
+    - osis: Rev
+      args: { BOOK: Zjevení }
+
+html:
+  elements:
+
+    - selector: "div.mw-body-content td.act b"
+      contexts:
+        - type: BOOK_TITLE
+          descendants:
+          - type: TEXT
+            op: text
+
+    # Main books : chapter title is an h2.
+    - selector: ".prp-pages-output h2"
+      contexts:
+        - type: CHAPTER
+          op: text
+          regexp: "(?:Kapitola|Žalm) ([CLXVI0-9]+).?"
+    # Main books : intro paragraph does not contain chapter title.
+    - selector: ".prp-pages-output > div.intro > p:not(:matches(^Kapitola\\s+))"
+      contexts:
+        - type: CHAPTER_INTRO
+          descendants:
+          - type: TEXT
+            op: text
+
+    # Deuterocanonical books : chapter title is included in chapter intro paragraph.
+    - selector: ".prp-pages-output > div.intro > p:matches(^Kapitola\\s+)"
+      contexts:
+        - type: CHAPTER
+          selector: "> span.rimske-cislice"
+          op: text
+          descendants:
+            - type: CHAPTER_INTRO
+              descendants:
+                - type: TEXT
+                  op: text
+
+  externalParsers:
+    - selector: ".prp-pages-output > div.text > p:not(:matches(^\\s+$))"
+
+      nodeParser:
+        nodes:
+          # All text nodes within the paragraph must be taken entirely as normal verse text.
+          - withAncestors: [ VERSE ]
+            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+            contexts:
+              - type: TEXT
+                regexp: (.*)
+
+        elements:
+          # Side notes are actually section titles.
+          - selector: "span.poznamkapostrane"
+            contexts:
+              - type: SECTION_TITLE
+                descendants:
+                  - type: TEXT
+                    op: text
+
+          # Superscript is used for verse numbers, marking the start of a new verse.
+          - selector: "sup.cisloverse"
+            contexts:
+              - type: VERSE
+                op: text
+
+          # Initial is to be taken as normal text.
+          - selector: "span.iniciala"
+            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+            contexts:
+              - type: TEXT
+                op: text
+
+          # Italics is used for additions by the translator.
+          - selector: "i"
+            contexts:
+              - type: TRANSLATION_ADD
+                descendants:
+                  - type: TEXT
+                    op: text
+
+          - selector: "sup.reference > a"
+            contexts:
+              - type: NOTE
+                descendants:
+                  - type: TEXT
+                    linkTargetSelector: "span.reference-text"
+                    op: text

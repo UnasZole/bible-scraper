@@ -1,4 +1,4 @@
-package com.github.unaszole.bible.scraping.generic.html;
+package com.github.unaszole.bible.scraping.generic.parsing;
 
 import org.crosswire.jsword.versification.BibleBook;
 

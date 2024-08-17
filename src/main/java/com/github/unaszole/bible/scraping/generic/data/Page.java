@@ -1,4 +1,4 @@
-package com.github.unaszole.bible.scraping.generic;
+package com.github.unaszole.bible.scraping.generic.data;
 
 import com.github.unaszole.bible.downloading.SourceFile;
 

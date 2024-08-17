@@ -27,9 +27,8 @@ public class CachedDownloader {
 	 *
 	 * @param source The source file to open.
 	 * @return The path to a local working copy of this source file.
-	 * @throws IOException If any error prevented reading the source file.
 	 */
-	public Path getFile(SourceFile source) throws IOException {
+	public Path getFile(SourceFile source) {
 		String hash = source.getHash();
 		Path targetPath = cacheDirectory.resolve(hash);
 
@@ -40,10 +39,14 @@ public class CachedDownloader {
 
 		LOG.debug("Downloading from {}", source);
 
-		// File is missing, download it.
-		ReadableByteChannel inChannel = Channels.newChannel(source.openStream());
-		FileChannel outChannel = FileChannel.open(targetPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-		outChannel.transferFrom(inChannel, 0, Long.MAX_VALUE);
+        try {
+			// File is missing, download it.
+			ReadableByteChannel inChannel = Channels.newChannel(source.openStream());
+			FileChannel outChannel = FileChannel.open(targetPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+			outChannel.transferFrom(inChannel, 0, Long.MAX_VALUE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 		
 		return targetPath;
 	}

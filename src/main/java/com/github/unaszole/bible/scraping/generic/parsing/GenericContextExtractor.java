@@ -1,13 +1,11 @@
-package com.github.unaszole.bible.scraping.generic.html;
+package com.github.unaszole.bible.scraping.generic.parsing;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.ContextReaderListBuilder;
 import com.github.unaszole.bible.scraping.ParsingUtils;
-import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.List;
-import java.util.Map;
 
 public abstract class GenericContextExtractor<Position> {
     /**

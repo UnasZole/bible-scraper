@@ -1,17 +1,18 @@
-package com.github.unaszole.bible.scraping.generic.html;
+package com.github.unaszole.bible.scraping.generic.parsing.html;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.ContextReaderListBuilder;
 import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
-import org.crosswire.jsword.versification.BibleBook;
+import com.github.unaszole.bible.scraping.generic.parsing.ContextStackAware;
+import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
+import com.github.unaszole.bible.scraping.generic.parsing.StringContextExtractor;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

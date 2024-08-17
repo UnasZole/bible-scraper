@@ -1,10 +1,11 @@
-package com.github.unaszole.bible.scraping.generic.html;
+package com.github.unaszole.bible.scraping.generic.parsing.html;
 
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.Parser;
+import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
@@ -14,11 +15,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-public class NodeParserConfig extends ExternalParserConfig {
+public class NodeParserConfig {
 
     public List<TextNodeParser> nodes;
     public List<ElementParser> elements;
-    public List<NodeParserConfig> nodeParsers;
+    public List<ExternalParserConfig> externalParsers;
 
     private List<PositionBufferedParserCore.ContextReader> parseElement(Deque<ContextMetadata> ancestorStack,
                                                                         ContextType type, Element e,
@@ -91,19 +92,18 @@ public class NodeParserConfig extends ExternalParserConfig {
         };
     }
 
-    @Override
     public Parser<?> getParser(Element e, Deque<Context> currentContextStack, final ContextualData contextualData) {
         return new Parser<Node>(new PositionBufferedParserCore<Node>() {
 
             @Override
             public Parser<?> parseExternally(Node n, Deque<Context> currentContextStack) {
-                if(nodeParsers == null || !(n instanceof Element)) {
+                if(externalParsers == null || !(n instanceof Element)) {
                     return null;
                 }
                 Element e = (Element) n;
 
-                for(NodeParserConfig nodeParserConfig: nodeParsers) {
-                    Optional<Parser<?>> parser = nodeParserConfig.getParserIfApplicable(e, currentContextStack,
+                for(ExternalParserConfig externalParserConfig: externalParsers) {
+                    Optional<Parser<?>> parser = externalParserConfig.getParserIfApplicable(e, currentContextStack,
                             contextualData);
                     if(parser.isPresent()) {
                         return parser.get();

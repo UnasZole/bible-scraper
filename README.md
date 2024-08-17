@@ -11,7 +11,7 @@ favourite bible study app.
 
 - **Embedded scrapers for many bibles** : Just run the program to extract a bible
 from one of the websites already implemented.
-- **Generic HTML scrapers** : Extract bibles from a custom website, that we do not
+- **Generic scrapers** : Extract bibles from a custom website, that we do not
 support yet, by providing a configuration file describing the structure of the
 website.
 - **USFM or OSIS output formats** : [USFM](https://ubsicap.github.io/usfm/) uses simple
@@ -60,7 +60,7 @@ The following sub commands are available :
 - `./run.sh help scraper-list` : list the available embedded scrapers.
 - `./run.sh help scraper-help -s <ScraperName>` : Get information about this scraper, and if it requires any additional inputs. \
 You can also specify additional inputs within this help command to check if they are valid, and get more specific help if available.
-For example `scraper-help -s GenericHtml -i TheoPlace`.
+For example `scraper-help -s Generic -i TheoPlace`.
 - `./run.sh scrape` : Fetch and convert a remote bible. This command has many parameters :
   - `-s <ScraperName>` to specify the scraper, and `-i <input>` to specify scraper inputs (repeated if several)
   - `-b <osisBook> -c <chapterNb>` to specify the passage of the bible to extract, or `--fullBible` if you want to extract the complete bible.
@@ -74,21 +74,21 @@ Examples :
 
 - Scrape the full bible of André Chouraqui, applying transformations to integrate deuterocanonical additions in the catholic way, outputting an OSIS XML file with corrected French typography : \
   `./run.sh scrape -s ChouraquiAggregated -i Catholic --fullBible -w OSIS -o andreChouraqui.xml --typographyFixer FRENCH`
-- Extract the book of Genesis from recatho.com's "Glaire et Vigouroux" bible using an embedded generic HTML scraper, outputting USFM files in a given folder : \
-`./run.sh scrape -s GenericHtml -i Recatho -i glaire-et-vigouroux -b Gen -w USFM -o outGlaireVigouroux/`
+- Extract the book of Genesis from recatho.com's "Glaire et Vigouroux" bible using an embedded generic scraper, outputting USFM files in a given folder : \
+`./run.sh scrape -s Generic -i Recatho -i glaire-et-vigouroux -b Gen -w USFM -o outGlaireVigouroux/`
 - Extract Revelation 1 from a custom website using the generic scraper, and output in USFM on your terminal's STDOUT (usually to test your custom scraper) : \
-`./run.sh scrape -s GenericHtml -i path/to/custom/scraperconfig.yaml -b Rev -c 1 -w USFM`
+`./run.sh scrape -s Generic -i path/to/custom/scraperconfig.yaml -b Rev -c 1 -w USFM`
 
-### Scraping a custom website with the generic HTML scraper
+### Scraping a custom website with the generic scraper
 
 If you need to scrape a website which is not supported by any of the embedded scrapers, you may be able to make use of
-the generic HTML scraper.
+the generic scraper.
 This is a scraper which is fully configured with a YAML configuration file, where you define the structure of the bible
 (specifically the URLs to fetch its contents and the rules to parse all pages), thus avoiding you the need to write Java code at all.
 
 #### YAML configuration file
 
-You may look at the [embedded generic scrapers](src/main/resources/scrapers/GenericHtml/) for examples of generic scraper
+You may look at the [embedded generic scrapers](src/main/resources/scrapers/Generic/) for examples of generic scraper
 configuration files.
 
 The general structure of the configuration file is explained here.
@@ -141,22 +141,27 @@ will fetch one single page using the chapter sequence's args.
 
 ##### Page parsing rules
 
-While all the properties described above serve to build the list of HTML pages to fetch, this last section is required to
+While all the properties described above serve to build the list of pages to fetch, this last section is required to
 let the scraper know how these pages should be parsed.
 
 In order to write these rules, you need to understand the overall parsing logic - which may be slightly counter-intuitive,
 but allows parsing even documents with ambiguous formatting.
 
-- The overall goal of the parser is to check all HTML elements in the page, and build a context tree (an internal
+- The overall goal of the parser is to check all elements in the page, and build a context tree (an internal
 structured representation of bible contents) out of it.
 - The [definition of all context types](src/main/java/com/github/unaszole/bible/datamodel/ContextType.java) specifies
 what each context can contain. Thus, at any point in time, the parser itself knows what types of context it may or may
 not open next. 
 The goal the parsing rules is therefore to answer the following two questions :
-  - Given the current position in the context tree, can a given HTML element open a new context ?
-  - If so, how do we extract the HTML element's contents to fill the new context ?
+  - Given the current position in the context tree, can a given element open a new context ?
+  - If so, how do we extract the element's contents to fill the new context ?
 
-HTML element parsing rules are specified in the `elements` section of the YAML configuration. Each
+###### HTML parsing
+
+If the page to parse is HTML, you need to specify HTML parsing rules in the `html` section.
+These rules are based on [JSoup CSS selectors](https://jsoup.org/apidocs/org/jsoup/select/Selector.html).
+
+Then, element parsing rules are specified in the `elements` section of the YAML configuration. Each
 element parsing rule has the following contents :
 - The `selector` property is a [JSoup CSS selector](https://jsoup.org/apidocs/org/jsoup/select/Selector.html), evaluated from the root of the HTML document, to match an
 input HTML element. If the current HTML fails to match this selector, then the rule is ignored.
@@ -184,15 +189,17 @@ following properties.
     - `literal=<value>`: Hardcoded text value.
   - The `regexp` property allows using a [Java regular expression](https://dev.java/learn/regex/), containing a single
   capturing group, to extract only a portion of the text returned by the operator.
-- The `descendants` property is a sequence of similar context extractors to create other contexts within this one, based
-on the same element selected by the rule.
 
-Elements which text nodes need to be processed in order can be managed using the `nodeParsers` list.
-Each node parser has the following contents :
+It is possible to change the parsing logic for some elements using the `externalParsers` list.
+Each external parser has the following contents :
 - The `selector` property is a [JSoup CSS selector](https://jsoup.org/apidocs/org/jsoup/select/Selector.html), evaluated from the root of the HTML document, that determines
-which elements will use this specific parser.
-- The `withAncestors`/`withoutAncestors` directives that enable this specific parsing method conditionally depending 
-on the current position in the context tree.
+  which elements will use this specific parser.
+- The `withAncestors`/`withoutAncestors` directives that enable this specific parsing method conditionally depending
+  on the current position in the context tree.
+- An actual configuration that depends on the type of external parser.
+
+Elements which text nodes need to be processed in order can be managed using the `nodeParser` external parser.
+A node parser is defined as an external parser with the `nodeParser` property containing the following fields :
 - The `elements` property is a list of element parsing rules. The structure is identical to that defined above for the
 root level `elements` property.
 - The `nodes` property is a list of text node parsing rules. Each text node parsing rule has the following contents:
@@ -214,17 +221,17 @@ root level `elements` property.
 
 #### Limitations
 
-Due to its much simpler setup, the generic HTML scraper has some limitations compared to what can be done with native
+Due to its much simpler setup, the generic scraper has some limitations compared to what can be done with native
 Java scrapers.
 Notably :
-- It takes rules for each HTML element in isolation. Therefore, the structure of the HTML pages must
+- The HTML parser takes rules for each HTML element in isolation. Therefore, the structure of the HTML pages must
 be consistent enough that you only need to check the element itself (its contents, its attributes, but NOT its siblings
 or parents) to know what type of context this element may open.
 - It can take additional inputs, allowing it to support websites that propose many bibles - however it
 does not provide a way to specify a different page structure for each bible, so you need all bibles reached by this scraper
 to follow a consistent URL pattern and consistent structure in terms of books and chapters.
 
-These limitations are highlighted within [the example TheoPlace configuration file](src/main/resources/scrapers/GenericHtml/TheoPlace.yaml),
+These limitations are highlighted within [the example TheoPlace configuration file](src/main/resources/scrapers/Generic/TheoPlace.yaml),
 which you may compare with the [native TheoPlace scraper](src/main/java/com/github/unaszole/bible/scraping/implementations/TheoPlace.java)
 to see how the Java API allows more accurate control in these cases.
 
