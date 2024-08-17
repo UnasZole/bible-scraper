@@ -51,14 +51,15 @@ public class TextParser {
                                                        Context rootContext, ContextualData contextualData) {
         return new Parser.TerminalParser<>(provider.getParser(contextualData), StreamUtils.concatIterators(
                 sourceFiles.stream()
-                        .map(cachedDownloader::getFile)
-                        .map(p -> {
-                            try {
-                                return provider.iterate(Files.newInputStream(p));
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
+                        .map(sf -> StreamUtils.deferredIterator(
+                                () -> {
+                                    try {
+                                        return provider.iterate(Files.newInputStream(cachedDownloader.getFile(sf)));
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                        ))
                         .collect(Collectors.toList())
         ), rootContext);
     }

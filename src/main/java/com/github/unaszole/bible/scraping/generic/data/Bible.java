@@ -11,6 +11,7 @@ import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -69,6 +70,7 @@ public class Bible extends PagesContainer {
             bookStreams = books.stream()
                     .map(book -> book.streamBook(bibleDefaults, ContextMetadata.forBook(book.osis),
                             sourceFileBuilder, ctxStreamer))
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         }
         else {

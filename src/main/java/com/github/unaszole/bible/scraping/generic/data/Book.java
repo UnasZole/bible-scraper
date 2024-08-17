@@ -9,6 +9,7 @@ import com.github.unaszole.bible.stream.ContextStreamEditor;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
@@ -74,7 +75,9 @@ public class Book extends PagesContainer {
                                     ContextMetadata.forChapter(osis, chapterNb),
                                     sourceFileBuilder,
                                     ctxStreamer
-                            )))
+                            ))
+                            .filter(Objects::nonNull)
+                    )
                     .collect(Collectors.toList());
         }
         else {
