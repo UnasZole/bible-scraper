@@ -520,26 +520,30 @@ html:
           op: text
 
   externalParsers:
-    # A paragraph starting with number+dot+space is a verse and must be parsed node-per-node.
-    - selector: "p:matches(^\\d+\\.\\s+.*$)"
+    # A non-empty paragraph within a chapter is verse text.
+    - selector: ".prp-pages-output p:matches(.+)"
       withAncestors: [ CHAPTER ]
       nodeParser:
         nodes:
-          # Text node that starts with number+dot+space marks the start and first words of a new verse.
-          - regexp: ^\d+\.\s+.*$
-            contexts:
-              - type: VERSE
-                regexp: ^(\d+)\.\s+.*$
-                descendants:
-                  - type: TEXT
-                    regexp: ^\d+\.\s+(.*)$
-          # Other text nodes (that don't start by a number) are just simple text.
-          - regexp: ^[^\d].*$
+          # Text nodes contain simple text.
+          - regexp: .*
             withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
             contexts:
               - type: TEXT
-                regexp: (.*)
+                # Ignore the starting verse number if any (verse number is handled in p element rule below).
+                regexp: ^(?:\d+\.\s+)?(.*)$
         elements:
+          # If the paragraph starts with a number, open the corresponding verse before processing the nodes.
+          - selector: "p:matches(^\\d+\\.\\s+.*$)"
+            contexts:
+              - type: VERSE
+                op: text
+                regexp: ^(\d+)\.\s+.*$
+          # If the paragraph does not start with a number, it's a continuation of the current verse. Prepend a space.
+          - selector: "p:not(:matches(^\\d+\\.\\s+.*$))"
+            contexts:
+              - type: TEXT
+                op: "literal= "
           # Italic texts shorter than 20 characters are assumed to be translation additions.
           - selector: "p > i:matches(^.{0,20}$)"
             contexts:
@@ -552,6 +556,13 @@ html:
             contexts:
               - type: TEXT
                 op: ownText
+          # Some simple text may be wrapped into a "coquille" span to highlight a correction from the manuscript.
+          - selector: "p > span.coquille"
+            contexts:
+              - type: TEXT
+                op: text
+                # Ignore the starting verse number if any.
+                regexp: ^(?:\d+\.\s+)?(.*)$
 
         externalParsers:
           - selector: "sup.reference > a"
