@@ -263,6 +263,9 @@ public class ContextStreamWriter {
             if(isOpen(ContextType.VERSE, event)) {
                 w.verse(event.metadata.verses, event.value);
             }
+            if(isOpen(ContextType.PSALM_TITLE, event)) {
+                w.psalmTitle(this::writeFlatText);
+            }
 
             return isClose(ContextType.BOOK, event);
         });

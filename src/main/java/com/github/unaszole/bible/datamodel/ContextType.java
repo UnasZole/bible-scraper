@@ -102,17 +102,21 @@ public enum ContextType {
 
 	/**
 	 * A structured text, ie. flat texts joined by structural delimiters.
-	 * Two successive flat texts are joined by an implicit paragraph break.
-	 * Explicit paragraph breaks should be used when a paragraph starts before the first flat text or after the last.
 	 */
 	STRUCTURED_TEXT(NO_META, NO_VALUE, any(FLAT_TEXT, STRUCTURE_MARKER)),
-	
-	// Verse must be built from a lexeme that provides a verse number.
+
+	/**
+	 * A canonical psalm title. If several psalm titles are written successively with no STRUCTURED_TEXT in between
+	 * (typically, when the title spans several verses or before the first verse), they should usually be rendered as
+	 * one single title.
+	 */
+	PSALM_TITLE(NO_META, NO_VALUE, one(FLAT_TEXT)),
+
 	/**
 	 * A verse.
 	 * Has a context value : the string representation of the verse number in the source document.
 	 */
-	VERSE(VERSE_LEVEL, STRING, atLeastOne(STRUCTURED_TEXT)),
+	VERSE(VERSE_LEVEL, STRING, atLeastOne(STRUCTURED_TEXT, PSALM_TITLE)),
 	
 	CHAPTER_INTRO(CHAPTER_LEVEL, NO_VALUE, one(FLAT_TEXT)),
 	CHAPTER_TITLE(CHAPTER_LEVEL, NO_VALUE, one(FLAT_TEXT)),
@@ -120,7 +124,7 @@ public enum ContextType {
 	 * A chapter.
 	 * Has a context value : the string representation of the chapter number in the source document.
 	 */
-	CHAPTER(CHAPTER_LEVEL, STRING, atMostOne(CHAPTER_TITLE), atMostOne(CHAPTER_INTRO), atMostOne(STRUCTURED_TEXT), atLeastOne(VERSE)),
+	CHAPTER(CHAPTER_LEVEL, STRING, atMostOne(CHAPTER_TITLE), atMostOne(CHAPTER_INTRO), atMostOne(PSALM_TITLE), atMostOne(STRUCTURED_TEXT), atLeastOne(VERSE)),
 
 	BOOK_INTRO_TITLE(BOOK_LEVEL, NO_VALUE, one(FLAT_TEXT)),
 	BOOK_INTRO(BOOK_LEVEL, NO_VALUE, atMostOne(BOOK_INTRO_TITLE), one(STRUCTURED_TEXT)),

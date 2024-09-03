@@ -9,6 +9,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements StructuredTextWriter.BookContentsWriter {
+    private boolean inPsalmTitle = false;
+
     public UsfmBookContentsWriter(PrintWriter out) {
         super(out, "\\p");
     }
@@ -68,13 +70,42 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
 
     @Override
     public void verse(int[] verseNbs, String... sourceNb) {
-        ensureInParagraph();
         out.println();
         String verseNbsStr = Arrays.stream(verseNbs)
                 .mapToObj(Integer::toString).collect(Collectors.joining("-"));
         out.print("\\v " + verseNbsStr + " ");
         if(!verseNbsStr.equals(sourceNb[0])) {
             out.print("\\vp " + sourceNb[0] + "\\vp* ");
+        }
+    }
+
+    @Override
+    public void psalmTitle(Consumer<TextWriter> writes) {
+        // If not yet in a psalm title, open it.
+        if(!inPsalmTitle) {
+            // A psalm title closes the previous paragraph.
+            closeParagraph();
+
+            out.println();
+            out.print("\\d ");
+
+            this.inPsalmTitle = true;
+        }
+
+        // Then write the text.
+        writeText(writes);
+        out.println();
+    }
+
+    @Override
+    protected void closeParagraph() {
+        if(inPsalmTitle) {
+            // If we are in a psalm title, just mark it closed.
+            this.inPsalmTitle = false;
+        }
+        else {
+            // Else, we close a regular paragraph.
+            super.closeParagraph();
         }
     }
 }

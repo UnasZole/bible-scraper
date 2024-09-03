@@ -14,8 +14,12 @@ import java.util.function.Consumer;
 
 public class UsfmBookWriter implements BookWriter {
 
+    /**
+     * Mapping as specified at https://wiki.crosswire.org/OSIS_Book_Abbreviations for all books supported in JSword.
+     */
     public static final Map<BibleBook, String> OSIS_TO_USFM = new HashMap<>();
     static {
+        // Old testament
         OSIS_TO_USFM.put(BibleBook.GEN, "GEN");
         OSIS_TO_USFM.put(BibleBook.EXOD, "EXO");
         OSIS_TO_USFM.put(BibleBook.LEV, "LEV");
@@ -55,6 +59,8 @@ public class UsfmBookWriter implements BookWriter {
         OSIS_TO_USFM.put(BibleBook.HAG, "HAG");
         OSIS_TO_USFM.put(BibleBook.ZECH, "ZEC");
         OSIS_TO_USFM.put(BibleBook.MAL, "MAL");
+
+        // New testament
         OSIS_TO_USFM.put(BibleBook.MATT, "MAT");
         OSIS_TO_USFM.put(BibleBook.MARK, "MRK");
         OSIS_TO_USFM.put(BibleBook.LUKE, "LUK");
@@ -82,6 +88,8 @@ public class UsfmBookWriter implements BookWriter {
         OSIS_TO_USFM.put(BibleBook.JOHN3, "3JN");
         OSIS_TO_USFM.put(BibleBook.JUDE, "JUD");
         OSIS_TO_USFM.put(BibleBook.REV, "REV");
+
+        // Deuterocanonical books
         OSIS_TO_USFM.put(BibleBook.TOB, "TOB");
         OSIS_TO_USFM.put(BibleBook.JDT, "JDT");
         OSIS_TO_USFM.put(BibleBook.ESTH_GR, "ESG");
@@ -95,10 +103,41 @@ public class UsfmBookWriter implements BookWriter {
         OSIS_TO_USFM.put(BibleBook.BEL, "BEL");
         OSIS_TO_USFM.put(BibleBook.MACC1, "1MA");
         OSIS_TO_USFM.put(BibleBook.MACC2, "2MA");
+        OSIS_TO_USFM.put(BibleBook.MACC3, "3MA");
+        OSIS_TO_USFM.put(BibleBook.MACC4, "4MA");
         OSIS_TO_USFM.put(BibleBook.ADD_DAN, "DAG");
         OSIS_TO_USFM.put(BibleBook.PR_MAN, "MAN");
         OSIS_TO_USFM.put(BibleBook.ESD1, "1ES");
         OSIS_TO_USFM.put(BibleBook.ESD2, "2ES");
+        OSIS_TO_USFM.put(BibleBook.ADD_PS, "PS2");
+
+        // Rahlfs' LXX
+        OSIS_TO_USFM.put(BibleBook.ODES, "ODA");
+        OSIS_TO_USFM.put(BibleBook.PSALM_SOL, "PSS");
+
+        // Vulgate and other later Latin
+        OSIS_TO_USFM.put(BibleBook.EP_LAO, "LAO");
+        OSIS_TO_USFM.put(BibleBook.ESD5, "5EZ");
+        OSIS_TO_USFM.put(BibleBook.ESD4, "EZA");
+
+        // Ethiopian orthodox canon
+        OSIS_TO_USFM.put(BibleBook.EN1, "ENO");
+        OSIS_TO_USFM.put(BibleBook.JUBS, "JUB");
+        OSIS_TO_USFM.put(BibleBook.BAR4, "4BA");
+
+        // Armenian orthodox canon
+        OSIS_TO_USFM.put(BibleBook.EP_COR_PAUL, "COP");
+        OSIS_TO_USFM.put(BibleBook.COR3, "3CO");
+
+        // Syriac orthodox canon
+        OSIS_TO_USFM.put(BibleBook.BAR2, "2BA");
+        OSIS_TO_USFM.put(BibleBook.EP_BAR, "LBA");
+
+        // Apostolic Fathers
+        OSIS_TO_USFM.put(BibleBook.CLEM1, "1CL");
+        OSIS_TO_USFM.put(BibleBook.CLEM2, "2CL");
+        OSIS_TO_USFM.put(BibleBook.HERM, "SHE");
+
     }
 
     private final PrintWriter out;

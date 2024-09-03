@@ -106,5 +106,11 @@ public interface StructuredTextWriter extends AutoCloseable {
          * @param sourceNb The string representation of the verse number in the source document.
          */
         void verse(int[] verseNbs, String...sourceNb);
+
+        /**
+         * Write a canonical psalm title.
+         * @param writes Logic to write the title.
+         */
+        void psalmTitle(Consumer<TextWriter> writes);
     };
 }

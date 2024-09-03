@@ -328,7 +328,7 @@ html:
         - type: TEXT
           op: "literal= "
 
-    - selector: "div.alineanegatif"
+    - selector: ":is(div.alineanegatif, div.alinea)"
       withAncestors: [ MINOR_SECTION_TITLE ]
       contexts:
         - type: TEXT

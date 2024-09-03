@@ -16,14 +16,14 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
     }
 
     private boolean inStanza = false;
-    protected void closeStanza() {
+    private void closeStanza() {
         if(inStanza) {
             out.println();
             out.println("\\b");
         }
         inStanza = false;
     }
-    protected void ensureInStanza() {
+    private void ensureInStanza() {
         if(!inStanza) {
             inStanza = true;
         }
@@ -36,7 +36,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
      */
     private int pendingPoetryLineIndent = 0;
 
-    protected void openPendingPoetryLineIfAny() {
+    private void openPendingPoetryLineIfAny() {
         if(pendingPoetryLineIndent != 0) {
             boolean isRefrain = pendingPoetryLineIndent == -1;
             int indentLevel = Math.max(pendingPoetryLineIndent, 0);
@@ -61,7 +61,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
         closeStanza();
         inParagraph = false;
     }
-    protected void ensureInParagraph() {
+    private void ensureInParagraph() {
         if(!inParagraph) {
             out.println();
             out.print(paragraphMarker + " ");

@@ -18,6 +18,7 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     private int currentChapter = -1;
     private String[] currentChapterSourceNb = null;
     private int[] currentVerse = null;
+    private boolean inPsalmTitle = false;
 
     public OsisBookContentsWriter(XMLStreamWriter xmlWriter, BibleBook book) {
         super(xmlWriter);
@@ -65,9 +66,6 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
         closeCurrentVerse();
 
         this.currentVerse = verseNbs;
-
-        // Make sure we're in an active paragraph for the verse start.
-        ensureInActiveParagraph();
 
         // <verse sID>
         writeEmptyElement("verse");
@@ -140,6 +138,44 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     @Override
     public void verse(int[] verseNbs, String... sourceNb) {
         openVerse(verseNbs, sourceNb);
+    }
+
+    @Override
+    public void psalmTitle(Consumer<TextWriter> writes) {
+        // If not yet in a psalm title, open it.
+        if(!inPsalmTitle) {
+            // A psalm title closes the previous paragraph.
+            closeCurrentParagraph();
+
+            // <title type="psalm" canonical="true">
+            writeStartElement("title");
+            writeAttribute("type", "psalm");
+            writeAttribute("canonical", "true");
+            if(currentVerse == null) {
+                // If we're before the start of the first verse, use SWORD extension to mark this as pre-verse title.
+                writeAttribute("subType", "x-preverse");
+            }
+            this.inPsalmTitle = true;
+        }
+        // Then write the text.
+        writeText(writes);
+
+        // Leave the psalm title opened in case there is a continuation for the title after a verse start.
+    }
+
+    @Override
+    protected void closeCurrentParagraph() {
+        if(inPsalmTitle) {
+            // If we are in a psalm title, close it.
+
+            writeEndElement();
+            // </title>
+            this.inPsalmTitle = false;
+        }
+        else {
+            // Else, we close a regular paragraph.
+            super.closeCurrentParagraph();
+        }
     }
 
     @Override

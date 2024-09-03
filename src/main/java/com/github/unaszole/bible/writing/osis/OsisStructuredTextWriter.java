@@ -28,7 +28,7 @@ public abstract class OsisStructuredTextWriter
         super(xmlWriter);
     }
 
-    protected void writeText(Consumer<TextWriter> writes) {
+    protected final void writeText(Consumer<TextWriter> writes) {
         try(TextWriter writer = new OsisTextWriter(xmlWriter)) {
             writes.accept(writer);
         } catch (Exception e) {
@@ -98,7 +98,7 @@ public abstract class OsisStructuredTextWriter
         this.inActiveParagraph = true;
     }
 
-    protected final void ensureInActiveParagraph() {
+    private void ensureInActiveParagraph() {
         if(!inActiveParagraph) {
             // If we're not in a paragraph, or an inactive one, we need to open a new paragraph.
             openParagraph();
@@ -114,14 +114,14 @@ public abstract class OsisStructuredTextWriter
         this.inStanza = true;
     }
 
-    protected final void ensureInStanza() {
+    private void ensureInStanza() {
         ensureInActiveParagraph();
         if(!inStanza) {
             openStanza();
         }
     }
 
-    protected void openPendingPoetryLineIfAny() {
+    private void openPendingPoetryLineIfAny() {
         if(pendingPoetryLineIndent != 0) {
             boolean isRefrain = pendingPoetryLineIndent == -1;
             int indentLevel = Math.max(pendingPoetryLineIndent, 0);

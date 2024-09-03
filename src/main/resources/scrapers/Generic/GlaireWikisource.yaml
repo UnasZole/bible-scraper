@@ -525,13 +525,18 @@ html:
       withAncestors: [ CHAPTER ]
       nodeParser:
         nodes:
-          # Text nodes contain simple text.
-          - regexp: .*
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+          # In text nodes with a starting verse number and non-empty followup, verse number has to be ignored.
+          - regexp: ^\d+\.\s+.+$
+            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP, PSALM_TITLE ]
             contexts:
               - type: TEXT
-                # Ignore the starting verse number if any (verse number is handled in p element rule below).
-                regexp: ^(?:\d+\.\s+)?(.*)$
+                regexp: ^\d+\.\s+(.+)$
+          # Non-empty text nodes that do not start with a verse number are taken as-is.
+          - regexp: ^[^\d].*$
+            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP, PSALM_TITLE ]
+            contexts:
+              - type: TEXT
+                regexp: ^([^\d].*)$
         elements:
           # If the paragraph starts with a number, open the corresponding verse before processing the nodes.
           - selector: "p:matches(^\\d+\\.\\s+.*$)"
@@ -544,25 +549,33 @@ html:
             contexts:
               - type: TEXT
                 op: "literal= "
-          # Italic texts shorter than 20 characters are assumed to be translation additions.
-          - selector: "p > i:matches(^.{0,20}$)"
+          # Italic longer than 30 or with specific keywords is a psalm title.
+          - selector: "p > i:is(:matches(^.{30,}$), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$))"
+            withAncestors: [ PSALM_TITLE ]
+            contexts:
+              - type: TEXT
+                op: ownText
+          # Italic texts that didn't match the previous selector are translation additions.
+          - selector: "p > i:not(:is(:matches(^.{30,}$), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$)))"
+            withoutAncestors: [ STRUCTURE_MARKER, NOTE, PSALM_TITLE ]
             contexts:
               - type: TRANSLATION_ADD
                 descendants:
                   - type: TEXT
                     op: ownText
-          # Italic longer than 20 is regular text.
-          - selector: "p > i:matches(^.{20,}$)"
-            contexts:
-              - type: TEXT
-                op: ownText
+
           # Some simple text may be wrapped into a "coquille" span to highlight a correction from the manuscript.
-          - selector: "p > span.coquille"
+          # This "coquille" span may include a verse number, to be ignored, or not.
+          - selector: "p > span.coquille:matches(^\\d+\\.\\s+.+$)"
             contexts:
               - type: TEXT
                 op: text
-                # Ignore the starting verse number if any.
-                regexp: ^(?:\d+\.\s+)?(.*)$
+                regexp: ^\d+\.\s+(.+)$
+          - selector: "p > span.coquille:matches(^[^\\d].*$)"
+            contexts:
+              - type: TEXT
+                op: text
+                regexp: ^([^\d].*)$
 
         externalParsers:
           - selector: "sup.reference > a"
