@@ -123,7 +123,7 @@ public class NodeParserConfig {
                 else if(n instanceof TextNode) {
                     return parseTextNode(ancestorStack, type, (TextNode) n, contextualData);
                 }
-                return null;
+                throw new IllegalArgumentException("Received a node of unknown type : " + n);
             }
         }, getNodeIterator(e), currentContextStack);
     }

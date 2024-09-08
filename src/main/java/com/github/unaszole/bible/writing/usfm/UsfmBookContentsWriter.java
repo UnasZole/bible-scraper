@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements StructuredTextWriter.BookContentsWriter {
     private boolean inPsalmTitle = false;
+    private String pendingVerseTags = null;
 
     public UsfmBookContentsWriter(PrintWriter out) {
         super(out, "\\p");
@@ -70,12 +71,21 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
 
     @Override
     public void verse(int[] verseNbs, String... sourceNb) {
-        out.println();
         String verseNbsStr = Arrays.stream(verseNbs)
                 .mapToObj(Integer::toString).collect(Collectors.joining("-"));
-        out.print("\\v " + verseNbsStr + " ");
+
+        // Do not open the verse immediately, we should print it only after the paragraph marker if any.
+        pendingVerseTags = "\\v " + verseNbsStr + " ";
         if(!verseNbsStr.equals(sourceNb[0])) {
-            out.print("\\vp " + sourceNb[0] + "\\vp* ");
+            pendingVerseTags += "\\vp " + sourceNb[0] + "\\vp* ";
+        }
+    }
+
+    private void openPendingVerse() {
+        if(pendingVerseTags != null) {
+            out.println();
+            out.print(pendingVerseTags);
+            pendingVerseTags = null;
         }
     }
 
@@ -92,20 +102,23 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
             this.inPsalmTitle = true;
         }
 
+        // Open pending verse if any.
+        openPendingVerse();
+
         // Then write the text.
         writeText(writes);
         out.println();
     }
 
     @Override
-    protected void closeParagraph() {
-        if(inPsalmTitle) {
-            // If we are in a psalm title, just mark it closed.
-            this.inPsalmTitle = false;
-        }
-        else {
-            // Else, we close a regular paragraph.
-            super.closeParagraph();
-        }
+    protected void ensureInParagraph() {
+        // Note that we are no longer in a psalm title.
+        this.inPsalmTitle = false;
+
+        // Actually open the paragraph.
+        super.ensureInParagraph();
+
+        // Open pending verse if any.
+        openPendingVerse();
     }
 }

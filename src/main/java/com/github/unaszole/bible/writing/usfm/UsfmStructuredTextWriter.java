@@ -61,7 +61,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
         closeStanza();
         inParagraph = false;
     }
-    private void ensureInParagraph() {
+    protected void ensureInParagraph() {
         if(!inParagraph) {
             out.println();
             out.print(paragraphMarker + " ");

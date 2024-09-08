@@ -79,6 +79,14 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
 
     private void closeCurrentVerse() {
         if(currentVerse != null) {
+            if(inPsalmTitle) {
+                // osis2mod does not support verse tags within titles.
+                // So when we close a verse, we must close the title beforehand.
+                // Following psalm title content will be in a separate title tag.
+                // TODO : just remove this if when osis2mod is fixed, to generate an OSIS file with a single title.
+                closeCurrentParagraph();
+            }
+
             // <verse eID>
             writeEmptyElement("verse");
             writeAttribute("eID", getCurrentVerseMilestoneId());

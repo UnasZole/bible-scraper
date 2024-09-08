@@ -1,0 +1,379 @@
+description: "Bibles from biblija.lt. The BIBLE input can have two values : RKK1998 or RKE1999."
+inputs: [ BIBLE ]
+bible:
+  metadata:
+    language: lt
+    systemName: "lit{BIBLE}"
+    title: "{BIBLE} extracted from biblija.lt"
+
+  patterns:
+    chapterUrl: "http://biblija.lt/index.aspx?cmp=reading&doc=Biblija{BIBLE}_{BOOK}_{CHAPTER}"
+    chapterPublishedNumber: "{CHAPTER}"
+
+  args:
+    # By default, the CHAPTER argument should be evaluated only within chapter sequence, and default to $i, the OSIS chapter number.
+    CHAPTER: = $i
+
+  books:
+    - osis: Gen
+      args: { BOOK: Pr }
+      chapters: [ { from: 1, to: 50 } ]
+
+    - osis: Exod
+      args: { BOOK: Iš }
+      chapters: [ { from: 1, to: 40 } ]
+
+    - osis: Lev
+      args: { BOOK: Kun }
+      chapters: [ { from: 1, to: 27 } ]
+
+    - osis: Num
+      args: { BOOK: Sk }
+      chapters: [ { from: 1, to: 36 } ]
+
+    - osis: Deut
+      args: { BOOK: Įst }
+      chapters: [ { from: 1, to: 34 } ]
+
+    - osis: Josh
+      args: { BOOK: Joz }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: Judg
+      args: { BOOK: Ts }
+      chapters: [ { from: 1, to: 21 } ]
+
+    - osis: Ruth
+      args: { BOOK: Rut }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: 1Sam
+      args: { BOOK: 1_Sam }
+      chapters: [ { from: 1, to: 31 } ]
+
+    - osis: 2Sam
+      args: { BOOK: 2_Sam }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: 1Kgs
+      args: { BOOK: 1_Kar }
+      chapters: [ { from: 1, to: 22 } ]
+
+    - osis: 2Kgs
+      args: { BOOK: 2_Kar }
+      chapters: [ { from: 1, to: 25 } ]
+
+    - osis: 1Chr
+      args: { BOOK: 1_Kr }
+      chapters: [ { from: 1, to: 29 } ]
+
+    - osis: 2Chr
+      args: { BOOK: 2_Kr }
+      chapters: [ { from: 1, to: 36 } ]
+
+    - osis: Ezra
+      args: { BOOK: Ezd }
+      chapters: [ { from: 1, to: 10 } ]
+
+    - osis: Neh
+      args: { BOOK: Neh }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Tob
+      args: { BOOK: Tob }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Jdt
+      args: { BOOK: Jdt }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: Esth
+      args: { BOOK: Est }
+      chapters: [ { from: 1, to: 15 } ]
+
+    - osis: 1Macc
+      args: { BOOK: 1_Mak }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 2Macc
+      args: { BOOK: 2_Mak }
+      chapters: [ { from: 1, to: 15 } ]
+
+    - osis: Job
+      args: { BOOK: Job }
+      chapters: [ { from: 1, to: 42 } ]
+
+    - osis: Ps
+      args: { BOOK: Ps }
+      chapters: [ { from: 1, to: 150 } ]
+
+    - osis: Prov
+      args: { BOOK: Pat }
+      chapters: [ { from: 1, to: 31 } ]
+
+    - osis: Eccl
+      args: { BOOK: Koh }
+      chapters: [ { from: 1, to: 12 } ]
+
+    - osis: Song
+      args: { BOOK: Gg }
+      chapters: [ { from: 1, to: 8 } ]
+
+    - osis: Wis
+      args: { BOOK: Išm }
+      chapters: [ { from: 1, to: 19 } ]
+
+    - osis: Sir
+      args: { BOOK: Sir }
+      chapters: [ { from: 0, to: 51 } ]
+
+    - osis: Isa
+      args: { BOOK: Iz }
+      chapters: [ { from: 1, to: 66 } ]
+
+    - osis: Jer
+      args: { BOOK: Jer }
+      chapters: [ { from: 1, to: 52 } ]
+
+    - osis: Lam
+      args: { BOOK: Rd }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: Bar
+      args: { BOOK: Bar }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Ezek
+      args: { BOOK: Ez }
+      chapters: [ { from: 1, to: 48 } ]
+
+    - osis: Dan
+      args: { BOOK: Dan }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Hos
+      args: { BOOK: Oz }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Joel
+      args: { BOOK: Jl }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Amos
+      args: { BOOK: Am }
+      chapters: [ { from: 1, to: 9 } ]
+
+    - osis: Obad
+      args: { BOOK: Abd }
+      chapters: [ { at: 1 } ]
+
+    - osis: Jonah
+      args: { BOOK: Jon }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Mic
+      args: { BOOK: Mch }
+      chapters: [ { from: 1, to: 7 } ]
+
+    - osis: Nah
+      args: { BOOK: Nah }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Hab
+      args: { BOOK: Hab }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Zeph
+      args: { BOOK: Sof }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Hag
+      args: { BOOK: Ag }
+      chapters: [ { from: 1, to: 2 } ]
+
+    - osis: Zech
+      args: { BOOK: Zch }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Mal
+      args: { BOOK: Mal }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Matt
+      args: { BOOK: Mt }
+      chapters: [ { from: 1, to: 28 } ]
+
+    - osis: Mark
+      args: { BOOK: Mk }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: Luke
+      args: { BOOK: Lk }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: John
+      args: { BOOK: Jn }
+      chapters: [ { from: 1, to: 21 } ]
+
+    - osis: Acts
+      args: { BOOK: Apd }
+      chapters: [ { from: 1, to: 28 } ]
+
+    - osis: Rom
+      args: { BOOK: Rom }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 1Cor
+      args: { BOOK: 1_Kor }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 2Cor
+      args: { BOOK: 2_Kor }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Gal
+      args: { BOOK: Gal }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Eph
+      args: { BOOK: Ef }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Phil
+      args: { BOOK: Fil }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Col
+      args: { BOOK: Kol }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: 1Thess
+      args: { BOOK: 1_Tes }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2Thess
+      args: { BOOK: 2_Tes }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: 1Tim
+      args: { BOOK: 1_Tim }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: 2Tim
+      args: { BOOK: 2_Tim }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Titus
+      args: { BOOK: Tit }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Phlm
+      args: { BOOK: Fm }
+      chapters: [ { at: 1 } ]
+
+    - osis: Heb
+      args: { BOOK: Žyd }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Jas
+      args: { BOOK: Jok }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 1Pet
+      args: { BOOK: 1_Pt }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2Pet
+      args: { BOOK: 2_Pt }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: 1John
+      args: { BOOK: 1_Jn }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2John
+      args: { BOOK: 2_Jn }
+      chapters: [ { at: 1 } ]
+
+    - osis: 3John
+      args: { BOOK: 3_Jn }
+      chapters: [ { at: 1 } ]
+
+    - osis: Jude
+      args: { BOOK: Jud }
+      chapters: [ { at: 1 } ]
+
+    - osis: Rev
+      args: { BOOK: Apr }
+      chapters: [ { from: 1, to: 22 } ]
+
+html:
+  elements:
+    - selector: "span#ctl00_ContentLB table p.bibl_metmuo"
+      contexts:
+        - type: MAJOR_SECTION_TITLE
+          descendants:
+            - type: TEXT
+              op: text
+    - selector: "span#ctl00_ContentLB table :is(p.bibl_tema, td.bibl_tema)"
+      contexts:
+        - type: SECTION_TITLE
+          descendants:
+            - type: TEXT
+              op: text
+
+  externalParsers:
+    - selector: "span#ctl00_ContentLB table p.bibl"
+      nodeParser:
+        nodes:
+          - withoutAncestors: [ NOTE, MARKUP, PSALM_TITLE ]
+            contexts:
+              - type: TEXT
+                regexp: (.*)
+
+        elements:
+          - selector: "p.bibl"
+            contexts:
+              - type: PARAGRAPH_BREAK
+
+          - selector: "p.bibl > sup:matches(^\\d+$)"
+            contexts:
+              - type: VERSE
+                op: text
+
+          - selector: "p.bibl > i"
+            withAncestors: [ PSALM_TITLE ]
+            contexts:
+              - type: TEXT
+                op: text
+
+        externalParsers:
+          - selector: "p.bibl > sup > a[onMouseOver]"
+            textParser:
+              stringExtractor:
+                op: attribute=onMouseOver
+                regexp: ^return overlib\('(.*)'\);$
+              html:
+                externalParsers:
+                  # When parsing an HTML string, JSoup automatically adds the html and body root tags if they are missing.
+                  - selector: "body"
+                    nodeParser:
+                      nodes:
+
+                        - withoutAncestors: [ MARKUP ]
+                          contexts:
+                            - type: TEXT
+                              regexp: (.*)
+
+                      elements:
+
+                        - selector: "body"
+                          contexts:
+                            - type: NOTE
+
+                        - selector: "i"
+                          withAncestors: [ QUOTE ]
+                          contexts:
+                            - type: TEXT
+                              op: text
+

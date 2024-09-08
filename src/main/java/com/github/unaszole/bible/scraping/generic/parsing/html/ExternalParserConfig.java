@@ -35,7 +35,7 @@ public class ExternalParserConfig extends ContextStackAware {
     /**
      * If not null, invokes any text parser on the selected element's text contents.
      */
-    public TextParser textParser;
+    public ElementTextParser textParser;
 
     private boolean canTriggerAtPosition(Element e, Deque<Context> currentContextStack) {
         return e.is(selector) && isContextStackValid(
@@ -67,10 +67,7 @@ public class ExternalParserConfig extends ContextStackAware {
                         return Optional.of(nodeParser.getParser(te, currentContextStack, contextualData));
                     }
                     else if(textParser != null) {
-                        return Optional.of(textParser.getLocalParser(
-                                new ByteArrayInputStream(te.text().getBytes(StandardCharsets.UTF_8)),
-                                currentContextStack, contextualData)
-                        );
+                        return Optional.of(textParser.getParser(te, currentContextStack, contextualData));
                     }
                     return Optional.empty();
                 });

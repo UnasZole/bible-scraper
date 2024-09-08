@@ -49,7 +49,7 @@ public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
     public List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
                                   ContextMetadata previousOfType, Element e) {
         if(elements == null) {
-            return null;
+            return List.of();
         }
 
         for(ElementParser eltParser: elements) {
