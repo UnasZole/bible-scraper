@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public enum ContextValueType {
     NO_VALUE(Objects::isNull, true, null),
     INTEGER(Pattern.compile("^\\d+$").asPredicate(), true, "1"),
-    STRING(Pattern.compile("^.*$").asPredicate(), true, ""),
+    STRING(Pattern.compile("^.*$", Pattern.DOTALL).asPredicate(), true, ""),
     INTEGER_OR_ROMAN(Pattern.compile("^(\\d+|[MmDdCcLlXxVvIi]+)$").asPredicate(), true, "1"),
     INTEGER_OR_ROMAN_LIST(Pattern.compile("^((\\d+|[MmDdCcLlXxVvIi]+)[^\\w]*)+$").asPredicate(), true, "1"),
     BOOK_ID(b -> b != null && BibleBook.fromOSIS(b) != null, false, null);

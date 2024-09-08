@@ -21,9 +21,8 @@ import com.github.unaszole.bible.scraping.generic.data.ChapterSeq;
 import com.github.unaszole.bible.scraping.generic.data.PatternContainer;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import com.github.unaszole.bible.scraping.generic.parsing.TextParser;
-import com.github.unaszole.bible.scraping.generic.parsing.html.ElementParser;
-import com.github.unaszole.bible.scraping.generic.parsing.html.NodeParserConfig;
 import com.github.unaszole.bible.stream.ContextStream;
+import com.jayway.jsonpath.JsonPath;
 import org.crosswire.jsword.versification.BibleBook;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;
@@ -35,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Generic extends Scraper {
@@ -86,11 +86,25 @@ public class Generic extends Scraper {
                     return QueryParser.parse(jsonParser.readValueAs(String.class));
                 }
             })
+            .addDeserializer(JsonPath.class, new StdDeserializer<>(JsonPath.class) {
+                @Override
+                public JsonPath deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
+                        throws IOException {
+                    return JsonPath.compile(jsonParser.readValueAs(String.class));
+                }
+            })
             .addDeserializer(BibleBook.class, new StdDeserializer<>(BibleBook.class) {
                 @Override
                 public BibleBook deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
                         throws IOException {
                     return BibleBook.fromOSIS(jsonParser.readValueAs(String.class));
+                }
+            })
+            .addDeserializer(Pattern.class, new StdDeserializer<>(Pattern.class) {
+                @Override
+                public Pattern deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
+                        throws IOException {
+                    return Pattern.compile(jsonParser.readValueAs(String.class), Pattern.DOTALL);
                 }
             })
     );
@@ -100,8 +114,6 @@ public class Generic extends Scraper {
         public String description;
         public List<String> inputs;
         public Bible bible;
-        public List<ElementParser> elements;
-        public List<NodeParserConfig> nodeParsers;
 
         public PatternContainer getGlobalDefaults(List<String> inputValues) {
             int nbExpectedFlags = inputs == null ? 0 : inputs.size();

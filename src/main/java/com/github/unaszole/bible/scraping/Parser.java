@@ -25,6 +25,7 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 	private final Iterator<Position> positions;
 	private final Deque<Context> currentContextStack;
 	private Parser<?> currentExternalParser;
+	private boolean closed = false;
 
 	/**
 	 *
@@ -199,7 +200,7 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 				currentExternalParser = null;
 			}
 		}
-		return positions.hasNext();
+		return positions.hasNext() || !closed;
 	}
 
 	/**
@@ -236,6 +237,7 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 		}
 
 		// Reached the last position.
+		this.closed = true;
 		return close(currentContextStack);
 	}
 

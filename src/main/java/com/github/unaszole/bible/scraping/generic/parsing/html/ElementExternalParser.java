@@ -4,17 +4,14 @@ import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextStackAware;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
-import com.github.unaszole.bible.scraping.generic.parsing.TextParser;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Evaluator;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Deque;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ExternalParserConfig extends ContextStackAware {
+public class ElementExternalParser extends ContextStackAware {
 
     /**
      * Selector to check if the current element triggers this external parser.

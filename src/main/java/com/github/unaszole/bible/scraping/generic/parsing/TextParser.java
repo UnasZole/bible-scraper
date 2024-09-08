@@ -6,6 +6,7 @@ import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.scraping.Parser;
 import com.github.unaszole.bible.scraping.ParserCore;
 import com.github.unaszole.bible.scraping.generic.parsing.html.HtmlParserProvider;
+import com.github.unaszole.bible.scraping.generic.parsing.json.JsonParserProvider;
 import com.github.unaszole.bible.stream.StreamUtils;
 
 import java.io.IOException;
@@ -24,10 +25,14 @@ public class TextParser {
     }
 
     public HtmlParserProvider html;
+    public JsonParserProvider json;
 
     private Provider<?> getProvider() {
         if(html != null) {
             return html;
+        }
+        if(json != null) {
+            return json;
         }
         throw new IllegalArgumentException("No parser provided !");
     }

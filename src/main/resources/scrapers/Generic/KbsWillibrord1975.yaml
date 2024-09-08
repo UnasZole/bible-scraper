@@ -1,0 +1,364 @@
+description: "Willibrordvertaling (KATHOLIEKE BIJBELSTICHTING)"
+bible:
+  metadata:
+    language: nl
+    systemName: nldWillibrordvertaling
+    title: Willibrordvertaling (1975)
+    versification: Catholic2
+
+  patterns:
+    chapterUrl: "https://rkbijbel.nl/cms/webservice.php?mode=versen"
+    chapterMethod: POST
+    chapterBody: '{"boektag":"{BOOK}","hoofdstuknr":{CHAPTER},"vertalingtag":"willibrord1975"}'
+    chapterPublishedNumber: "{CHAPTER}"
+
+  args:
+    CHAPTER: = $i
+
+  books:
+    - osis: Gen
+      args: { BOOK: genesis }
+      chapters: [ { from: 1, to: 50 } ]
+
+    - osis: Exod
+      args: { BOOK: exodus }
+      chapters: [ { from: 1, to: 40 } ]
+
+    - osis: Lev
+      args: { BOOK: leviticus }
+      chapters: [ { from: 1, to: 27 } ]
+
+    - osis: Num
+      args: { BOOK: numeri }
+      chapters: [ { from: 1, to: 36 } ]
+
+    - osis: Deut
+      args: { BOOK: deuteronomium }
+      chapters: [ { from: 1, to: 34 } ]
+
+    - osis: Josh
+      args: { BOOK: jozua }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: Judg
+      args: { BOOK: rechters }
+      chapters: [ { from: 1, to: 21 } ]
+
+    - osis: Ruth
+      args: { BOOK: ruth }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: 1Sam
+      args: { BOOK: 1samuel }
+      chapters: [ { from: 1, to: 31 } ]
+
+    - osis: 2Sam
+      args: { BOOK: 2samuel }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: 1Kgs
+      args: { BOOK: 1koningen }
+      chapters: [ { from: 1, to: 22 } ]
+
+    - osis: 2Kgs
+      args: { BOOK: 2koningen }
+      chapters: [ { from: 1, to: 25 } ]
+
+    - osis: 1Chr
+      args: { BOOK: 1kronieken }
+      chapters: [ { from: 1, to: 29 } ]
+
+    - osis: 2Chr
+      args: { BOOK: 2kronieken }
+      chapters: [ { from: 1, to: 36 } ]
+
+    - osis: Ezra
+      args: { BOOK: ezra }
+      chapters: [ { from: 1, to: 10 } ]
+
+    - osis: Neh
+      args: { BOOK: nehemia }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Tob
+      args: { BOOK: tobit }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Jdt
+      args: { BOOK: judit }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: Esth
+      args: { BOOK: ester }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 1Macc
+      args: { BOOK: 1makkabeeen }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 2Macc
+      args: { BOOK: 2makkabeeen }
+      chapters: [ { from: 1, to: 15 } ]
+
+    - osis: Job
+      args: { BOOK: job }
+      chapters: [ { from: 1, to: 42 } ]
+
+    - osis: Ps
+      args: { BOOK: psalmen }
+      chapters: [ { from: 1, to: 150 } ]
+
+    - osis: Prov
+      args: { BOOK: spreuken }
+      chapters: [ { from: 1, to: 31 } ]
+
+    - osis: Eccl
+      args: { BOOK: prediker }
+      chapters: [ { from: 1, to: 12 } ]
+
+    - osis: Song
+      args: { BOOK: hooglied }
+      chapters: [ { from: 1, to: 8 } ]
+
+    - osis: Wis
+      args: { BOOK: wijsheid }
+      chapters: [ { from: 1, to: 19 } ]
+
+    - osis: Sir
+      args: { BOOK: jezussirach }
+      chapters: [ { from: 1, to: 51 } ]
+
+    - osis: Isa
+      args: { BOOK: jesaja }
+      chapters: [ { from: 1, to: 66 } ]
+
+    - osis: Jer
+      args: { BOOK: jeremia }
+      chapters: [ { from: 1, to: 52 } ]
+
+    - osis: Lam
+      args: { BOOK: klaagliederen }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: Bar
+      args: { BOOK: baruch }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Ezek
+      args: { BOOK: ezechiel }
+      chapters: [ { from: 1, to: 48 } ]
+
+    - osis: Dan
+      args: { BOOK: daniel }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Hos
+      args: { BOOK: hosea }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Joel
+      args: { BOOK: joel }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Amos
+      args: { BOOK: amos }
+      chapters: [ { from: 1, to: 9 } ]
+
+    - osis: Obad
+      args: { BOOK: obadja }
+      chapters: [ { at: 1 } ]
+
+    - osis: Jonah
+      args: { BOOK: jonas }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Mic
+      args: { BOOK: micha }
+      chapters: [ { from: 1, to: 7 } ]
+
+    - osis: Nah
+      args: { BOOK: nahum }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Hab
+      args: { BOOK: habakuk }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Zeph
+      args: { BOOK: sefanja }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Hag
+      args: { BOOK: haggai }
+      chapters: [ { from: 1, to: 2 } ]
+
+    - osis: Zech
+      args: { BOOK: zacharias }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Mal
+      args: { BOOK: maleachi }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Matt
+      args: { BOOK: matteus }
+      chapters: [ { from: 1, to: 28 } ]
+
+    - osis: Mark
+      args: { BOOK: marcus }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: Luke
+      args: { BOOK: lucas }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: John
+      args: { BOOK: johannes }
+      chapters: [ { from: 1, to: 21 } ]
+
+    - osis: Acts
+      args: { BOOK: handelingen }
+      chapters: [ { from: 1, to: 28 } ]
+
+    - osis: Rom
+      args: { BOOK: romeinen }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 1Cor
+      args: { BOOK: 1korintiers }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 2Cor
+      args: { BOOK: 2korintiers }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Gal
+      args: { BOOK: galaten }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Eph
+      args: { BOOK: efesiers }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Phil
+      args: { BOOK: filippenzen }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Col
+      args: { BOOK: kolossenzen }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: 1Thess
+      args: { BOOK: 1tessalonicenzen }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2Thess
+      args: { BOOK: 2tessalonicenzen }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: 1Tim
+      args: { BOOK: 1timoteus }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: 2Tim
+      args: { BOOK: 2timoteus }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Titus
+      args: { BOOK: titus }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Phlm
+      args: { BOOK: filemon }
+      chapters: [ { at: 1, pages: [ { args: { CHAPTER: 0 } } ] } ]
+
+    - osis: Heb
+      args: { BOOK: hebreeen }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Jas
+      args: { BOOK: jacobus }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 1Pet
+      args: { BOOK: 1petrus }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2Pet
+      args: { BOOK: 2petrus }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: 1John
+      args: { BOOK: 1johannes }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2John
+      args: { BOOK: 2johannes }
+      chapters: [ { at: 1, pages: [ { args: { CHAPTER: 0 } } ] } ]
+
+    - osis: 3John
+      args: { BOOK: 3johannes }
+      chapters: [ { at: 1, pages: [ { args: { CHAPTER: 0 } } ] } ]
+
+    - osis: Jude
+      args: { BOOK: judas }
+      chapters: [ { at: 1, pages: [ { args: { CHAPTER: 0 } } ] } ]
+
+    - osis: Rev
+      args: { BOOK: apokalyps }
+      chapters: [ { from: 1, to: 22 } ]
+
+json:
+  nodes:
+    - selector: "$[?(@.stitel != null)].stitel"
+      contexts:
+        - type: SECTION_TITLE
+          descendants:
+            - type: TEXT
+              selector: "$"
+
+    - selector: "$[*].iversnummer"
+      contexts:
+        - type: VERSE
+          selector: "$"
+
+    - selector: "$[*].sjson.children[*].text"
+      withoutAncestors: [ NOTE, MARKUP, STRUCTURE_MARKER ]
+      contexts:
+        - type: TEXT
+          selector: "$"
+
+    - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')]"
+      contexts:
+        - type: POETRY_LINE_INDENT
+          literal: 1
+
+    - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[?(@.tag == 'br')]"
+      contexts:
+        - type: POETRY_LINE_INDENT
+          literal: 1
+
+    - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[:-1].text"
+      contexts:
+        - type: TEXT
+          selector: "$"
+
+    - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[-1].text"
+      contexts:
+        - type: TEXT
+          selector: "$"
+        - type: POETRY_STANZA_BREAK
+
+    - selector: "$[*].sjson.children[?(@.tag == 'abbr')].ref"
+      contexts:
+        - type: NOTE
+          descendants:
+            - type: TEXT
+              selector: "$"
+
+    - selector: "$[*].sjson.children[?(@.tag == 'abbr')].title"
+      contexts:
+        - type: NOTE
+          descendants:
+            - type: TEXT
+              selector: "$"

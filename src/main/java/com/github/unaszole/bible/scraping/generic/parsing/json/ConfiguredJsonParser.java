@@ -1,40 +1,37 @@
-package com.github.unaszole.bible.scraping.generic.parsing.html;
+package com.github.unaszole.bible.scraping.generic.parsing.json;
 
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.Parser;
+import com.github.unaszole.bible.scraping.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
-import org.jsoup.nodes.Element;
 
 import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 
-public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
+public class ConfiguredJsonParser extends PositionBufferedParserCore<JsonParserProvider.JsonNodeWrapper> {
 
-    private final List<ElementParser> elements;
-
-    private final List<ElementExternalParser> externalParsers;
+    private final List<JsonNodeParser> nodes;
+    private final List<JsonNodeExternalParser> externalParsers;
 
     private final ContextualData contextualData;
 
-    public ConfiguredHtmlParser(List<ElementParser> elements,
-                                List<ElementExternalParser> externalParsers,
+    public ConfiguredJsonParser(List<JsonNodeParser> nodes, List<JsonNodeExternalParser> externalParsers,
                                 ContextualData contextualData) {
-        this.elements = elements;
+        this.nodes = nodes;
         this.externalParsers = externalParsers;
         this.contextualData = contextualData;
     }
 
     @Override
-    public Parser<?> parseExternally(Element e, Deque<Context> currentContextStack) {
+    public Parser<?> parseExternally(JsonParserProvider.JsonNodeWrapper e, Deque<Context> currentContextStack) {
         if(externalParsers == null) {
             return null;
         }
 
-        for(ElementExternalParser elementExternalParser : externalParsers) {
+        for(JsonNodeExternalParser elementExternalParser : externalParsers) {
             Optional<Parser<?>> parser = elementExternalParser.getParserIfApplicable(e, currentContextStack, contextualData);
             if(parser.isPresent()) {
                 return parser.get();
@@ -47,12 +44,12 @@ public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
 
     @Override
     public List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
-                                  ContextMetadata previousOfType, Element e) {
-        if(elements == null) {
+                                            ContextMetadata previousOfType, JsonParserProvider.JsonNodeWrapper e) {
+        if(nodes == null) {
             return List.of();
         }
 
-        for(ElementParser eltParser: elements) {
+        for(JsonNodeParser eltParser: nodes) {
             List<ContextReader> result = eltParser.parse(e, ancestorStack, type, contextualData);
             if(result != null) {
                 return result;

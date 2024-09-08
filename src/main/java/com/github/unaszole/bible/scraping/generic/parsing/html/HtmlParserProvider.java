@@ -14,7 +14,7 @@ import java.util.List;
 public class HtmlParserProvider implements TextParser.Provider<Element> {
 
     public List<ElementParser> elements;
-    public List<ExternalParserConfig> externalParsers;
+    public List<ElementExternalParser> externalParsers;
 
     @Override
     public Iterator<Element> iterate(InputStream input) throws IOException {

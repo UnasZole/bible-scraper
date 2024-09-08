@@ -19,7 +19,7 @@ public class NodeParserConfig {
 
     public List<TextNodeParser> nodes;
     public List<ElementParser> elements;
-    public List<ExternalParserConfig> externalParsers;
+    public List<ElementExternalParser> externalParsers;
 
     private List<PositionBufferedParserCore.ContextReader> parseElement(Deque<ContextMetadata> ancestorStack,
                                                                         ContextType type, Element e,
@@ -102,8 +102,8 @@ public class NodeParserConfig {
                 }
                 Element e = (Element) n;
 
-                for(ExternalParserConfig externalParserConfig: externalParsers) {
-                    Optional<Parser<?>> parser = externalParserConfig.getParserIfApplicable(e, currentContextStack,
+                for(ElementExternalParser elementExternalParser : externalParsers) {
+                    Optional<Parser<?>> parser = elementExternalParser.getParserIfApplicable(e, currentContextStack,
                             contextualData);
                     if(parser.isPresent()) {
                         return parser.get();
