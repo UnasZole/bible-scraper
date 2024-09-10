@@ -1,6 +1,5 @@
 package com.github.unaszole.bible.writing.osis;
 
-import com.github.unaszole.bible.writing.BufferedTextWrites;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 import org.crosswire.jsword.versification.BibleBook;
@@ -19,6 +18,8 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     private String[] currentChapterSourceNb = null;
     private int[] currentVerse = null;
     private boolean inPsalmTitle = false;
+    private int[] pendingVerseNbs = null;
+    private String[] pendingVerseSourceNb = null;
 
     public OsisBookContentsWriter(XMLStreamWriter xmlWriter, BibleBook book) {
         super(xmlWriter);
@@ -62,6 +63,9 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     }
 
     private void openVerse(int[] verseNbs, String... sourceNb) {
+        // If in a psalm title, close it before any verse closing or opening tag.
+        closeCurrentPsalmTitle();
+
         // Close the current verse if any.
         closeCurrentVerse();
 
@@ -145,11 +149,32 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
 
     @Override
     public void verse(int[] verseNbs, String... sourceNb) {
-        openVerse(verseNbs, sourceNb);
+        // Close the current verse immediately.
+        closeCurrentVerse();
+        // Set a new verse to be opened before next text contents.
+        this.pendingVerseNbs = verseNbs;
+        this.pendingVerseSourceNb = sourceNb;
+    }
+
+    private void openPendingVerse() {
+        if(pendingVerseNbs != null) {
+            openVerse(pendingVerseNbs, pendingVerseSourceNb);
+            this.pendingVerseNbs = null;
+            this.pendingVerseSourceNb = null;
+        }
+    }
+
+    @Override
+    protected void ensureInActiveParagraph() {
+        super.ensureInActiveParagraph();
+        openPendingVerse();
     }
 
     @Override
     public void psalmTitle(Consumer<TextWriter> writes) {
+        // If this psalm title is inside a verse, make sure to open it first.
+        openPendingVerse();
+
         // If not yet in a psalm title, open it.
         if(!inPsalmTitle) {
             // A psalm title closes the previous paragraph.
@@ -171,19 +196,20 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
         // Leave the psalm title opened in case there is a continuation for the title after a verse start.
     }
 
-    @Override
-    protected void closeCurrentParagraph() {
+    private void closeCurrentPsalmTitle() {
         if(inPsalmTitle) {
-            // If we are in a psalm title, close it.
-
             writeEndElement();
             // </title>
             this.inPsalmTitle = false;
         }
-        else {
-            // Else, we close a regular paragraph.
-            super.closeCurrentParagraph();
-        }
+    }
+
+    @Override
+    protected void closeCurrentParagraph() {
+        // If we are in a psalm title, close it as well.
+        closeCurrentPsalmTitle();
+
+        super.closeCurrentParagraph();
     }
 
     @Override

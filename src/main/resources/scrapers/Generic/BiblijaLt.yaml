@@ -341,8 +341,14 @@ html:
               - type: VERSE
                 op: text
 
-          - selector: "p.bibl > i"
+          - selector: "p.bibl > i:is(:matches(^Dovydo.*$), :matches(^Giesmė.*$), :matches(^Malda.*$), :matches(^Kai.*$), :matches(^Koraho sūnų.*$), :matches(^Atminimo.*$), :matches(^.*[Cc]horvedžiui.*$), :matches(^.*[Pp]salmė.*$))"
             withAncestors: [ PSALM_TITLE ]
+            contexts:
+              - type: TEXT
+                op: text
+
+          - selector: "p.bibl > i:not(:is(:matches(^Dovydo.*$), :matches(^Giesmė.*$), :matches(^Malda.*$), :matches(^Kai.*$), :matches(^Koraho sūnų.*$), :matches(^Atminimo.*$), :matches(^.*[Cc]horvedžiui.*$), :matches(^.*[Pp]salmė.*$)))"
+            withAncestors: [ QUOTE ]
             contexts:
               - type: TEXT
                 op: text

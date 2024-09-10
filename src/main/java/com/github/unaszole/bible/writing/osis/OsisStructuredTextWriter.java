@@ -98,7 +98,7 @@ public abstract class OsisStructuredTextWriter
         this.inActiveParagraph = true;
     }
 
-    private void ensureInActiveParagraph() {
+    protected void ensureInActiveParagraph() {
         if(!inActiveParagraph) {
             // If we're not in a paragraph, or an inactive one, we need to open a new paragraph.
             openParagraph();
