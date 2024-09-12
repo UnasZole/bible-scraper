@@ -37,6 +37,16 @@ public interface StructuredTextWriter extends AutoCloseable {
     void poetryRefrainLine();
 
     /**
+     * Mark the start of an acrostic line of poetry.
+     */
+    void poetryAcrosticLine();
+
+    /**
+     * Mark the start of a poetry line with the keyword "Selah".
+     */
+    void poetrySelahLine();
+
+    /**
      * Mark the end of a stanza of poetry.
      */
     void poetryStanza();

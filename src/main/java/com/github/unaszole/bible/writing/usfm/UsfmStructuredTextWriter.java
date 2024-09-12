@@ -17,6 +17,8 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
     private boolean inStanza = false;
     private void closeStanza() {
+        closeSelah();
+
         if(inStanza) {
             out.println();
             out.println("\\b");
@@ -29,17 +31,32 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
         }
     }
 
+    private static final int POETRY_REFRAIN = -1;
+    private static final int POETRY_ACROSTIC = -2;
+    private static final int POETRY_SELAH = -3;
     /**
-     * >= 1 if pending a normal poetry line.
-     * = -1 if pending a refrain line.
+     * >= 1 if pending a normal poetry line, the number indicates the indent.
+     * > 0 if pending a special line, the number indicates the type.
      * = 0 if no poetry line pending.
      */
-    private int pendingPoetryLineIndent = 0;
+    private int pendingPoetryLine = 0;
+    private boolean inSelah = false;
+
+    private void closeSelah() {
+        if(inSelah) {
+            out.print("\\qs* ");
+            this.inSelah = false;
+        }
+    }
 
     private void openPendingPoetryLineIfAny() {
-        if(pendingPoetryLineIndent != 0) {
-            boolean isRefrain = pendingPoetryLineIndent == -1;
-            int indentLevel = Math.max(pendingPoetryLineIndent, 0);
+        if(pendingPoetryLine != 0) {
+            closeSelah();
+
+            boolean isRefrain = pendingPoetryLine == POETRY_REFRAIN;
+            boolean isAcrostic = pendingPoetryLine == POETRY_ACROSTIC;
+            boolean isSelah = pendingPoetryLine == POETRY_SELAH;
+            int indentLevel = Math.max(pendingPoetryLine, 0);
 
             ensureInStanza();
 
@@ -47,12 +64,19 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
             if(isRefrain) {
                 out.print("\\qr ");
             }
+            if(isAcrostic) {
+                out.print("\\qa ");
+            }
+            if(isSelah) {
+                out.print("\\qs ");
+                this.inSelah = true;
+            }
             if(indentLevel >=1 ) {
                 out.print("\\q" + indentLevel + " ");
             }
 
             // Line is opened : no longer pending.
-            this.pendingPoetryLineIndent = 0;
+            this.pendingPoetryLine = 0;
         }
     }
 
@@ -79,7 +103,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
     @Override
     public void poetryLine(int indentLevel) {
-        pendingPoetryLineIndent = indentLevel;
+        pendingPoetryLine = indentLevel;
     }
 
     /**
@@ -87,7 +111,17 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
      */
     @Override
     public void poetryRefrainLine() {
-        pendingPoetryLineIndent = -1;
+        pendingPoetryLine = POETRY_REFRAIN;
+    }
+
+    @Override
+    public void poetryAcrosticLine() {
+        pendingPoetryLine = POETRY_ACROSTIC;
+    }
+
+    @Override
+    public void poetrySelahLine() {
+        pendingPoetryLine = POETRY_SELAH;
     }
 
     /**

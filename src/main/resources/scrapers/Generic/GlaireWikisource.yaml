@@ -550,13 +550,13 @@ html:
               - type: TEXT
                 op: "literal= "
           # Italic longer than 30 or with specific keywords is a psalm title.
-          - selector: "p > i:is(:matches(^.{30,}$), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$))"
+          - selector: "p > i:is(:matches(^.{30,}$), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$))"
             withAncestors: [ PSALM_TITLE ]
             contexts:
               - type: TEXT
                 op: ownText
           # Italic texts that didn't match the previous selector are translation additions.
-          - selector: "p > i:not(:is(:matches(^.{30,}$), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$)))"
+          - selector: "p > i:not(:is(:matches(^.{30,}$), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$)))"
             withoutAncestors: [ STRUCTURE_MARKER, NOTE, PSALM_TITLE ]
             contexts:
               - type: TRANSLATION_ADD

@@ -348,7 +348,7 @@ html:
                 op: text
 
           - selector: "p.bibl > i:not(:is(:matches(^Dovydo.*$), :matches(^Giesmė.*$), :matches(^Malda.*$), :matches(^Kai.*$), :matches(^Koraho sūnų.*$), :matches(^Atminimo.*$), :matches(^.*[Cc]horvedžiui.*$), :matches(^.*[Pp]salmė.*$)))"
-            withAncestors: [ QUOTE ]
+            withAncestors: [ OT_QUOTE ]
             contexts:
               - type: TEXT
                 op: text

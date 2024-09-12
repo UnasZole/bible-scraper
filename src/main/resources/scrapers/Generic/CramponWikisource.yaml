@@ -346,6 +346,11 @@ html:
       contexts:
         - type: PARAGRAPH_BREAK
 
+    - selector: "div.poem > div"
+      contexts:
+        - type: POETRY_ACROSTIC_START
+        - type: TEXT
+          op: text
 
   externalParsers:
     - selector: ".prp-pages-output p:matches(^.*[^\\s].*$)"
@@ -369,13 +374,13 @@ html:
           # Poem paragraph start means start of the first poetry line.
           - selector: "div.poem > p"
             contexts:
-              - type: POETRY_LINE_INDENT
+              - type: POETRY_LINE_START
                 op: literal=1
 
           # Line breaks within a poem denote a new poetry line.
           - selector: ".prp-pages-output div.poem > p > br"
             contexts:
-              - type: POETRY_LINE_INDENT
+              - type: POETRY_LINE_START
                 op: literal=1
 
           - selector: ":is(sup.verset-num, span.sidenote-left > small)"
@@ -397,12 +402,18 @@ html:
               - type: TEXT
                 op: text
 
-          - selector: "i"
+          - selector: "i:not(:matches(^Séla$))"
             contexts:
               - type: TRANSLATION_ADD
                 descendants:
                   - type: TEXT
                     op: text
+
+          - selector: "i:matches(^Séla$)"
+            contexts:
+              - type: POETRY_SELAH_START
+              - type: TEXT
+                op: text
 
         externalParsers:
           - selector: "sup.reference > a"

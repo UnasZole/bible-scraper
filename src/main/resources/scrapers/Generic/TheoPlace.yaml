@@ -387,11 +387,11 @@ html:
           # See Num 21:14 in the "tob" bible for example.
           - selector: "#logos > span[data-verset]:has(> br)"
             contexts:
-              - type: POETRY_LINE_INDENT
+              - type: POETRY_LINE_START
                 op: literal=1
           - selector: "#logos > span[data-verset] > br"
             contexts:
-              - type: POETRY_LINE_INDENT
+              - type: POETRY_LINE_START
                 op: literal=1
           - selector: "#logos > span[data-verset]:has(> br) + br + span.verset + span[data-verset]:not(:has(> br))"
             contexts:

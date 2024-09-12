@@ -330,12 +330,12 @@ json:
 
     - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')]"
       contexts:
-        - type: POETRY_LINE_INDENT
+        - type: POETRY_LINE_START
           literal: 1
 
     - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[?(@.tag == 'br')]"
       contexts:
-        - type: POETRY_LINE_INDENT
+        - type: POETRY_LINE_START
           literal: 1
 
     - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[:-1].text"

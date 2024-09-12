@@ -102,11 +102,11 @@ public class ContextMetadata {
 	}
 
 	public static ContextMetadata forPoetryLineIndent() {
-		return new ContextMetadata(ContextType.POETRY_LINE_INDENT);
+		return new ContextMetadata(ContextType.POETRY_LINE_START);
 	}
 
 	public static ContextMetadata forPoetryRefrainIndent() {
-		return new ContextMetadata(ContextType.POETRY_REFRAIN_INDENT);
+		return new ContextMetadata(ContextType.POETRY_REFRAIN_START);
 	}
 
 	public static ContextMetadata forPoetryStanzaBreak() {

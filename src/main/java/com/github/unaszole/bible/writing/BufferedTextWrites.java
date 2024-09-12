@@ -30,6 +30,11 @@ public class BufferedTextWrites implements Consumer<TextWriter> {
             }
 
             @Override
+            public void oldTestamentQuote(String str) {
+                actions.add(w -> w.oldTestamentQuote(str));
+            }
+
+            @Override
             public void reference(BibleRef rangeStart, BibleRef rangeEnd, String text) {
                 actions.add(w -> w.reference(rangeStart, rangeEnd, text));
             }

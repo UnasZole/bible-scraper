@@ -140,6 +140,9 @@ public class ContextStreamWriter {
             if(isOpen(ContextType.QUOTE, event)) {
                 w.quote(consumeAndAggregateValues(event.metadata));
             }
+            if(isOpen(ContextType.OT_QUOTE, event)) {
+                w.oldTestamentQuote(consumeAndAggregateValues(event.metadata));
+            }
             if(isClose(ContextType.TEXT, event)) {
                 w.text(textTransformer.apply(event.value));
             }
@@ -205,11 +208,17 @@ public class ContextStreamWriter {
                 w.minorSection(this::writeFlatText);
             }
 
-            if(isOpen(ContextType.POETRY_LINE_INDENT, event)) {
+            if(isOpen(ContextType.POETRY_LINE_START, event)) {
                 w.poetryLine(Integer.parseInt(event.value));
             }
-            if(isOpen(ContextType.POETRY_REFRAIN_INDENT, event)) {
+            if(isOpen(ContextType.POETRY_REFRAIN_START, event)) {
                 w.poetryRefrainLine();
+            }
+            if(isOpen(ContextType.POETRY_ACROSTIC_START, event)) {
+                w.poetryAcrosticLine();
+            }
+            if(isOpen(ContextType.POETRY_SELAH_START, event)) {
+                w.poetrySelahLine();
             }
 
             if(isOpen(ContextType.FLAT_TEXT, event)) {

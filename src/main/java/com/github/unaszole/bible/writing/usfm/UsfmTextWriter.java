@@ -70,6 +70,11 @@ public class UsfmTextWriter implements TextWriter {
         printTag("qt", str, true);
     }
 
+    @Override
+    public void oldTestamentQuote(String str) {
+        quote(str);
+    }
+
     protected static String getUsfmRef(BibleRef ref) {
         return UsfmBookWriter.OSIS_TO_USFM.get(ref.book)
                 + (ref.chapter == 0 ? "" : " " + ref.chapter

@@ -17,12 +17,16 @@ public abstract class OsisStructuredTextWriter
     private boolean inActiveParagraph = false;
     private boolean inStanza = false;
     private boolean inPoetryLine = false;
+
+    private static final int POETRY_REFRAIN = -1;
+    private static final int POETRY_ACROSTIC = -2;
+    private static final int POETRY_SELAH = -3;
     /**
-     * >= 1 if pending a normal poetry line.
-     * = -1 if pending a refrain line.
+     * >= 1 if pending a normal poetry line, the number indicates the indent.
+     * > 0 if pending a special line, the number indicates the type.
      * = 0 if no poetry line pending.
      */
-    private int pendingPoetryLineIndent = 0;
+    private int pendingPoetryLine = 0;
 
     public OsisStructuredTextWriter(XMLStreamWriter xmlWriter) {
         super(xmlWriter);
@@ -122,9 +126,11 @@ public abstract class OsisStructuredTextWriter
     }
 
     private void openPendingPoetryLineIfAny() {
-        if(pendingPoetryLineIndent != 0) {
-            boolean isRefrain = pendingPoetryLineIndent == -1;
-            int indentLevel = Math.max(pendingPoetryLineIndent, 0);
+        if(pendingPoetryLine != 0) {
+            boolean isRefrain = pendingPoetryLine == POETRY_REFRAIN;
+            boolean isAcrostic = pendingPoetryLine == POETRY_ACROSTIC;
+            boolean isSelah = pendingPoetryLine == POETRY_SELAH;
+            int indentLevel = Math.max(pendingPoetryLine, 0);
 
             ensureInStanza();
 
@@ -133,6 +139,12 @@ public abstract class OsisStructuredTextWriter
             if(isRefrain) {
                 writeAttribute("type", "refrain");
             }
+            if(isAcrostic) {
+                writeAttribute("type", "acrostic");
+            }
+            if(isSelah) {
+                writeAttribute("type", "selah");
+            }
             if(indentLevel >=1 ) {
                 writeAttribute("level", String.valueOf(indentLevel));
             }
@@ -140,7 +152,7 @@ public abstract class OsisStructuredTextWriter
             this.inPoetryLine = true;
 
             // Line is opened : no longer pending.
-            this.pendingPoetryLineIndent = 0;
+            this.pendingPoetryLine = 0;
         }
     }
 
@@ -162,7 +174,7 @@ public abstract class OsisStructuredTextWriter
             this.inStanza = false;
 
             // If there was a pending poetry line within the open stanza, it's an empty line to be ignored.
-            this.pendingPoetryLineIndent = 0;
+            this.pendingPoetryLine = 0;
         }
     }
 
@@ -231,13 +243,25 @@ public abstract class OsisStructuredTextWriter
         // Close the current poetry line.
         closeCurrentPoetryLine();
         // Opening of the new line is deferred until there is actual content to write in the line.
-        this.pendingPoetryLineIndent = indentLevel;
+        this.pendingPoetryLine = indentLevel;
     }
 
     @Override
     public void poetryRefrainLine() {
         closeCurrentPoetryLine();
-        this.pendingPoetryLineIndent = -1;
+        this.pendingPoetryLine = POETRY_REFRAIN;
+    }
+
+    @Override
+    public void poetryAcrosticLine() {
+        closeCurrentPoetryLine();
+        this.pendingPoetryLine = POETRY_ACROSTIC;
+    }
+
+    @Override
+    public void poetrySelahLine() {
+        closeCurrentPoetryLine();
+        this.pendingPoetryLine = POETRY_SELAH;
     }
 
     @Override
@@ -247,6 +271,9 @@ public abstract class OsisStructuredTextWriter
 
     @Override
     public void paragraph() {
+        // Close current stanza immediately, to ensure that any pending poetry line in the next paragraph is well written in a new stanza.
+        closeCurrentStanza();
+
         // Mark the current paragraph as inactive to force opening a new one on next action.
         this.inActiveParagraph = false;
     }

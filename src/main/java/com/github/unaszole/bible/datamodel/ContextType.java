@@ -20,6 +20,7 @@ public enum ContextType {
 	 */
 	TRANSLATION_ADD(NO_META, NO_VALUE, atLeastOne(TEXT)),
 	QUOTE(NO_META, NO_VALUE, atLeastOne(TEXT)),
+	OT_QUOTE(NO_META, NO_VALUE, atLeastOne(TEXT)),
 	/**
 	 * Book reference : context value must be a valid OSIS book ID.
 	 */
@@ -51,7 +52,7 @@ public enum ContextType {
 	 */
 	REFERENCE(NO_META, NO_VALUE, one(FULL_REF, CONTINUED_REF, LOCAL_REF), atLeastOne(TEXT)),
 
-	MARKUP(NO_META, NO_VALUE, one(TRANSLATION_ADD, QUOTE, REFERENCE)),
+	MARKUP(NO_META, NO_VALUE, one(TRANSLATION_ADD, QUOTE, OT_QUOTE, REFERENCE)),
 	/**
 	 * An inline text, ie. a text that does not have any structure or any note whatsoever.
 	 * It may only contain semantic or formatting markup around portions of the text.
@@ -83,17 +84,19 @@ public enum ContextType {
 	 * Anything until the next structure marker is considered part of this line.
 	 * Has a context value : a positive integer denoting the indent level. If unsure, put 1.
 	 */
-	POETRY_LINE_INDENT(NO_META, INTEGER),
+	POETRY_LINE_START(NO_META, INTEGER),
 	/**
 	 * This marks the beginning of a refrain line in poetry.
 	 * Anything until the next structure marker is considered part of this line.
 	 */
-	POETRY_REFRAIN_INDENT(NO_META, NO_VALUE),
+	POETRY_REFRAIN_START(NO_META, NO_VALUE),
+	POETRY_ACROSTIC_START(NO_META, NO_VALUE),
+	POETRY_SELAH_START(NO_META, NO_VALUE),
 	/**
 	 * This marks the end of a stanza, ie a group of lines in a poem.
 	 */
 	POETRY_STANZA_BREAK(NO_META, NO_VALUE),
-	POETRY_MARKER(NO_META, NO_VALUE, one(POETRY_LINE_INDENT, POETRY_REFRAIN_INDENT, POETRY_STANZA_BREAK)),
+	POETRY_MARKER(NO_META, NO_VALUE, one(POETRY_LINE_START, POETRY_REFRAIN_START, POETRY_ACROSTIC_START, POETRY_SELAH_START, POETRY_STANZA_BREAK)),
 	MINOR_SECTION_TITLE(NO_META, NO_VALUE, one(FLAT_TEXT)),
 	SECTION_TITLE(NO_META, NO_VALUE, one(FLAT_TEXT)),
 	MAJOR_SECTION_TITLE(NO_META, NO_VALUE, one(FLAT_TEXT)),

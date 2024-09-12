@@ -37,6 +37,16 @@ public class OsisTextWriter extends BaseXmlWriter implements TextWriter {
         // </q>
     }
 
+    @Override
+    public void oldTestamentQuote(String str) {
+        // <q>
+        writeStartElement("seg");
+        writeAttribute("type", "otPassage");
+        writeCharacters(str);
+        writeEndElement();
+        // </q>
+    }
+
     private static String getOsisRef(BibleRef ref) {
         return ref.book.getOSIS()
                 + (ref.chapter == 0 ? "" : "." + ref.chapter

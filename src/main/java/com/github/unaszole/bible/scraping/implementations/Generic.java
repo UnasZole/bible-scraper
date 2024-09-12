@@ -156,7 +156,7 @@ public class Generic extends Scraper {
     }
 
     private static Path getCacheSubPath(Path cachePath, String[] flags) {
-        Path outPath = cachePath.resolve("GenericHtml");
+        Path outPath = cachePath.resolve("Generic");
 
         File configFile = new File(flags[0]);
         if(configFile.exists()) {
