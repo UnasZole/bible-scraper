@@ -165,8 +165,10 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     }
 
     @Override
-    protected void ensureInActiveParagraph() {
-        super.ensureInActiveParagraph();
+    protected void ensureReadyForText() {
+        super.ensureReadyForText();
+
+        // If there is a pending verse, open it just before writing the text itself.
         openPendingVerse();
     }
 

@@ -336,17 +336,18 @@ html:
         - type: TEXT
           op: "literal= "
 
-    - selector: ".prp-pages-output div > a:matches((?:Chapitre|Psaume) (\\d+)[^\\d]*)"
+    - selector: ".prp-pages-output div > a[href='#Sommaire']:matches(^\\d+$)"
       contexts:
         - type: CHAPTER
           op: text
-          regexp: (?:Chapitre|Psaume) (\d+)[^\d]*
+          regexp: ^(\d+)$
 
     - selector: ".prp-pages-output p"
       contexts:
         - type: PARAGRAPH_BREAK
 
-    - selector: "div.poem > div"
+    # A div inside a poem is an acrostic heading... unless it's a chapter start.
+    - selector: "div.poem > div:not(:has(a[href='#Sommaire']:matches(^\\d+$)))"
       contexts:
         - type: POETRY_ACROSTIC_START
         - type: TEXT
@@ -505,8 +506,24 @@ html:
                         - type: TEXT
                           op: text
 
+                # Links containing only a #1-2 anchor are local references to a verse.
+                - selector: "a[href~=^#\\d+-\\d+$]"
+                  contexts:
+                    - type: REFERENCE
+                      descendants:
+                        - type: LOCAL_REF
+                          descendants:
+                            - type: REF_CHAPTER
+                              op: attribute=href
+                              regexp: "^#(\\d+)-\\d+$"
+                            - type: REF_VERSES
+                              op: attribute=href
+                              regexp: "^#\\d+-(\\d+)$"
+                        - type: TEXT
+                          op: text
+
                 # Links that are not inside Crampon should be taken as just text.
-                - selector: "a:not([href~=^.*Bible_Crampon_1923.*$])"
+                - selector: "a:not([href~=^.*Bible_Crampon_1923.*$]):not([href~=^#\\d+-\\d+$])"
                   contexts:
                     - type: TEXT
                       op: text

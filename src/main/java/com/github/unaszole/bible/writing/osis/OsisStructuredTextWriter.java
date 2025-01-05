@@ -102,13 +102,6 @@ public abstract class OsisStructuredTextWriter
         this.inActiveParagraph = true;
     }
 
-    protected void ensureInActiveParagraph() {
-        if(!inActiveParagraph) {
-            // If we're not in a paragraph, or an inactive one, we need to open a new paragraph.
-            openParagraph();
-        }
-    }
-
     private void openStanza() {
         // Close the current stanza if any.
         closeCurrentStanza();
@@ -119,14 +112,19 @@ public abstract class OsisStructuredTextWriter
     }
 
     private void ensureInStanza() {
-        ensureInActiveParagraph();
         if(!inStanza) {
             openStanza();
         }
     }
 
-    private void openPendingPoetryLineIfAny() {
+    protected void ensureReadyForText() {
+        if(!inActiveParagraph) {
+            // If we're not in a paragraph, or an inactive one, we need to open a new paragraph before writing text.
+            openParagraph();
+        }
+
         if(pendingPoetryLine != 0) {
+            // If we have a pending poetry line, process it before writing the text.
             boolean isRefrain = pendingPoetryLine == POETRY_REFRAIN;
             boolean isAcrostic = pendingPoetryLine == POETRY_ACROSTIC;
             boolean isSelah = pendingPoetryLine == POETRY_SELAH;
@@ -280,8 +278,7 @@ public abstract class OsisStructuredTextWriter
 
     @Override
     public void flatText(Consumer<TextWriter> writes) {
-        ensureInActiveParagraph();
-        openPendingPoetryLineIfAny();
+        ensureReadyForText();
 
         writeText(writes);
     }
