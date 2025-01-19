@@ -117,14 +117,8 @@ public abstract class OsisStructuredTextWriter
         }
     }
 
-    protected void ensureReadyForText() {
-        if(!inActiveParagraph) {
-            // If we're not in a paragraph, or an inactive one, we need to open a new paragraph before writing text.
-            openParagraph();
-        }
-
+    private void openPendingPoetryLine() {
         if(pendingPoetryLine != 0) {
-            // If we have a pending poetry line, process it before writing the text.
             boolean isRefrain = pendingPoetryLine == POETRY_REFRAIN;
             boolean isAcrostic = pendingPoetryLine == POETRY_ACROSTIC;
             boolean isSelah = pendingPoetryLine == POETRY_SELAH;
@@ -152,6 +146,16 @@ public abstract class OsisStructuredTextWriter
             // Line is opened : no longer pending.
             this.pendingPoetryLine = 0;
         }
+    }
+
+    protected void ensureReadyForText() {
+        if(!inActiveParagraph) {
+            // If we're not in a paragraph, or an inactive one, we need to open a new paragraph before writing text.
+            openParagraph();
+        }
+
+        // If we have a pending poetry line, process it before writing the text.
+        openPendingPoetryLine();
     }
 
     private void closeCurrentPoetryLine() {

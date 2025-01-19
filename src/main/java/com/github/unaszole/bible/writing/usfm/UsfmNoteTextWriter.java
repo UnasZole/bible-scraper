@@ -15,11 +15,6 @@ public class UsfmNoteTextWriter extends UsfmTextWriter implements NoteTextWriter
     }
 
     @Override
-    public void quote(String str) {
-        printTag("qt", str, false);
-    }
-
-    @Override
     public void catchphraseQuote(String str) {
         printTag("fq", str, false);
     }
