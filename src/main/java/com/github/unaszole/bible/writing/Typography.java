@@ -8,9 +8,9 @@ public class Typography {
     private static class French {
         private static final char NO_BREAK_SPACE = ' ';
         private static final char NARROW_NO_BREAK_SPACE = ' ';
-        private static final Pattern FR_PUNCT_BEGIN = Pattern.compile("([«])\\s*");
-        private static final Pattern FR_PUNCT_END = Pattern.compile("\\s*([»:])");
-        private static final Pattern FR_PUNCT_END_NARROW = Pattern.compile("\\s*([;?!])");
+        private static final Pattern FR_PUNCT_BEGIN = Pattern.compile("([«])\\h*");
+        private static final Pattern FR_PUNCT_END = Pattern.compile("\\h*([»:])");
+        private static final Pattern FR_PUNCT_END_NARROW = Pattern.compile("\\h*([;?!])");
 
         public static String fixFrenchTypography(String s) {
             String ret = s;
