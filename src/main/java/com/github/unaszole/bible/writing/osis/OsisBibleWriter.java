@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import com.github.unaszole.bible.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
-import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
+import com.github.unaszole.bible.writing.osis.stax.IndentingXmlStreamWriter;
 import org.crosswire.jsword.versification.BibleBook;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -26,7 +26,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 	private static XMLStreamWriter getXmlStreamWriter(OutputStream outputStream) throws XMLStreamException {
 		XMLOutputFactory factory = XMLOutputFactory.newInstance();
 		factory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
-		return new IndentingXMLStreamWriter(factory.createXMLStreamWriter(outputStream, "UTF-8"));
+		return new IndentingXmlStreamWriter(factory.createXMLStreamWriter(outputStream, "UTF-8"));
 	}
 
 	public OsisBibleWriter(OutputStream outputStream, DocumentMetadata meta) throws XMLStreamException {
