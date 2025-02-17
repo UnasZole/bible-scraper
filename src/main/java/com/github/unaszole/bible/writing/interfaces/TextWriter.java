@@ -2,6 +2,7 @@ package com.github.unaszole.bible.writing.interfaces;
 
 import com.github.unaszole.bible.datamodel.BibleRef;
 
+import java.net.URI;
 import java.util.function.Consumer;
 
 public interface TextWriter extends AutoCloseable {
@@ -36,6 +37,13 @@ public interface TextWriter extends AutoCloseable {
      * @param text The text contents of this reference.
      */
     void reference(BibleRef rangeStart, BibleRef rangeEnd, String text);
+
+    /**
+     * Write a link to an external resource.
+     * @param uri The URI referencing the resource.
+     * @param text The text contents of this link.
+     */
+    void link(URI uri, String text);
 
     /**
      * Write a note.

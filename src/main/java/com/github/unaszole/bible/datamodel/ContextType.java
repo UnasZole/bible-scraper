@@ -51,8 +51,14 @@ public enum ContextType {
 	 * The TEXT children contain the actual text of the reference to be rendered.
 	 */
 	REFERENCE(NO_META, NO_VALUE, one(FULL_REF, CONTINUED_REF, LOCAL_REF), atLeastOne(TEXT)),
+	/**
+	 * A link to an external document.
+	 * The value contains the URL of the link.
+	 * The TEXT children contain the text of the link to be rendered.
+	 */
+	LINK(NO_META, URI, atLeastOne(TEXT)),
 
-	MARKUP(NO_META, NO_VALUE, one(TRANSLATION_ADD, QUOTE, OT_QUOTE, REFERENCE)),
+	MARKUP(NO_META, NO_VALUE, one(TRANSLATION_ADD, QUOTE, OT_QUOTE, REFERENCE, LINK)),
 	/**
 	 * An inline text, ie. a text that does not have any structure or any note whatsoever.
 	 * It may only contain semantic or formatting markup around portions of the text.

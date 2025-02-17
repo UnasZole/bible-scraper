@@ -2,6 +2,8 @@ package com.github.unaszole.bible.datamodel;
 
 import org.crosswire.jsword.versification.BibleBook;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -12,7 +14,15 @@ public enum ContextValueType {
     STRING(Pattern.compile("^.*$", Pattern.DOTALL).asPredicate(), true, ""),
     INTEGER_OR_ROMAN(Pattern.compile("^(\\d+|[MmDdCcLlXxVvIi]+)$").asPredicate(), true, "1"),
     INTEGER_OR_ROMAN_LIST(Pattern.compile("^((\\d+|[MmDdCcLlXxVvIi]+)[^\\w]*)+$").asPredicate(), true, "1"),
-    BOOK_ID(b -> b != null && BibleBook.fromOSIS(b) != null, false, null);
+    BOOK_ID(b -> b != null && BibleBook.fromOSIS(b) != null, false, null),
+    URI(u -> {
+        try {
+            new URI(u);
+            return true;
+        } catch (URISyntaxException e) {
+            return false;
+        }
+    }, false, null);
 
     private final Predicate<String> validator;
     public final boolean implicitAllowed;

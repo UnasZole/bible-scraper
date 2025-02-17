@@ -5,6 +5,7 @@ import com.github.unaszole.bible.writing.interfaces.NoteTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import javax.xml.stream.XMLStreamWriter;
+import java.net.URI;
 import java.util.function.Consumer;
 
 public class OsisTextWriter extends BaseXmlWriter implements TextWriter {
@@ -63,6 +64,16 @@ public class OsisTextWriter extends BaseXmlWriter implements TextWriter {
         writeCharacters(text);
         writeEndElement();
         // </reference>
+    }
+
+    @Override
+    public void link(URI uri, String text) {
+        // <a>
+        writeStartElement("a");
+        writeAttribute("href", uri.toString());
+        writeCharacters(text);
+        writeEndElement();
+        // </a>
     }
 
     @Override

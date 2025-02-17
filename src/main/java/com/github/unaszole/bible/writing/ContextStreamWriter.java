@@ -8,6 +8,8 @@ import com.github.unaszole.bible.stream.ContextEvent;
 import com.github.unaszole.bible.writing.interfaces.*;
 import org.crosswire.jsword.versification.BibleBook;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.UnaryOperator;
@@ -171,6 +173,17 @@ public class ContextStreamWriter {
                 w.reference(refs[0], refs.length > 1 ? refs[1] : null,
                         String.join("", values.get(ContextType.TEXT))
                 );
+            }
+
+            if(isOpen(ContextType.LINK, event)) {
+                String uri = event.value;
+                String linkText = consumeAndAggregateValues(event.metadata);
+
+                try {
+                    w.link(new URI(uri), linkText);
+                } catch (URISyntaxException e) {
+                    throw new IllegalArgumentException("Invalid URI " + uri, e);
+                }
             }
 
             // If inside a note, we have other specific markup available.

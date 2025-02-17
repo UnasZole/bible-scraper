@@ -4,6 +4,7 @@ import com.github.unaszole.bible.datamodel.BibleRef;
 import com.github.unaszole.bible.writing.interfaces.NoteTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -37,6 +38,11 @@ public class BufferedTextWrites implements Consumer<TextWriter> {
             @Override
             public void reference(BibleRef rangeStart, BibleRef rangeEnd, String text) {
                 actions.add(w -> w.reference(rangeStart, rangeEnd, text));
+            }
+
+            @Override
+            public void link(URI uri, String text) {
+                actions.add(w -> w.link(uri, text));
             }
 
             @Override

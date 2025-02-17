@@ -5,6 +5,7 @@ import com.github.unaszole.bible.writing.interfaces.NoteTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import java.io.PrintWriter;
+import java.net.URI;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -86,6 +87,11 @@ public class UsfmTextWriter implements TextWriter {
         printTag("xt", text + "|" + getUsfmRef(rangeStart)
                 + (rangeEnd != null && rangeEnd.verse > 0 ? "-" + rangeEnd.verse : "")
                 , true);
+    }
+
+    @Override
+    public void link(URI uri, String text) {
+        printTag("jmp", text + "|link-href=\"" + uri.toString() + "\"", true);
     }
 
     @Override
