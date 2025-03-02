@@ -10,21 +10,23 @@ public class Context {
 	private static long instanceCounter = 0;
 
 	public final ContextMetadata metadata;
-	public final String value;
+	public final Object value;
 	public final List<Context> children;
 	public final long contextUniqueId;
 
-	private Context(ContextMetadata metadata, String value, List<Context> children, long contextUniqueId) {
-		if(!metadata.type.valueType.isValid(value)) {
-			throw new IllegalArgumentException("Invalid value " + value + " for context of type " + metadata.type);
-		}
+	private Context(ContextMetadata metadata, Object value, List<Context> children, long contextUniqueId) {
 		this.metadata = metadata;
-		this.value = value;
+		try {
+			this.value = metadata.type.valueType.of(value);
+		}
+		catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("Invalid value " + value + " for context of type " + metadata.type + " : " + e.getMessage());
+		}
 		this.children = children;
 		this.contextUniqueId = contextUniqueId;
 	}
 
-	public Context(ContextMetadata metadata, String value) {
+	public Context(ContextMetadata metadata, Object value) {
 		this(metadata, value, List.of(), instanceCounter++);
 	}
 

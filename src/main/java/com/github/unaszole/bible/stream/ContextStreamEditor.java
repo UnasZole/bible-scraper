@@ -68,8 +68,8 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         this.stream = originalStream.getStream();
     }
 
-    public ContextStreamEditor<StreamType> replace(final BiPredicate<ContextMetadata, String> from,
-                                                   final BiPredicate<ContextMetadata, String> until,
+    public ContextStreamEditor<StreamType> replace(final BiPredicate<ContextMetadata, Object> from,
+                                                   final BiPredicate<ContextMetadata, Object> until,
                                                    final List<? extends ContextStream<?>> by) {
         // Start deleting all events from the OPEN of first element, included.
         actions.add(new Action(
@@ -85,14 +85,14 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         return this;
     }
 
-    public ContextStreamEditor<StreamType> replace(BiPredicate<ContextMetadata, String> from,
-                                                   BiPredicate<ContextMetadata, String> until,
+    public ContextStreamEditor<StreamType> replace(BiPredicate<ContextMetadata, Object> from,
+                                                   BiPredicate<ContextMetadata, Object> until,
                                                    ContextStream<?>... by) {
         return replace(from, until, Arrays.asList(by));
     }
 
-    public ContextStreamEditor<StreamType> remove(BiPredicate<ContextMetadata, String> from,
-                                                  BiPredicate<ContextMetadata, String> until) {
+    public ContextStreamEditor<StreamType> remove(BiPredicate<ContextMetadata, Object> from,
+                                                  BiPredicate<ContextMetadata, Object> until) {
         return replace(from, until);
     }
 
@@ -103,7 +103,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         );
     }
 
-    public ContextStreamEditor<StreamType> remove(BiPredicate<ContextMetadata, String> elt) {
+    public ContextStreamEditor<StreamType> remove(BiPredicate<ContextMetadata, Object> elt) {
         return remove(elt, elt);
     }
 
@@ -134,7 +134,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
     }
 
     public ContextStreamEditor<StreamType> inject(final InjectionPosition pos,
-                                                  final BiPredicate<ContextMetadata, String> target,
+                                                  final BiPredicate<ContextMetadata, Object> target,
                                                   final List<? extends ContextStream<?>> contextStreams) {
         actions.add(Action.singleEvent(
                         e -> e.type == pos.injectionEventType && target.test(e.metadata, e.value),
@@ -157,7 +157,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         return inject(pos, (m, v) -> Objects.equals(m, target), contextStreams);
     }
 
-    public ContextStreamEditor<StreamType> inject(InjectionPosition pos, BiPredicate<ContextMetadata, String> target,
+    public ContextStreamEditor<StreamType> inject(InjectionPosition pos, BiPredicate<ContextMetadata, Object> target,
                                                   ContextStream<?>... contextStreams) {
         return inject(pos, target, Arrays.asList(contextStreams));
     }
@@ -168,7 +168,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
     }
 
     public ContextStreamEditor<StreamType> doNothingUntil(InjectionPosition pos,
-                                                          BiPredicate<ContextMetadata, String> target) {
+                                                          BiPredicate<ContextMetadata, Object> target) {
         return inject(pos, target);
     }
 
@@ -219,7 +219,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
                     ? verseNbsUpdater.apply(e.metadata)
                     : e.metadata.verses;
 
-            String newValue = e.value;
+            Object newValue = e.value;
             if(chapterValueUpdater != null && e.metadata.type == ContextType.CHAPTER) {
                 newValue = chapterValueUpdater.apply(e.metadata);
             }

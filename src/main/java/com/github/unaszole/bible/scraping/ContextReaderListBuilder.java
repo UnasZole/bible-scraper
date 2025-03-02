@@ -12,16 +12,16 @@ import java.util.function.BiFunction;
 public class ContextReaderListBuilder {
 
     public static ContextReaderListBuilder context(final BiFunction<Deque<ContextMetadata>, ContextMetadata,
-            ContextMetadata> buildMeta, final String value, ContextReaderListBuilder descendants) {
+            ContextMetadata> buildMeta, final Object value, ContextReaderListBuilder descendants) {
         return new ContextReaderListBuilder().followedBy(buildMeta, value, descendants);
     }
 
-    public static ContextReaderListBuilder context(final ContextMetadata meta, final String value,
+    public static ContextReaderListBuilder context(final ContextMetadata meta, final Object value,
                                                    ContextReaderListBuilder descendants) {
         return context((as, pot) -> meta, value, descendants);
     }
 
-    public static ContextReaderListBuilder context(final ContextMetadata meta, final String value) {
+    public static ContextReaderListBuilder context(final ContextMetadata meta, final Object value) {
         return context(meta, value, null);
     }
 
@@ -38,7 +38,7 @@ public class ContextReaderListBuilder {
     private final ContextMetadata[] lastObjectMeta = new ContextMetadata[] { null };
 
     public ContextReaderListBuilder followedBy(final BiFunction<Deque<ContextMetadata>, ContextMetadata,
-            ContextMetadata> buildMeta, final String value, ContextReaderListBuilder descendants) {
+            ContextMetadata> buildMeta, final Object value, ContextReaderListBuilder descendants) {
         // Add a reader for this context.
         readers.add((as, type, pot) -> {
             ContextMetadata meta = buildMeta.apply(as, pot);

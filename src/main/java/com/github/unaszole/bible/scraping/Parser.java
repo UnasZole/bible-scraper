@@ -134,11 +134,11 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 			}
 
 			Optional<ContextMetadata> implicitMeta = baseContext.metadata.getImplicitChildOfType(eltType, previousOfType);
-			if(implicitMeta.isPresent() && eltType.valueType.implicitAllowed) {
+			if(implicitMeta.isPresent() && eltType.implicitValue.implicitAllowed) {
 				// If this element type can be created implicitly, build one and look recursively.
 
 				// Build an implicit context for this element.
-				Context newContext = new Context(implicitMeta.get(), eltType.valueType.implicitValue);
+				Context newContext = new Context(implicitMeta.get(), eltType.implicitValue.implicitValue);
 
 				// Call recursively until we get a real state.
 				ContextState reachedState = parseDescendantContext(baseState.openChildContext(newContext), position);

@@ -447,8 +447,8 @@ public class ChouraquiSpiritualLand extends Scraper {
 						(m, v) -> m.type == ContextType.VERSE && m.chapter == 5 && Objects.equals(v, "2B")
 				);
 				editor.remove(
-						(m, v) -> m.type == ContextType.TEXT && v.startsWith(" Èstér revêt"),
-						(m, v) -> m.type == ContextType.TEXT && v.endsWith("la maison.")
+						(m, v) -> m.type == ContextType.TEXT && ((String)v).startsWith(" Èstér revêt"),
+						(m, v) -> m.type == ContextType.TEXT && ((String)v).endsWith("la maison.")
 				);
 				editor.remove((m, v) -> m.type == ContextType.VERSE && m.chapter == 5 && Objects.equals(v, "2C"));
 

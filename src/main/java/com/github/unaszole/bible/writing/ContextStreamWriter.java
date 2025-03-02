@@ -3,13 +3,11 @@ package com.github.unaszole.bible.writing;
 import com.github.unaszole.bible.datamodel.BibleRef;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.scraping.ParsingUtils;
 import com.github.unaszole.bible.stream.ContextEvent;
 import com.github.unaszole.bible.writing.interfaces.*;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.UnaryOperator;
@@ -72,8 +70,8 @@ public class ContextStreamWriter {
         throw new IllegalStateException("Did not find " + metadata + " closing event.");
     }
 
-    private Map<ContextType, List<String>> consumeAndListValuesByType(ContextMetadata metadata) {
-        Map<ContextType, List<String>> values = new HashMap<>();
+    private Map<ContextType, List<Object>> consumeAndListValuesByType(ContextMetadata metadata) {
+        Map<ContextType, List<Object>> values = new HashMap<>();
 
         while(hasNext()) {
             ContextEvent event = next();
@@ -100,24 +98,24 @@ public class ContextStreamWriter {
     BibleRef currentFullRef = null;
     BibleRef currentLocalRef = null;
 
-    private BibleRef[] buildRefs(Map<ContextType, List<String>> values, BibleRef inheritFrom) {
+    private BibleRef[] buildRefs(Map<ContextType, List<Object>> values, BibleRef inheritFrom) {
         BibleBook book = inheritFrom != null ? inheritFrom.book : null;
         if(values.containsKey(ContextType.REF_BOOK)) {
-            book = BibleBook.fromOSIS(values.get(ContextType.REF_BOOK).get(0));
+            book = (BibleBook) values.get(ContextType.REF_BOOK).get(0);
         }
 
         int chapter = inheritFrom != null ? inheritFrom.chapter : 0;
         if(values.containsKey(ContextType.REF_CHAPTER)) {
-            chapter = ParsingUtils.parseInt(values.get(ContextType.REF_CHAPTER).get(0));
+            chapter = (int) values.get(ContextType.REF_CHAPTER).get(0);
         }
 
         int firstVerse = 0;
         int lastVerse = 0;
         if(values.containsKey(ContextType.REF_VERSES)) {
-            String[] verseRange = values.get(ContextType.REF_VERSES).get(0).split("[^a-zA-Z0-9]+");
-            firstVerse = ParsingUtils.parseInt(verseRange[0]);
+            int[] verseRange = (int[]) values.get(ContextType.REF_VERSES).get(0);
+            firstVerse = verseRange[0];
             if(verseRange.length > 1) {
-                lastVerse = ParsingUtils.parseInt(verseRange[1]);
+                lastVerse = verseRange[1];
             }
         }
 
@@ -146,14 +144,14 @@ public class ContextStreamWriter {
                 w.oldTestamentQuote(consumeAndAggregateValues(event.metadata));
             }
             if(isClose(ContextType.TEXT, event)) {
-                w.text(textTransformer.apply(event.value));
+                w.text(textTransformer.apply((String) event.value));
             }
             if(isOpen(ContextType.NOTE, event)) {
                 w.note(iw -> writeText(iw, ContextType.NOTE));
             }
 
             if(isOpen(ContextType.REFERENCE, event)) {
-                Map<ContextType, List<String>> values = consumeAndListValuesByType(event.metadata);
+                Map<ContextType, List<Object>> values = consumeAndListValuesByType(event.metadata);
 
                 BibleRef[] refs = null;
                 if(values.containsKey(ContextType.FULL_REF)) {
@@ -170,20 +168,16 @@ public class ContextStreamWriter {
                     throw new IllegalArgumentException("REFERENCE is missing actual FULL_REF/CONTINUED_REF/LOCAL_REF child");
                 }
 
-                w.reference(refs[0], refs.length > 1 ? refs[1] : null,
-                        String.join("", values.get(ContextType.TEXT))
-                );
+                StringBuilder fullString = new StringBuilder();
+                for(Object textValue: values.get(ContextType.TEXT)) {
+                    fullString.append(textValue);
+                }
+
+                w.reference(refs[0], refs.length > 1 ? refs[1] : null, fullString.toString());
             }
 
             if(isOpen(ContextType.LINK, event)) {
-                String uri = event.value;
-                String linkText = consumeAndAggregateValues(event.metadata);
-
-                try {
-                    w.link(new URI(uri), linkText);
-                } catch (URISyntaxException e) {
-                    throw new IllegalArgumentException("Invalid URI " + uri, e);
-                }
+                w.link((URI) event.value, consumeAndAggregateValues(event.metadata));
             }
 
             // If inside a note, we have other specific markup available.
@@ -222,7 +216,7 @@ public class ContextStreamWriter {
             }
 
             if(isOpen(ContextType.POETRY_LINE_START, event)) {
-                w.poetryLine(Integer.parseInt(event.value));
+                w.poetryLine((Integer) event.value);
             }
             if(isOpen(ContextType.POETRY_REFRAIN_START, event)) {
                 w.poetryRefrainLine();
@@ -268,13 +262,13 @@ public class ContextStreamWriter {
     public void writeBookContents(StructuredTextWriter.BookContentsWriter writer) {
         if(isOpen(ContextType.CHAPTER, getCurrent())) {
             currentLocalRef = new BibleRef(getCurrent().metadata.book, getCurrent().metadata.chapter, 0);
-            writer.chapter(getCurrent().metadata.chapter, getCurrent().value);
+            writer.chapter(getCurrent().metadata.chapter, (String) getCurrent().value);
         }
 
         writeStructuredText(writer, (w, event) -> {
             if(isOpen(ContextType.CHAPTER, event)) {
                 currentLocalRef = new BibleRef(event.metadata.book, event.metadata.chapter, 0);
-                w.chapter(event.metadata.chapter, event.value);
+                w.chapter(event.metadata.chapter, (String) event.value);
             }
             if(isOpen(ContextType.CHAPTER_TITLE, event)) {
                 w.chapterTitle(this::writeFlatText);
@@ -283,7 +277,7 @@ public class ContextStreamWriter {
                 w.chapterIntro(this::writeFlatText);
             }
             if(isOpen(ContextType.VERSE, event)) {
-                w.verse(event.metadata.verses, event.value);
+                w.verse(event.metadata.verses, (String) event.value);
             }
             if(isOpen(ContextType.PSALM_TITLE, event)) {
                 w.psalmTitle(this::writeFlatText);

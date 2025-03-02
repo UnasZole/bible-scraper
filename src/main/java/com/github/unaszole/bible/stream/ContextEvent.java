@@ -24,9 +24,9 @@ public class ContextEvent {
 
     public final Type type;
     public final ContextMetadata metadata;
-    public final String value;
+    public final Object value;
 
-    public ContextEvent(Type type, ContextMetadata metadata, String value) {
+    public ContextEvent(Type type, ContextMetadata metadata, Object value) {
         this.type = type;
         this.metadata = metadata;
         this.value = value;

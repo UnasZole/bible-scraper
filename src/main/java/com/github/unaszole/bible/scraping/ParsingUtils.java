@@ -3,50 +3,13 @@ package com.github.unaszole.bible.scraping;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import org.crosswire.jsword.versification.BibleBook;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ParsingUtils {
-
-    private static final Pattern INTEGER = Pattern.compile("^\\d+$");
-    private static final Pattern ROMAN_NUM = Pattern.compile("^[MDCLXVI]+$");
-
-    public static int parseRomanNumeral(String roman) {
-        if(roman.isEmpty()) {
-            return 0;
-        }
-        if(roman.startsWith("M")) { return 1000 + parseRomanNumeral(roman.substring(1)); }
-        if(roman.startsWith("CM")) { return 900 + parseRomanNumeral(roman.substring(2)); }
-        if(roman.startsWith("D")) { return 500 + parseRomanNumeral(roman.substring(1)); }
-        if(roman.startsWith("CD")) { return 400 + parseRomanNumeral(roman.substring(2)); }
-        if(roman.startsWith("C")) { return 100 + parseRomanNumeral(roman.substring(1)); }
-        if(roman.startsWith("XC")) { return 90 + parseRomanNumeral(roman.substring(2)); }
-        if(roman.startsWith("L")) { return 50 + parseRomanNumeral(roman.substring(1)); }
-        if(roman.startsWith("XL")) { return 40 + parseRomanNumeral(roman.substring(2)); }
-        if(roman.startsWith("X")) { return 10 + parseRomanNumeral(roman.substring(1)); }
-        if(roman.startsWith("IX")) { return 9 + parseRomanNumeral(roman.substring(2)); }
-        if(roman.startsWith("V")) { return 5 + parseRomanNumeral(roman.substring(1)); }
-        if(roman.startsWith("IV")) { return 4 + parseRomanNumeral(roman.substring(2)); }
-        if(roman.startsWith("I")) { return 1 + parseRomanNumeral(roman.substring(1)); }
-        throw new IllegalArgumentException(roman + " is not a valid roman numeral");
-    }
-
-    public static int parseInt(String str) {
-        if(INTEGER.matcher(str).matches()) {
-            return Integer.parseInt(str);
-        }
-        else if(ROMAN_NUM.matcher(str.toUpperCase()).matches()) {
-            return parseRomanNumeral(str.toUpperCase());
-        }
-        throw new IllegalArgumentException(str + " is not a valid integer");
-    }
 
     /**
      * Utility method for parsers : check if the current context is a descendant of a context of a given type.
