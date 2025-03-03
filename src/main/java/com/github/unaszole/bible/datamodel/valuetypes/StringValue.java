@@ -2,7 +2,7 @@ package com.github.unaszole.bible.datamodel.valuetypes;
 
 import com.github.unaszole.bible.datamodel.ValueType;
 
-public class StringValue implements ValueType<String> {
+public class StringValue implements ValueType.Definition<String> {
     @Override
     public Class<String> getValueClass() {
         return String.class;

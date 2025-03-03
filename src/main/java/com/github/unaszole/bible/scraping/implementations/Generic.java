@@ -185,7 +185,10 @@ public class Generic extends Scraper {
 
     private ContextStream.Single contextStreamer(Context ctx, List<SourceFile> files) {
         return config.getFileParser(downloader, files, ctx,
-                new ContextualData(config.bible.getBookReferences())
+                new ContextualData(
+                        config.bible.getBookReferences(),
+                        !files.isEmpty() ? files.get(0).getBaseUri() : null // Use the base URI of the first file... TODO improve that to pass the base URI of each file.
+                )
         ).asContextStream();
     }
 

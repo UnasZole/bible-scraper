@@ -100,6 +100,15 @@ public class HttpSourceFile implements SourceFile {
     }
 
     @Override
+    public URI getBaseUri() {
+        try {
+            return url.toURI();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public InputStream openStream() throws IOException {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod(method);

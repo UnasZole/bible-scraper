@@ -2,12 +2,15 @@ package com.github.unaszole.bible.scraping.generic.parsing;
 
 import org.crosswire.jsword.versification.BibleBook;
 
+import java.net.URI;
 import java.util.Map;
 
 public class ContextualData {
     public final Map<String, BibleBook> bookRefs;
+    public final URI baseUri;
 
-    public ContextualData(Map<String, BibleBook> bookRefs) {
+    public ContextualData(Map<String, BibleBook> bookRefs, URI baseUri) {
         this.bookRefs = bookRefs;
+        this.baseUri = baseUri;
     }
 }

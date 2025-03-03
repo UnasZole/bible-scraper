@@ -2,10 +2,13 @@ package com.github.unaszole.bible.scraping.generic.parsing;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.ValueType;
 import com.github.unaszole.bible.scraping.ContextReaderListBuilder;
 import com.github.unaszole.bible.scraping.ParsingUtils;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 public abstract class GenericContextExtractor<Position> {
     /**
@@ -21,13 +24,12 @@ public abstract class GenericContextExtractor<Position> {
         return parsedNb.length() == 1 ? parsedNb : parsedNb.replaceAll("^0*(.)", "$1");
     }
 
-    protected ContextMetadata getContextMetadata(ContextMetadata parent, ContextMetadata previousOfType, String value) {
+    protected ContextMetadata getContextMetadata(ContextMetadata parent, ContextMetadata previousOfType, Object value) {
         switch (type) {
             case CHAPTER:
-                return ParsingUtils.getChapterMetadata(parent, previousOfType, value);
+                return ParsingUtils.getChapterMetadata(parent, previousOfType, (String) value);
             case VERSE:
-                value = stripLeadingZeroes(value);
-                return ParsingUtils.getVerseMetadata(parent, previousOfType, value);
+                return ParsingUtils.getVerseMetadata(parent, previousOfType, stripLeadingZeroes((String)value));
             default:
                 return new ContextMetadata(type, parent.book, parent.chapter, parent.verses);
         }
@@ -42,13 +44,23 @@ public abstract class GenericContextExtractor<Position> {
         }
 
         String value = extractValue(position);
-        final String actualValue = ((type == ContextType.REF_BOOK || type == ContextType.BOOK)
-                && contextualData.bookRefs.containsKey(value))
-                ? contextualData.bookRefs.get(value).getOSIS() : value;
+        final Object finalValue;
+        switch(type.valueType) {
+            case BOOK_ID:
+                finalValue = Optional.<Object>ofNullable(contextualData.bookRefs.get(value)).orElse(value);
+                break;
+            case URI:
+                finalValue = Optional.ofNullable(contextualData.baseUri)
+                        .map(baseUri -> baseUri.resolve(URI.create(value)))
+                        .orElse(URI.create(value));
+                break;
+            default:
+                finalValue = value;
+        }
 
         builder.followedBy(
-                (as, pot) -> getContextMetadata(as.peekFirst(), pot, actualValue),
-                actualValue,
+                (as, pot) -> getContextMetadata(as.peekFirst(), pot, finalValue),
+                finalValue,
                 descendantsBuilder
         );
     }

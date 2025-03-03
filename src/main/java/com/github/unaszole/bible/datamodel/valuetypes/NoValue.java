@@ -2,7 +2,7 @@ package com.github.unaszole.bible.datamodel.valuetypes;
 
 import com.github.unaszole.bible.datamodel.ValueType;
 
-public class NoValue implements ValueType<Void> {
+public class NoValue implements ValueType.Definition<Void> {
     @Override
     public Class<Void> getValueClass() {
         return Void.class;

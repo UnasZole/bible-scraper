@@ -2,6 +2,7 @@ package com.github.unaszole.bible.downloading;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -24,6 +25,12 @@ public interface SourceFile {
      * When another file with the same hash is requested, cache may be reused.
      */
     String getHash();
+
+    /**
+     *
+     * @return The base URI to use to turn relative URIs contained in the document to absolute URIs.
+     */
+    URI getBaseUri();
 
     /**
      * Fetch the source file and open it for reading.

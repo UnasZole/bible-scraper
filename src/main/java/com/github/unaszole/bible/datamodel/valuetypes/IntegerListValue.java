@@ -4,7 +4,7 @@ import com.github.unaszole.bible.datamodel.ValueType;
 
 import java.util.Arrays;
 
-public class IntegerListValue implements ValueType<int[]> {
+public class IntegerListValue implements ValueType.Definition<int[]> {
     @Override
     public Class<int[]> getValueClass() {
         return int[].class;

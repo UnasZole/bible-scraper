@@ -151,7 +151,7 @@ public enum ContextType {
 	BIBLE(NO_META, NO_VALUE, NULL, atLeastOne(BOOK));
 
 	public final ContextMetadataType metaType;
-	public final ValueType<?> valueType;
+	public final ValueType valueType;
 	public final ImplicitValue implicitValue;
 
 	/**

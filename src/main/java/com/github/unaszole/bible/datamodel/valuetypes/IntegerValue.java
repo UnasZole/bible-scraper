@@ -4,7 +4,7 @@ import com.github.unaszole.bible.datamodel.ValueType;
 
 import java.util.regex.Pattern;
 
-public class IntegerValue implements ValueType<Integer> {
+public class IntegerValue implements ValueType.Definition<Integer> {
 
     private static final Pattern INTEGER = Pattern.compile("^\\d+$");
     private static final Pattern ROMAN_NUM = Pattern.compile("^[MDCLXVI]+$");
