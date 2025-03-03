@@ -331,10 +331,9 @@ html:
     - selector: "#logos > p"
       withAncestors: [ BOOK_INTRO ]
       contexts:
-        - type: FLAT_TEXT
-          descendants:
-            - type: TEXT
-              op: text
+        - type: PARAGRAPH_BREAK
+        - type: TEXT
+          op: text
     - selector: "#logos > h2"
       contexts:
         - type: MAJOR_SECTION_TITLE

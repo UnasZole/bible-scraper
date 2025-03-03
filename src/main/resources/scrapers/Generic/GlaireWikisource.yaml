@@ -501,7 +501,14 @@ html:
     - selector: ".prp-pages-output p:matches(.+)"
       withAncestors: [ BOOK_INTRO ]
       contexts:
-        - type: FLAT_TEXT
+        - type: PARAGRAPH_BREAK
+        - type: TEXT
+          op: text
+
+    - selector: ".prp-pages-output div[style*=font-size:85%]:matches(.+)"
+      withAncestors: [ BOOK_INTRO ]
+      contexts:
+        - type: QUOTE
           descendants:
             - type: TEXT
               op: text

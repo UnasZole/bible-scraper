@@ -229,10 +229,6 @@ public class ContextStreamWriter {
             }
 
             if(isOpen(ContextType.FLAT_TEXT, event)) {
-                if(isClose(ContextType.FLAT_TEXT, getLast())) {
-                    // Implicit paragraph break if two flat texts immediately follow each other.
-                    w.paragraph();
-                }
                 w.flatText(this::writeFlatText);
             }
 
