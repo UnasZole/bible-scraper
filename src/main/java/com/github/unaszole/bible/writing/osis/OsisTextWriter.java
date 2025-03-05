@@ -48,6 +48,15 @@ public class OsisTextWriter extends BaseXmlWriter implements TextWriter {
         // </q>
     }
 
+    @Override
+    public void speaker(String str) {
+        // <speaker>
+        writeStartElement("speaker");
+        writeCharacters(str);
+        writeEndElement();
+        // </speaker>
+    }
+
     private static String getOsisRef(BibleRef ref) {
         return ref.book.getOSIS()
                 + (ref.chapter == 0 ? "" : "." + ref.chapter

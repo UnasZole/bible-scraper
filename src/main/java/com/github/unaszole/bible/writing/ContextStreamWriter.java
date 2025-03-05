@@ -143,6 +143,9 @@ public class ContextStreamWriter {
             if(isOpen(ContextType.OT_QUOTE, event)) {
                 w.oldTestamentQuote(consumeAndAggregateValues(event.metadata));
             }
+            if(isOpen(ContextType.SPEAKER, event)) {
+                w.speaker(consumeAndAggregateValues(event.metadata));
+            }
             if(isClose(ContextType.TEXT, event)) {
                 w.text(textTransformer.apply((String) event.value));
             }

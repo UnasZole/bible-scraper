@@ -76,6 +76,13 @@ public class UsfmTextWriter implements TextWriter {
         quote(str);
     }
 
+    @Override
+    public void speaker(String str) {
+        out.println();
+        out.print("\\sp " + str);
+        out.println();
+    }
+
     protected static String getUsfmRef(BibleRef ref) {
         return UsfmBookWriter.OSIS_TO_USFM.get(ref.book)
                 + (ref.chapter == 0 ? "" : " " + ref.chapter

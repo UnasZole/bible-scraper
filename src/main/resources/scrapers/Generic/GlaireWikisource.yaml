@@ -508,6 +508,8 @@ html:
     - selector: ".prp-pages-output div[style*=font-size:85%]:matches(.+)"
       withAncestors: [ BOOK_INTRO ]
       contexts:
+        - type: TEXT
+          op: "literal= "
         - type: QUOTE
           descendants:
             - type: TEXT
@@ -557,13 +559,13 @@ html:
               - type: TEXT
                 op: "literal= "
           # Italic longer than 30 or with specific keywords is a psalm title.
-          - selector: "p > i:is(:matches(^.{30,}$), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$))"
+          - selector: "p > i:is(:matches(^.{30,}$):not(:matches(ne vous viendra des secours)), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$))"
             withAncestors: [ PSALM_TITLE ]
             contexts:
               - type: TEXT
                 op: ownText
           # Italic texts that didn't match the previous selector are translation additions.
-          - selector: "p > i:not(:is(:matches(^.{30,}$), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$)))"
+          - selector: "p > i:not(:is(:matches(^.{30,}$):not(:matches(ne vous viendra des secours)), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$)))"
             withoutAncestors: [ STRUCTURE_MARKER, NOTE, PSALM_TITLE ]
             contexts:
               - type: TRANSLATION_ADD
@@ -583,6 +585,14 @@ html:
               - type: TEXT
                 op: text
                 regexp: ^([^\d].*)$
+
+          # Text in small caps is the speaker identification.
+          - selector: "p > span.sc"
+            contexts:
+              - type: SPEAKER
+                descendants:
+                  - type: TEXT
+                    op: text
 
         externalParsers:
           - selector: "sup.reference > a"

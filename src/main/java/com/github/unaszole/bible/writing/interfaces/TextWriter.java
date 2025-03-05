@@ -31,6 +31,12 @@ public interface TextWriter extends AutoCloseable {
     void oldTestamentQuote(String str);
 
     /**
+     * Write a speaker identification.
+     * @param str The speaker's identification.
+     */
+    void speaker(String str);
+
+    /**
      * Write a reference to another portion of the text.
      * @param rangeStart The first verse of the range being referenced.
      * @param rangeEnd The last verse of the range being referenced - leave null if no range.

@@ -22,6 +22,7 @@ public enum ContextType {
 	TRANSLATION_ADD(NO_META, NO_VALUE, NO_IMPLICIT, atLeastOne(TEXT)),
 	QUOTE(NO_META, NO_VALUE, NO_IMPLICIT, atLeastOne(TEXT)),
 	OT_QUOTE(NO_META, NO_VALUE, NO_IMPLICIT, atLeastOne(TEXT)),
+	SPEAKER(NO_META, NO_VALUE, NO_IMPLICIT, atLeastOne(TEXT)),
 	/**
 	 * Book reference : context value must be a valid OSIS book ID.
 	 */
@@ -59,7 +60,7 @@ public enum ContextType {
 	 */
 	LINK(NO_META, URI, NO_IMPLICIT, atLeastOne(TEXT)),
 
-	MARKUP(NO_META, NO_VALUE, NULL, one(TRANSLATION_ADD, QUOTE, OT_QUOTE, REFERENCE, LINK)),
+	MARKUP(NO_META, NO_VALUE, NULL, one(TRANSLATION_ADD, QUOTE, OT_QUOTE, SPEAKER, REFERENCE, LINK)),
 	/**
 	 * An inline text, ie. a text that does not have any structure or any note whatsoever.
 	 * It may only contain semantic or formatting markup around portions of the text.
@@ -120,7 +121,7 @@ public enum ContextType {
 	 * (typically, when the title spans several verses or before the first verse), they should usually be rendered as
 	 * one single title.
 	 */
-	PSALM_TITLE(NO_META, NO_VALUE, NO_IMPLICIT, one(FLAT_TEXT)),
+	PSALM_TITLE(NO_META, NO_VALUE, NULL, one(FLAT_TEXT)),
 
 	/**
 	 * A verse.

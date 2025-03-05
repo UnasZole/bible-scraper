@@ -36,6 +36,11 @@ public class BufferedTextWrites implements Consumer<TextWriter> {
             }
 
             @Override
+            public void speaker(String str) {
+                actions.add(w -> w.speaker(str));
+            }
+
+            @Override
             public void reference(BibleRef rangeStart, BibleRef rangeEnd, String text) {
                 actions.add(w -> w.reference(rangeStart, rangeEnd, text));
             }
