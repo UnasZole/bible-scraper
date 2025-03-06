@@ -26,7 +26,12 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 	private static XMLStreamWriter getXmlStreamWriter(OutputStream outputStream) throws XMLStreamException {
 		XMLOutputFactory factory = XMLOutputFactory.newInstance();
 		factory.setProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES, true);
-		return new IndentingXmlStreamWriter(factory.createXMLStreamWriter(outputStream, "UTF-8"));
+		return new IndentingXmlStreamWriter(
+				factory.createXMLStreamWriter(outputStream, "UTF-8"),
+				(ns, name) -> (name.equals("verse") || name.equals("chapter"))
+						? IndentingXmlStreamWriter.IndentMode.SELF
+						: IndentingXmlStreamWriter.IndentMode.AUTO
+		);
 	}
 
 	public OsisBibleWriter(OutputStream outputStream, DocumentMetadata meta) throws XMLStreamException {

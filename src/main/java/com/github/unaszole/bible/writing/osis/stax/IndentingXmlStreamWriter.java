@@ -9,7 +9,21 @@ import java.util.function.BiFunction;
 
 public class IndentingXmlStreamWriter extends WrappingXmlStreamWriter {
 
-    public enum IndentMode { YES, NO, AUTO }
+    public enum Mode {YES, NO, AUTO}
+
+    public static class IndentMode {
+        public static final IndentMode AUTO = new IndentMode(Mode.AUTO, Mode.AUTO);
+        public static final IndentMode CONTENTS = new IndentMode(Mode.AUTO, Mode.YES);
+        public static final IndentMode SELF = new IndentMode(Mode.YES, Mode.AUTO);
+
+        public final Mode self;
+        public final Mode contents;
+
+        public IndentMode(Mode self, Mode contents) {
+            this.self = self;
+            this.contents = contents;
+        }
+    }
 
     private static class Element {
         public final IndentMode mode;
@@ -34,8 +48,12 @@ public class IndentingXmlStreamWriter extends WrappingXmlStreamWriter {
         this.indentModeResolver = indentModeResolver;
     }
 
+    public IndentingXmlStreamWriter(XMLStreamWriter wrapped, BiFunction<String, String, IndentMode> indentModeResolver) {
+        this(wrapped, "  ", "\n", indentModeResolver);
+    }
+
     public IndentingXmlStreamWriter(XMLStreamWriter wrapped) {
-        this(wrapped, "  ", "\n", (ns, name) -> IndentMode.AUTO);
+        this(wrapped, (ns, name) -> IndentMode.AUTO);
     }
 
     private void writeIndent(boolean closing) throws XMLStreamException {
@@ -45,25 +63,39 @@ public class IndentingXmlStreamWriter extends WrappingXmlStreamWriter {
         }
     }
 
-    private void writeIndentIfNeeded(boolean closing) throws XMLStreamException {
+    private void writeIndentForStartElement(IndentMode eltIndentMode) throws XMLStreamException {
         assert !eltStack.isEmpty();
 
-        // Check the mode of the current head.
-        switch(eltStack.peek().mode) {
-            case YES:
-                // We need to indent before the next tag.
-                writeIndent(closing);
-                break;
-            case AUTO:
-                // We need to indent only if the current head does not currently end with non-space data.
-                // Else, the indent would insert new significant spaces, to be avoided.
-                if(!eltStack.peek().endsWithNonWhitespaceData) {
-                    // Do not indent if closing an element with no children.
-                    if(!closing || eltStack.peek().hasChildren) {
-                        writeIndent(closing);
-                    }
-                }
-                break;
+        // Check the mode of the current head, i.e. the parent element.
+        IndentMode parentIndentMode = eltStack.peek().mode;
+
+        if(
+                // Contents of the parent are explicitly indented.
+                (parentIndentMode.contents == Mode.YES)
+                // Contents of the parent are auto, and element itself is explicitly indented.
+                || (parentIndentMode.contents == Mode.AUTO && eltIndentMode.self == Mode.YES)
+                // Contents of the parent are auto, and parent currently ends with a whitespace.
+                || (parentIndentMode.contents == Mode.AUTO && !eltStack.peek().endsWithNonWhitespaceData)
+        ) {
+            // Write indent for the opening tag.
+            writeIndent(false);
+        }
+    }
+
+    private void writeIndentForEndElement() throws XMLStreamException {
+        assert !eltStack.isEmpty();
+
+        // Check the mode of the current head, i.e. the closed element.
+        IndentMode indentMode = eltStack.peek().mode;
+
+        if(
+                // Contents of the element are explicitly indented.
+                indentMode.contents == Mode.YES
+                // Contents of the element are auto, and element has children and currently ends with whitespace.
+                || (indentMode.contents == Mode.AUTO && !eltStack.peek().endsWithNonWhitespaceData && eltStack.peek().hasChildren)
+        ) {
+            // Write indent for the closing tag.
+            writeIndent(true);
         }
     }
 
@@ -72,28 +104,32 @@ public class IndentingXmlStreamWriter extends WrappingXmlStreamWriter {
         // Note that the parent has children.
         eltStack.peek().hasChildren = true;
 
-        // Write indent for the open tag if the parent requires it.
-        writeIndentIfNeeded(false);
+        IndentMode eltIndentMode = indentModeResolver.apply(namespaceUri, eltName);
+
+        // Write indent for the open tag if needed.
+        writeIndentForStartElement(eltIndentMode);
 
         // Starting element is the new head.
-        eltStack.push(new Element(indentModeResolver.apply(namespaceUri, eltName)));
+        eltStack.push(new Element(eltIndentMode));
     }
 
     private void onEndElement() throws XMLStreamException {
-        // Write indent for the close tag if the element requires it.
-        writeIndentIfNeeded(true);
+        // Write indent for the close tag if needed.
+        writeIndentForEndElement();
 
         // Remove the ending element from the stack.
         eltStack.pop();
     }
 
-    private void onEmptyElement() throws XMLStreamException {
+    private void onEmptyElement(String namespaceUri, String eltName) throws XMLStreamException {
         assert !eltStack.isEmpty();
         // Note that the parent has children.
         eltStack.peek().hasChildren = true;
 
-        // Write indent for the self-closing tag if the parent element requires it.
-        writeIndentIfNeeded(false);
+        IndentMode eltIndentMode = indentModeResolver.apply(namespaceUri, eltName);
+
+        // Write indent for the self-closing tag if needed.
+        writeIndentForStartElement(eltIndentMode);
     }
 
     private boolean isXmlWhitespace(char c) {
@@ -131,17 +167,17 @@ public class IndentingXmlStreamWriter extends WrappingXmlStreamWriter {
     }
 
     public void writeEmptyElement(String namespaceURI, String localName) throws XMLStreamException {
-        onEmptyElement();
+        onEmptyElement(namespaceURI, localName);
         super.writeEmptyElement(namespaceURI, localName);
     }
 
     public void writeEmptyElement(String prefix, String localName, String namespaceURI) throws XMLStreamException {
-        onEmptyElement();
+        onEmptyElement(namespaceURI, localName);
         super.writeEmptyElement(prefix, localName, namespaceURI);
     }
 
     public void writeEmptyElement(String localName) throws XMLStreamException {
-        onEmptyElement();
+        onEmptyElement(null, localName);
         super.writeEmptyElement(localName);
     }
 

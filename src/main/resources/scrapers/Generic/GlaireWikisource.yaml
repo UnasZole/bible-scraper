@@ -615,6 +615,12 @@ html:
                       descendants:
                         - type: TEXT
                           op: text
+                # Other items to be taken as text.
+                - selector: ":is(span.coquille, abbr)"
+                  withoutAncestors: [ NOTE_MARKUP ]
+                  contexts:
+                    - type: TEXT
+                      op: text
 
                 # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing numbers, are full references to verses.
                 - selector: "a[href~=^(.*La_sainte_Bible_selon_la_Vulgate_\\(J.-B._Glaire\\)/)?([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*\\d+.*$)"
