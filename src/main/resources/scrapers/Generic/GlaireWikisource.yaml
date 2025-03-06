@@ -616,7 +616,7 @@ html:
                         - type: TEXT
                           op: text
                 # Other items to be taken as text.
-                - selector: ":is(span.coquille, abbr)"
+                - selector: ":is(span.coquille, span.sc, abbr)"
                   withoutAncestors: [ NOTE_MARKUP ]
                   contexts:
                     - type: TEXT
