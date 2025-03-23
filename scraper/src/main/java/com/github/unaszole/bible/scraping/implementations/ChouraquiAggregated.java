@@ -9,6 +9,7 @@ import org.crosswire.jsword.versification.BibleBook;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 
 public class ChouraquiAggregated extends Scraper {
 
@@ -35,7 +36,7 @@ public class ChouraquiAggregated extends Scraper {
 
     @Override
     public DocumentMetadata getMeta() {
-        return new DocumentMetadata("fr", "freCHUagg", "Bible d'André Chouraqui", spiritualLand.getMeta().refSystem);
+        return new DocumentMetadata(Locale.FRENCH, "freCHUagg", "Bible d'André Chouraqui", spiritualLand.getMeta().refSystem);
     }
 
     @Override

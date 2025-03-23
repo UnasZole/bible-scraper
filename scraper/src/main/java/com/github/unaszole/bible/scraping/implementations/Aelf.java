@@ -276,7 +276,7 @@ public class Aelf extends Scraper {
 
     @Override
     public DocumentMetadata getMeta() {
-        return new DocumentMetadata("fr", "freAELF", "Nouvelle Traduction Liturgique", "Bible.Catholic3");
+        return new DocumentMetadata(Locale.FRENCH, "freAELF", "Nouvelle Traduction Liturgique", "Bible.Catholic3");
     }
 
     @Override

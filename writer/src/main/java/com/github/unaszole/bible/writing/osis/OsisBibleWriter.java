@@ -1,6 +1,9 @@
 package com.github.unaszole.bible.writing.osis;
 
+import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -44,7 +47,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 			writeStartElement("osisText");
 			writeAttribute("osisRefWork", meta.systemName);
 			writeAttribute("osisIDWork", meta.systemName);
-			writeAttribute("xml:lang", meta.language);
+			writeAttribute("xml:lang", meta.locale.getLanguage());
 			
 				// <header>
 				writeStartElement("header");
@@ -88,7 +91,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 						// <language>
 						writeStartElement("language");
 						writeAttribute("type", "IETF");
-						writeCharacters(meta.language);
+						writeCharacters(meta.locale.getLanguage());
 						writeEndElement();
 						// </language>
 						
@@ -103,6 +106,21 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 				
 				writeEndElement();
 				// </header>
+	}
+
+	private static OutputStream getOutputStream(Path path) throws IOException {
+		if(Files.isDirectory(path)) {
+			throw new IllegalArgumentException(path + " must be a file.");
+		}
+		if(!path.getFileName().toString().endsWith(".xml")) {
+			throw new IllegalArgumentException(path + " must be a file ending with .xml");
+		}
+
+		return Files.newOutputStream(path);
+	}
+
+	public OsisBibleWriter(Path outFile, DocumentMetadata meta) throws IOException, XMLStreamException {
+		this(getOutputStream(outFile), meta);
 	}
 	
 	/**

@@ -1,11 +1,12 @@
 package com.github.unaszole.bible.writing.datamodel;
 
+import java.util.Locale;
+
 public class DocumentMetadata {
     /**
-     * Must be a "primary language subtag" as defined in BCP 47.
-     * See https://www.w3.org/International/questions/qa-choosing-language-tags
+     * Locale that indicates the language of the document.
      */
-    public final String language;
+    public final Locale locale;
     /**
      * Unique identifier for the document. Should be short and without special characters.
      */
@@ -19,8 +20,8 @@ public class DocumentMetadata {
      */
     public final String refSystem;
 
-    public DocumentMetadata(String language, String systemName, String title, String refSystem) {
-        this.language = language;
+    public DocumentMetadata(Locale locale, String systemName, String title, String refSystem) {
+        this.locale = locale;
         this.systemName = systemName;
         this.title = title;
         this.refSystem = refSystem;

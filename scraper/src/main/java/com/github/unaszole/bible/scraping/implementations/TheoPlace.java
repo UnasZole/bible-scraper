@@ -279,7 +279,7 @@ public class TheoPlace extends Scraper {
 
     @Override
     public DocumentMetadata getMeta() {
-        return new DocumentMetadata("fr", "fre" + bible.toUpperCase() + "tp",
+        return new DocumentMetadata(Locale.FRENCH, "fre" + bible.toUpperCase() + "tp",
                 bible.toUpperCase() + " extraite de TheoPlace", "Bible");
     }
 

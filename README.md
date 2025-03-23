@@ -14,10 +14,12 @@ from one of the websites already implemented.
 - **Generic scrapers** : Extract bibles from a custom website, that we do not
 support yet, by providing a configuration file describing the structure of the
 website.
-- **USFM or OSIS output formats** : [USFM](https://ubsicap.github.io/usfm/) uses simple
-markers in text to be more easily manipulated, while [OSIS](https://wiki.crosswire.org/OSIS)
-uses a very detailed XML schema to represent more accurately the structure of
-the original document.
+- **Several supported output formats** :
+  - [OSIS](https://wiki.crosswire.org/OSIS), mainly used to generate SWORD modules, uses a very detailed XML schema
+    to represent more accurately the structure of the original document.
+  - [USFM](https://ubsicap.github.io/usfm/), mainly used by Paratext, uses simple markers in text to be more easily edited.
+  - [MyBible](https://mysword.info/modules-format), used by the MySword application, stores bibles in small SQLite
+  databases with simple text markers. (This output format loses some semantic information compared to OSIS or USFM)
 - **Preserve introductions, sections and notes** : If the website provides them,
 a scraper can extract non-canonical contents from the bible, not just the verses
 themselves.
@@ -67,6 +69,7 @@ For example `scraper-help -s Generic -i TheoPlace`.
   - `-w <outFormat> -o <outFileOrFolder>` to specify the output format (OSIS or USFM), and where to write the result. \
 For OSIS, a file will be created (or overwritten if exists) at the given path. \
 For USFM, the path must point to an existing empty folder. \
+For MyBible, the path must point to a (possibly non-existing) ".bbl.mybible" file that will be overwritten.\
 If the "-o" option is omitted, the output will be printed in your terminal (useful for testing when you're writing a new scraper).
   - `--typographyFixer <FRENCH or NONE>` to enforce some typography rules on the extracted text before printing it to the output document.
 

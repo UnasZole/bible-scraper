@@ -3,20 +3,19 @@ package com.github.unaszole.bible.cli.args;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.writing.Typography;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
+import com.github.unaszole.bible.writing.mybible.MyBibleBibleWriter;
 import com.github.unaszole.bible.writing.osis.OsisBibleWriter;
 import com.github.unaszole.bible.writing.usfm.UsfmBibleWriter;
 import picocli.CommandLine;
 
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 public class WriterArgument {
 
-    enum WriterType { DEBUG_EVENTS, DEBUG_CTX, OSIS, USFM }
+    enum WriterType { DEBUG_EVENTS, DEBUG_CTX, OSIS, USFM, MYBIBLE }
 
     @CommandLine.Option(names={"--writer", "-w"}, required = true, description = "Output format to write the extracted Bible. One of : OSIS, USFM")
     private WriterType writer;
@@ -41,14 +40,22 @@ public class WriterArgument {
     public BibleWriter get(DocumentMetadata docMeta) throws Exception {
         switch(writer) {
             case OSIS:
-                OutputStream os = outputPath.isPresent() ? Files.newOutputStream(outputPath.get()) : System.out;
-                return new OsisBibleWriter(os, docMeta);
+                if(outputPath.isPresent()) {
+                    return new OsisBibleWriter(outputPath.get(), docMeta);
+                }
+                return new OsisBibleWriter(System.out, docMeta);
 
             case USFM:
                 if(outputPath.isPresent()) {
                     return new UsfmBibleWriter(outputPath.get());
                 }
                 return new UsfmBibleWriter(new PrintWriter(System.out));
+
+            case MYBIBLE:
+                if(outputPath.isPresent()) {
+                    return new MyBibleBibleWriter(outputPath.get(), docMeta);
+                }
+                return new MyBibleBibleWriter(new PrintWriter(System.out));
 
             default:
                 return null;

@@ -2,6 +2,7 @@ package com.github.unaszole.bible.scraping.generic.data;
 
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 
+import java.util.Locale;
 import java.util.Map;
 
 public class BibleMetadata {
@@ -36,7 +37,7 @@ public class BibleMetadata {
         String v = evaluateField(versification, args, null);
 
         return new DocumentMetadata(
-                evaluateField(language, args, "en"),
+                Locale.forLanguageTag(evaluateField(language, args, "en")),
                 evaluateField(systemName, args, "scrapedBible").replaceAll("[^a-zA-Z0-9]+", ""),
                 evaluateField(title, args, "Scraped bible"),
                 v == null ? "Bible" : "Bible." + v

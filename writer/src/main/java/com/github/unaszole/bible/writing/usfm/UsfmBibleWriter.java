@@ -6,8 +6,10 @@ import org.crosswire.jsword.versification.BibleBook;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class UsfmBibleWriter implements BibleWriter {
 
@@ -15,7 +17,20 @@ public class UsfmBibleWriter implements BibleWriter {
     private final PrintWriter outWriter;
     private int bookNb = 1;
 
-    public UsfmBibleWriter(Path outFolder) {
+    private static void validateEmptyDir(Path path) throws IOException {
+        if(!Files.isDirectory(path)) {
+            throw new IllegalArgumentException(path + " must be an (empty) directory.");
+        }
+
+        try(Stream<Path> children = Files.list(path)) {
+            if(children.findAny().isPresent()) {
+                throw new IllegalArgumentException(path + " directory must be empty.");
+            }
+        }
+    }
+
+    public UsfmBibleWriter(Path outFolder) throws IOException {
+        validateEmptyDir(outFolder);
         this.outFolder = outFolder;
         this.outWriter = null;
     }

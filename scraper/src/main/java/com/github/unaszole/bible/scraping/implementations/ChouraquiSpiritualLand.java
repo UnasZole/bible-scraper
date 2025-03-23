@@ -482,7 +482,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 
 	@Override
 	public DocumentMetadata getMeta() {
-		return new DocumentMetadata("fr", "freCHUsl", "Bible d'André Chouraqui", variant.getRefSystem());
+		return new DocumentMetadata(Locale.FRENCH, "freCHUsl", "Bible d'André Chouraqui", variant.getRefSystem());
 	}
 
 	@Override
