@@ -91,7 +91,7 @@ This is a scraper which is fully configured with a YAML configuration file, wher
 
 #### YAML configuration file
 
-You may look at the [embedded generic scrapers](src/main/resources/scrapers/Generic/) for examples of generic scraper
+You may look at the [embedded generic scrapers](scraper/src/main/resources/scrapers/Generic/) for examples of generic scraper
 configuration files.
 
 The general structure of the configuration file is explained here.
@@ -152,7 +152,7 @@ but allows parsing even documents with ambiguous formatting.
 
 - The overall goal of the parser is to check all elements in the page, and build a context tree (an internal
 structured representation of bible contents) out of it.
-- The [definition of all context types](src/main/java/com/github/unaszole/bible/datamodel/ContextType.java) specifies
+- The [definition of all context types](parser/src/main/java/com/github/unaszole/bible/datamodel/ContextType.java) specifies
 what each context can contain. Thus, at any point in time, the parser itself knows what types of context it may or may
 not open next. 
 The goal the parsing rules is therefore to answer the following two questions :
@@ -177,7 +177,7 @@ if we are in a book introduction".
 - The `contexts` property contains a sequence of context extractors, meaning a sequence of contexts to be built from
 the selected HTML element and instructions to read the contents from the element. Each context extractor has the
 following properties.
-  - The `type` property designates which [context type](src/main/java/com/github/unaszole/bible/datamodel/ContextType.java) is opened by this extractor.
+  - The `type` property designates which [context type](parser/src/main/java/com/github/unaszole/bible/datamodel/ContextType.java) is opened by this extractor.
   If this context types requires a context value, the following properties specify how to read the context value from the
   HTML element.
   - The `selector` property is an optional [JSoup CSS selector](https://jsoup.org/apidocs/org/jsoup/select/Selector.html), evaluated from the rule's selected HTML element,
@@ -216,7 +216,7 @@ root level `elements` property.
   - The `contexts` property contains a sequence of context extractors, meaning a sequence of contexts to be built from
     the selected text node and instructions to read the contents from the node. Each context extractor has the
     following properties.
-    - The `type` property designates which [context type](src/main/java/com/github/unaszole/bible/datamodel/ContextType.java) is opened by this extractor.
+    - The `type` property designates which [context type](parser/src/main/java/com/github/unaszole/bible/datamodel/ContextType.java) is opened by this extractor.
     - The `regexp` property to select which part of the contents to use as context value. To use the full text contents
     of the text node (or the portion given by the regexp at rule level), you should use `(.*)`.
     - The `descendants` property is a sequence of similar context extractors to create other contexts within this one,
@@ -234,8 +234,8 @@ or parents) to know what type of context this element may open.
 does not provide a way to specify a different page structure for each bible, so you need all bibles reached by this scraper
 to follow a consistent URL pattern and consistent structure in terms of books and chapters.
 
-These limitations are highlighted within [the example TheoPlace configuration file](src/main/resources/scrapers/Generic/TheoPlace.yaml),
-which you may compare with the [native TheoPlace scraper](src/main/java/com/github/unaszole/bible/scraping/implementations/TheoPlace.java)
+These limitations are highlighted within [the example TheoPlace configuration file](scraper/src/main/resources/scrapers/Generic/TheoPlace.yaml),
+which you may compare with the [native TheoPlace scraper](scraper/src/main/java/com/github/unaszole/bible/scraping/implementations/TheoPlace.java)
 to see how the Java API allows more accurate control in these cases.
 
 ## Legal disclaimer
@@ -256,7 +256,7 @@ familial au titre de la copie privée.
 
 En effet, les articles [L.122-5](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000037388886)
 et [L.211-3](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000038835794) du code de
-la propriété intellectuelle spécifie que sont autorisées "Les copies ou reproductions réalisées à partir
+la propriété intellectuelle spécifient que sont autorisées "Les copies ou reproductions réalisées à partir
 d’une source licite et strictement réservées à l’usage privé du copiste et non destinées à une utilisation
 collective".
 

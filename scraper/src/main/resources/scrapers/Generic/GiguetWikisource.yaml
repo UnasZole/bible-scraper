@@ -449,6 +449,12 @@ html:
                 op: text
                 regexp: ^([^\d].*)$
 
+          # Text in small caps is taken as-is.
+          - selector: "p > span.sc"
+            contexts:
+              - type: TEXT
+                op: text
+
         externalParsers:
           - selector: "sup.reference > a"
             linkTargetSelector: "> span.reference-text"
