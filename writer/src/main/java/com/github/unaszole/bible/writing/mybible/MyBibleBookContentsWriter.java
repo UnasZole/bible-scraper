@@ -12,10 +12,49 @@ public class MyBibleBookContentsWriter implements StructuredTextWriter.BookConte
     private int currentChapter = 0;
     private int currentVerse = 0;
     private StringBuilder currentVerseBuilder = null;
+    private StringBuilder pendingPrefixBuilder = null;
 
     public MyBibleBookContentsWriter(VerseSink sink, int bookNumber) {
         this.sink = sink;
         this.bookNumber = bookNumber;
+    }
+
+    private void append(StringBuilder stringBuilder, String str) {
+        if(stringBuilder != null) {
+            stringBuilder.append(str);
+        }
+    }
+
+    private void appendHere(String str) {
+        append(currentVerseBuilder, str);
+    }
+
+    private void appendToPrefix(String str) {
+        if(pendingPrefixBuilder == null) {
+            this.pendingPrefixBuilder = new StringBuilder();
+        }
+        append(pendingPrefixBuilder, str);
+    }
+
+    private void appendPrefixHere() {
+        if(pendingPrefixBuilder != null) {
+            String prefix = pendingPrefixBuilder.toString();
+            this.pendingPrefixBuilder = null;
+            appendHere(prefix);
+        }
+    }
+
+    private void appendTaggedText(StringBuilder stringBuilder,
+                                  String openTag, Consumer<TextWriter> writes, String closeTag) {
+        if(stringBuilder != null) {
+            stringBuilder.append(openTag);
+            writes.accept(new MyBibleTextWriter(stringBuilder));
+            stringBuilder.append(closeTag);
+        }
+    }
+
+    private void appendTaggedTextHere(String openTag, Consumer<TextWriter> writes, String closeTag) {
+        appendTaggedText(currentVerseBuilder, openTag, writes, closeTag);
     }
 
     private void closeCurrentVerse() {
@@ -54,93 +93,65 @@ public class MyBibleBookContentsWriter implements StructuredTextWriter.BookConte
 
     @Override
     public void psalmTitle(Consumer<TextWriter> writes) {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<TS2>");
-            writes.accept(new MyBibleTextWriter(currentVerseBuilder));
-            currentVerseBuilder.append("<Ts2>");
-        }
+        appendTaggedTextHere("<TS2>", writes, "<Ts2>");
     }
 
     @Override
     public void majorSection(Consumer<TextWriter> writes) {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<TS1>");
-            writes.accept(new MyBibleTextWriter(currentVerseBuilder));
-            currentVerseBuilder.append("<Ts1>");
-        }
+        appendTaggedTextHere("<TS1>", writes, "<Ts1>");
     }
 
     @Override
     public void section(Consumer<TextWriter> writes) {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<TS3>");
-            writes.accept(new MyBibleTextWriter(currentVerseBuilder));
-            currentVerseBuilder.append("<Ts3>");
-        }
+        appendTaggedTextHere("<TS3>", writes, "<Ts3>");
     }
 
     @Override
     public void minorSection(Consumer<TextWriter> writes) {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<TS4>");
-            writes.accept(new MyBibleTextWriter(currentVerseBuilder));
-            currentVerseBuilder.append("<Ts4>");
-        }
+        appendTaggedTextHere("<TS4>", writes, "<Ts4>");
     }
 
     @Override
     public void poetryLine(int indentLevel) {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<PF")
-                    .append(indentLevel)
-                    .append(">");
-        }
+        appendToPrefix("<PF" + indentLevel + ">");
     }
 
     @Override
     public void poetryRefrainLine() {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<PF7>");
-        }
+        appendToPrefix("<PF7>");
     }
 
     @Override
     public void poetryAcrosticLine() {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<PF7>");
-        }
+        appendToPrefix("<PF7>");
     }
 
     @Override
     public void poetrySelahLine() {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<PF7>");
-        }
+        appendToPrefix("<PF7>");
     }
 
     @Override
     public void poetryStanza() {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<CM>");
-        }
+        paragraph();
     }
 
     @Override
     public void paragraph() {
-        if(currentVerseBuilder != null) {
-            currentVerseBuilder.append("<CM>");
-        }
+        appendHere("<CM>");
     }
 
     @Override
     public void flatText(Consumer<TextWriter> writes) {
         if(currentVerseBuilder != null) {
+            appendPrefixHere();
             writes.accept(new MyBibleTextWriter(currentVerseBuilder));
         }
     }
 
     @Override
     public void close() throws Exception {
+        appendPrefixHere();
         closeCurrentVerse();
     }
 }

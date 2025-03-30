@@ -131,8 +131,8 @@ public class TextNodeParser extends ContextStackAware {
                                                                 ContextType nextContextType,
                                                                 ContextualData contextualData) {
         final String text = extractText(n);
-
-        if(text != null && canParseInContext(ancestorStack, nextContextType)) {
+        
+        if(text != null && !text.isEmpty() && canParseInContext(ancestorStack, nextContextType)) {
             if(!contexts.isEmpty()) {
                 final ContextReaderListBuilder builder = new ContextReaderListBuilder();
                 contexts.forEach(ex -> ex.appendTo(builder, text, contextualData));
