@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Element that sets or overrides some patterns, or some arguments used in these patterns.
@@ -56,12 +54,6 @@ public class PatternContainer {
         return other.defaultedBy(this);
     }
 
-    private static final Pattern ARG_REFERENCE = Pattern.compile("\\{([A-Z0-9_]+)}");
-    public static String substituteArgs(String str, final Function<String, String> argGetter) {
-        Matcher argRefs = ARG_REFERENCE.matcher(str);
-        return argRefs.replaceAll(r -> argGetter.apply(r.group(1)));
-    }
-
     public final boolean hasPattern(String patternName) {
         return patterns != null && patterns.containsKey(patternName);
     }
@@ -79,6 +71,6 @@ public class PatternContainer {
         if(pattern == null) {
             return Optional.empty();
         }
-        return Optional.of(substituteArgs(pattern, a -> argEvaluator.apply(args.get(a))));
+        return Optional.of(VarSubstitution.substituteVars(pattern, a -> argEvaluator.apply(args.get(a))));
     }
 }

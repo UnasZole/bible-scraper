@@ -54,13 +54,13 @@ public class Book extends PagesContainer {
         return null;
     }
 
-    public List<SourceFile> getBookFiles(PatternContainer bookDefaults, SourceFile.Builder sourceFileBuilder) {
+    public List<PageData> getBookPages(PatternContainer bookDefaults, SourceFile.Builder sourceFileBuilder) {
         return getPageFiles(bookDefaults, a -> a, "book", sourceFileBuilder);
     }
 
     public ContextStream.Single streamBook(PatternContainer bibleDefaults, ContextMetadata bookCtxMeta,
                                            final SourceFile.Builder sourceFileBuilder,
-                                           final BiFunction<Context, List<SourceFile>, ContextStream.Single> ctxStreamer) {
+                                           final BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
         assert bookCtxMeta.type == ContextType.BOOK && bookCtxMeta.book == osis;
         final PatternContainer bookDefaults = this.defaultedBy(bibleDefaults);
 
@@ -89,10 +89,10 @@ public class Book extends PagesContainer {
         Context bookCtx = new Context(bookCtxMeta, bookCtxMeta.book.getOSIS());
         ContextStream.Single bookStream = null;
 
-        List<SourceFile> bookFiles = getBookFiles(bookDefaults, sourceFileBuilder);
-        if(!bookFiles.isEmpty()) {
+        List<PageData> bookPages = getBookPages(bookDefaults, sourceFileBuilder);
+        if(!bookPages.isEmpty()) {
             // We have pages for this book, prepare a context with the given streamer and append chapters at the end.
-            bookStream = ctxStreamer.apply(bookCtx, bookFiles).edit().inject(
+            bookStream = ctxStreamer.apply(bookCtx, bookPages).edit().inject(
                     ContextStreamEditor.InjectionPosition.AT_END, bookCtxMeta, chapterStreams
             ).process();
         }

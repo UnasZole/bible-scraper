@@ -10,16 +10,13 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.unaszole.bible.JarUtils;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.parsing.Parser;
+import com.github.unaszole.bible.scraping.generic.data.*;
+import com.github.unaszole.bible.scraping.generic.parsing.PageListParser;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.CachedDownloader;
-import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.downloading.HttpSourceFile;
 import com.github.unaszole.bible.scraping.Scraper;
-import com.github.unaszole.bible.scraping.generic.data.Bible;
-import com.github.unaszole.bible.scraping.generic.data.Book;
-import com.github.unaszole.bible.scraping.generic.data.ChapterSeq;
-import com.github.unaszole.bible.scraping.generic.data.PatternContainer;
-import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import com.github.unaszole.bible.scraping.generic.parsing.TextParser;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.jayway.jsonpath.JsonPath;
@@ -183,12 +180,11 @@ public class Generic extends Scraper {
         this.downloader = new CachedDownloader(getCacheSubPath(cachePath, inputs));
     }
 
-    private ContextStream.Single contextStreamer(Context ctx, List<SourceFile> files) {
-        return config.getFileParser(downloader, files, ctx,
-                new ContextualData(
-                        config.bible.getBookReferences(),
-                        !files.isEmpty() ? files.get(0).getBaseUri() : null // Use the base URI of the first file... TODO improve that to pass the base URI of each file.
-                )
+    private ContextStream.Single contextStreamer(Context ctx, List<PageData> pages) {
+        return new Parser.TerminalParser<>(
+                new PageListParser(config, downloader, config.bible.getBookReferences()),
+                pages.iterator(),
+                ctx
         ).asContextStream();
     }
 

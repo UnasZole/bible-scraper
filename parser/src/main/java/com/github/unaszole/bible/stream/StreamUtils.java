@@ -73,6 +73,7 @@ public class StreamUtils {
         ));
     }
 
+    @SafeVarargs
     public static <T> Stream<T> concatStreams(Stream<T>... streams) {
         return concatStreams(Arrays.asList(streams));
     }

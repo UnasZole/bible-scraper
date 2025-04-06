@@ -53,13 +53,13 @@ public class Bible extends PagesContainer {
                 ));
     }
 
-    public List<SourceFile> getBibleFiles(PatternContainer bibleDefaults, SourceFile.Builder sourceFileBuilder) {
+    public List<PageData> getBiblePages(PatternContainer bibleDefaults, SourceFile.Builder sourceFileBuilder) {
         return getPageFiles(bibleDefaults, a -> a, "bible", sourceFileBuilder);
     }
 
     public ContextStream.Single streamBible(PatternContainer globalDefaults, ContextMetadata bibleCtxMeta,
                                             final SourceFile.Builder sourceFileBuilder,
-                                            final BiFunction<Context, List<SourceFile>, ContextStream.Single> ctxStreamer) {
+                                            final BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
         assert bibleCtxMeta.type == ContextType.BIBLE;
         final PatternContainer bibleDefaults = this.defaultedBy(globalDefaults);
 
@@ -82,10 +82,10 @@ public class Bible extends PagesContainer {
         Context bibleCtx = new Context(bibleCtxMeta);
         ContextStream.Single bibleStream = null;
 
-        List<SourceFile> bibleFiles = getBibleFiles(bibleDefaults, sourceFileBuilder);
-        if(!bibleFiles.isEmpty()) {
+        List<PageData> biblePages = getBiblePages(bibleDefaults, sourceFileBuilder);
+        if(!biblePages.isEmpty()) {
             // We have pages for this bible, prepare a context with the given streamer and append books at the end.
-            bibleStream = ctxStreamer.apply(bibleCtx, bibleFiles).edit().inject(
+            bibleStream = ctxStreamer.apply(bibleCtx, biblePages).edit().inject(
                     ContextStreamEditor.InjectionPosition.AT_END, bibleCtxMeta, bookStreams
             ).process();
         }

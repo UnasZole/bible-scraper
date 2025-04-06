@@ -47,8 +47,8 @@ public abstract class PagesContainer extends PatternContainer {
      * @param sourceFileBuilder Builder to extract sources files based on the properties available.
      * @return The built source files.
      */
-    protected List<SourceFile> getPageFiles(PatternContainer defaults, final Function<String, String> argEvaluator,
-                                            final String patternPrefix, final SourceFile.Builder sourceFileBuilder) {
+    protected List<PageData> getPageFiles(PatternContainer defaults, final Function<String, String> argEvaluator,
+                                          final String patternPrefix, final SourceFile.Builder sourceFileBuilder) {
         final PatternContainer containerDefaults = this.defaultedBy(defaults);
         return getPages().stream()
                 .map(p -> p.evaluateFile(containerDefaults, argEvaluator, patternPrefix, sourceFileBuilder))

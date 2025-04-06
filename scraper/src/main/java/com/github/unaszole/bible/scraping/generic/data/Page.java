@@ -20,18 +20,19 @@ public class Page extends PatternContainer {
     }
 
     /**
-     * Try to build a source file by evaluating the patterns of this container.
+     * Try to build a page file by evaluating the patterns of this container.
      * @param defaults The parent context to default to for patterns and arguments.
      * @param argEvaluator A function to evaluate arguments before substituting them in the pattern.
      * @param patternPrefix A prefix for the properties expected by the sourceFileBuilder.
      * @param sourceFileBuilder Logic to extract a source file from a set of properties.
      * @return The built source file, or empty optional if no source file could be found from the given properties.
      */
-    public Optional<SourceFile> evaluateFile(PatternContainer defaults, Function<String, String> argEvaluator,
-                                             String patternPrefix, SourceFile.Builder sourceFileBuilder) {
+    public Optional<PageData> evaluateFile(PatternContainer defaults, Function<String, String> argEvaluator,
+                                           String patternPrefix, SourceFile.Builder sourceFileBuilder) {
         final PatternContainer finalContainer = this.defaultedBy(defaults);
+
         return sourceFileBuilder.buildFrom(
                 patternName -> finalContainer.evaluate(patternPrefix + patternName, argEvaluator)
-        );
+        ).map(sf -> new PageData(sf, finalContainer.args));
     }
 }

@@ -90,20 +90,20 @@ public class ChapterSeq extends PagesContainer {
         return getPageValues(bookDefaults, "chapterPublishedNumber", a -> evalChapterArg(a, chapterNb));
     }
 
-    public List<SourceFile> getChapterFiles(PatternContainer bookDefaults, final int chapterNb,
-                                            SourceFile.Builder sourceFileBuilder) {
+    public List<PageData> getChapterPages(PatternContainer bookDefaults, final int chapterNb,
+                                          SourceFile.Builder sourceFileBuilder) {
         assert containsChapter(chapterNb);
         return getPageFiles(bookDefaults, a -> evalChapterArg(a, chapterNb), "chapter", sourceFileBuilder);
     }
 
     public ContextStream.Single streamChapter(PatternContainer bookDefaults, ContextMetadata chapterCtxMeta,
                                               SourceFile.Builder sourceFileBuilder,
-                                              BiFunction<Context, List<SourceFile>, ContextStream.Single> ctxStreamer) {
+                                              BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
         assert chapterCtxMeta.type == ContextType.CHAPTER && containsChapter(chapterCtxMeta.chapter);
 
-        List<SourceFile> chapterFiles = getChapterFiles(bookDefaults, chapterCtxMeta.chapter, sourceFileBuilder);
+        List<PageData> chapterPages = getChapterPages(bookDefaults, chapterCtxMeta.chapter, sourceFileBuilder);
 
-        if(!chapterFiles.isEmpty()) {
+        if(!chapterPages.isEmpty()) {
             // We have pages for this chapter, proceed.
 
             // Compute chapter value
@@ -113,7 +113,7 @@ public class ChapterSeq extends PagesContainer {
 
             // Prepare context with the provided filler.
             Context chapterCtx = new Context(chapterCtxMeta, chapterValue);
-            ContextStream.Single chapterStream = ctxStreamer.apply(chapterCtx, chapterFiles);
+            ContextStream.Single chapterStream = ctxStreamer.apply(chapterCtx, chapterPages);
 
             // Configure editor if provided.
             if(edit != null) {

@@ -30,7 +30,7 @@ public class BibleMetadata {
         if(fieldValue == null) {
             return defaultValue;
         }
-        return PatternContainer.substituteArgs(fieldValue, args::get);
+        return VarSubstitution.substituteVars(fieldValue, args::get);
     }
 
     public DocumentMetadata getDocMeta(Map<String, String> args) {
