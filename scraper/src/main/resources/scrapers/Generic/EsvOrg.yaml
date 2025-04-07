@@ -1,0 +1,371 @@
+description: "English Standard Version (esv.org)"
+bible:
+  metadata:
+    language: en
+    systemName: engESV
+    title: English Standard Version
+    versification: KJV
+
+  patterns:
+    chapterUrl: "https://www.esv.org/{BOOK}+{CHAPTER}"
+    chapterPublishedNumber: "{CHAPTER}"
+
+  args:
+    CHAPTER: = $i
+
+  books:
+    - osis: Gen
+      args: { BOOK: Genesis }
+      chapters: [ { from: 1, to: 50 } ]
+
+    - osis: Exod
+      args: { BOOK: Exodus }
+      chapters: [ { from: 1, to: 40 } ]
+
+    - osis: Lev
+      args: { BOOK: Leviticus }
+      chapters: [ { from: 1, to: 27 } ]
+
+    - osis: Num
+      args: { BOOK: Numbers }
+      chapters: [ { from: 1, to: 36 } ]
+
+    - osis: Deut
+      args: { BOOK: Deuteronomy }
+      chapters: [ { from: 1, to: 34 } ]
+
+    - osis: Josh
+      args: { BOOK: Joshua }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: Judg
+      args: { BOOK: Judges }
+      chapters: [ { from: 1, to: 21 } ]
+
+    - osis: Ruth
+      args: { BOOK: Ruth }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: 1Sam
+      args: { BOOK: 1 Samuel }
+      chapters: [ { from: 1, to: 31 } ]
+
+    - osis: 2Sam
+      args: { BOOK: 2 Samuel }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: 1Kgs
+      args: { BOOK: 1 Kings }
+      chapters: [ { from: 1, to: 22 } ]
+
+    - osis: 2Kgs
+      args: { BOOK: 2 Kings }
+      chapters: [ { from: 1, to: 25 } ]
+
+    - osis: 1Chr
+      args: { BOOK: 1 Chronicles }
+      chapters: [ { from: 1, to: 29 } ]
+
+    - osis: 2Chr
+      args: { BOOK: 2 Chronicles }
+      chapters: [ { from: 1, to: 36 } ]
+
+    - osis: Ezra
+      args: { BOOK: Ezra }
+      chapters: [ { from: 1, to: 10 } ]
+
+    - osis: Neh
+      args: { BOOK: Nehemiah }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Esth
+      args: { BOOK: Esther }
+      chapters: [ { from: 1, to: 10 } ]
+
+    - osis: Job
+      args: { BOOK: Job }
+      chapters: [ { from: 1, to: 42 } ]
+
+    - osis: Ps
+      args: { BOOK: Psalms }
+      chapters: [ { from: 1, to: 150 } ]
+
+    - osis: Prov
+      args: { BOOK: Proverbs }
+      chapters: [ { from: 1, to: 31 } ]
+
+    - osis: Eccl
+      args: { BOOK: Ecclesiastes }
+      chapters: [ { from: 1, to: 12 } ]
+
+    - osis: Song
+      args: { BOOK: Song of Solomon }
+      chapters: [ { from: 1, to: 8 } ]
+
+    - osis: Isa
+      args: { BOOK: Isaiah }
+      chapters: [ { from: 1, to: 66 } ]
+
+    - osis: Jer
+      args: { BOOK: Jeremiah }
+      chapters: [ { from: 1, to: 52 } ]
+
+    - osis: Lam
+      args: { BOOK: Lamentations }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: Ezek
+      args: { BOOK: Ezekiel }
+      chapters: [ { from: 1, to: 48 } ]
+
+    - osis: Dan
+      args: { BOOK: Daniel }
+      chapters: [ { from: 1, to: 12 } ]
+
+    - osis: Hos
+      args: { BOOK: Hosea }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Joel
+      args: { BOOK: Joel }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Amos
+      args: { BOOK: Amos }
+      chapters: [ { from: 1, to: 9 } ]
+
+    - osis: Obad
+      args: { BOOK: Obadiah }
+      chapters: [ { at: 1 } ]
+
+    - osis: Jonah
+      args: { BOOK: Jonah }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Mic
+      args: { BOOK: Micah }
+      chapters: [ { from: 1, to: 7 } ]
+
+    - osis: Nah
+      args: { BOOK: Nahum }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Hab
+      args: { BOOK: Habakkuk }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Zeph
+      args: { BOOK: Zephaniah }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Hag
+      args: { BOOK: Haggai }
+      chapters: [ { from: 1, to: 2 } ]
+
+    - osis: Zech
+      args: { BOOK: Zechariah }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Mal
+      args: { BOOK: Malachi }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Matt
+      args: { BOOK: Matthew }
+      chapters: [ { from: 1, to: 28 } ]
+
+    - osis: Mark
+      args: { BOOK: Mark }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: Luke
+      args: { BOOK: Luke }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: John
+      args: { BOOK: John }
+      chapters: [ { from: 1, to: 21 } ]
+
+    - osis: Acts
+      args: { BOOK: Acts }
+      chapters: [ { from: 1, to: 28 } ]
+
+    - osis: Rom
+      args: { BOOK: Romans }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 1Cor
+      args: { BOOK: 1+Corinthians }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 2Cor
+      args: { BOOK: 2+Corinthians }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Gal
+      args: { BOOK: Galatians }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Eph
+      args: { BOOK: Ephesians }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Phil
+      args: { BOOK: Philippians }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Col
+      args: { BOOK: Colossians }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: 1Thess
+      args: { BOOK: 1 Thessalonians }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2Thess
+      args: { BOOK: 2 Thessalonians }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: 1Tim
+      args: { BOOK: 1 Timothy }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: 2Tim
+      args: { BOOK: 2 Timothy }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Titus
+      args: { BOOK: Titus }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Phlm
+      args: { BOOK: Philemon }
+      chapters: [ { at: 1 } ]
+
+    - osis: Heb
+      args: { BOOK: Hebrews }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Jas
+      args: { BOOK: James }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 1Pet
+      args: { BOOK: 1 Peter }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2Pet
+      args: { BOOK: 2 Peter }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: 1John
+      args: { BOOK: 1 John }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2John
+      args: { BOOK: 2 John }
+      chapters: [ { at: 1 } ]
+
+    - osis: 3John
+      args: { BOOK: 3 John }
+      chapters: [ { at: 1 } ]
+
+    - osis: Jude
+      args: { BOOK: Jude }
+      chapters: [ { at: 1 } ]
+
+    - osis: Rev
+      args: { BOOK: Revelation }
+      chapters: [ { from: 1, to: 22 } ]
+
+html:
+  elements: []
+
+  externalParsers:
+    - selector: "div#bible-content > section[data-reference=\"{BOOK} {CHAPTER}\"]"
+      nodeParser:
+        nodes: []
+
+        elements:
+          - selector: "h3"
+            contexts:
+              - type: SECTION_TITLE
+                descendants:
+                  - type: TEXT
+                    op: text
+
+          - selector: "b.chapter-num"
+            contexts:
+              - type: VERSE
+                op: literal=1
+
+          - selector: "b.verse-num"
+            contexts:
+              - type: VERSE
+                op: ownText
+
+          - selector: ":is(p:not([class]), p.same-paragraph)"
+            contexts:
+              - type: PARAGRAPH_BREAK
+
+          - selector: "section.line-group"
+            contexts:
+              - type: POETRY_STANZA_BREAK
+
+          - selector: "p.line:not(.indent)"
+            contexts:
+              - type: POETRY_LINE_START
+                op: literal=1
+
+          - selector: "p.line.indent"
+            contexts:
+              - type: POETRY_LINE_START
+                op: literal=2
+
+          - selector: "u"
+            withAncestors: [ INLINE_TEXT ]
+            withoutAncestors: [ MARKUP ]
+            contexts:
+              - type: TEXT
+                op: wholeText
+
+          - selector: "sup.crossref > a"
+            contexts:
+              - type: NOTE
+                descendants:
+                  - type: TEXT
+                    op: attribute=data-passage
+
+        externalParsers:
+          - selector: "sup.footnote > a"
+            textParser:
+              stringExtractor:
+                op: attribute=title
+              html:
+                elements: []
+                externalParsers:
+                  - selector: "span.footnote-embedded"
+                    nodeParser:
+                      nodes:
+                        - withoutAncestors: [ NOTE_MARKUP ]
+                          contexts:
+                            - type: TEXT
+                              regexp: (.*)
+                      elements:
+                        - selector: "span.footnote-embedded"
+                          contexts:
+                            - type: NOTE
+
+                        - selector: "i.catch-word"
+                          contexts:
+                            - type: CATCHPHRASE
+                              descendants:
+                                - type: TEXT
+                                  op: text
+
+                        - selector: "i:not(.catch-word)"
+                          contexts:
+                            - type: QUOTE
+                              descendants:
+                                - type: TEXT
+                                  op: text

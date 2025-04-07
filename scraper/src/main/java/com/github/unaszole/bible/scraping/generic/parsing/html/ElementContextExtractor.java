@@ -1,8 +1,8 @@
 package com.github.unaszole.bible.scraping.generic.parsing.html;
 
+import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import com.github.unaszole.bible.scraping.generic.parsing.GenericContextExtractor;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Evaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +20,13 @@ public class ElementContextExtractor extends GenericContextExtractor<Element> {
      * If specified, this selector is relative to the parsed element : the first descendant matching this selector will
      * be used by this extractor.
      */
-    public Evaluator selector;
+    public EvaluatorWrapper selector;
     /**
      * If provided, and if the "selector" points to an element with an "href" attribute (typically an "a"), then
      * this link target selector is evaluated from the target of the link to select another element.
      * Typically used to fetch note contents elsewhere in a page from a note reference link.
      */
-    public Evaluator linkTargetSelector;
+    public EvaluatorWrapper linkTargetSelector;
 
     /**
      * See {@link ElementStringExtractor#op}.
@@ -55,12 +55,12 @@ public class ElementContextExtractor extends GenericContextExtractor<Element> {
      * @return The value for the new context.
      */
     @Override
-    protected String extractValue(Element parsedElt) {
+    protected String extractValue(Element parsedElt, ContextualData contextualData) {
         if(op == null) {
             return null;
         }
 
-        Element targetElt = selector != null ? parsedElt.select(selector).first() : parsedElt;
+        Element targetElt = selector != null ? parsedElt.select(selector.get(contextualData)).first() : parsedElt;
 
         Element actualTargetElt = targetElt;
 
@@ -69,7 +69,7 @@ public class ElementContextExtractor extends GenericContextExtractor<Element> {
             if (!link[0].isEmpty()) {
                 throw new IllegalArgumentException("Cannot follow link " + link + " as it's not local to the page");
             }
-            actualTargetElt = targetElt.ownerDocument().getElementById(link[1]).selectFirst(linkTargetSelector);
+            actualTargetElt = targetElt.ownerDocument().getElementById(link[1]).selectFirst(linkTargetSelector.get(contextualData));
         }
 
         ElementStringExtractor stringExtractor = new ElementStringExtractor();

@@ -5,7 +5,6 @@ import com.github.unaszole.bible.parsing.Parser;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextStackAware;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Evaluator;
 
 import java.util.Deque;
 import java.util.Optional;
@@ -16,13 +15,13 @@ public class ElementExternalParser extends ContextStackAware {
     /**
      * Selector to check if the current element triggers this external parser.
      */
-    public Evaluator selector;
+    public EvaluatorWrapper selector;
 
     /**
      * If the selector field selected an element with an href attribute pointing to another anchor in the page,
      * a linkTargetSelector allows running the external parser on a descendant of the target of the link.
      */
-    public Evaluator linkTargetSelector;
+    public EvaluatorWrapper linkTargetSelector;
 
     /**
      * If not null, invokes an HTML node parser iterating on the child nodes of the selected element.
@@ -34,14 +33,14 @@ public class ElementExternalParser extends ContextStackAware {
      */
     public ElementTextParser textParser;
 
-    private boolean canTriggerAtPosition(Element e, Deque<Context> currentContextStack) {
-        return e.is(selector) && isContextStackValid(
+    private boolean canTriggerAtPosition(Element e, Deque<Context> currentContextStack, ContextualData contextualData) {
+        return e.is(selector.get(contextualData)) && isContextStackValid(
                 currentContextStack.stream().map(c -> c.metadata).collect(Collectors.toList())
         );
     }
 
-    private Optional<Element> getTargetElement(Element e, Deque<Context> currentContextStack) {
-        if(!canTriggerAtPosition(e, currentContextStack)) {
+    private Optional<Element> getTargetElement(Element e, Deque<Context> currentContextStack, ContextualData contextualData) {
+        if(!canTriggerAtPosition(e, currentContextStack, contextualData)) {
             return Optional.empty();
         }
 
@@ -51,14 +50,14 @@ public class ElementExternalParser extends ContextStackAware {
             if (!link[0].isEmpty()) {
                 throw new IllegalArgumentException("Cannot follow link " + link + " as it's not local to the page");
             }
-            target = e.ownerDocument().getElementById(link[1]).selectFirst(linkTargetSelector);
+            target = e.ownerDocument().getElementById(link[1]).selectFirst(linkTargetSelector.get(contextualData));
         }
         return Optional.ofNullable(target);
     }
 
     public Optional<Parser<?>> getParserIfApplicable(final Element e, final Deque<Context> currentContextStack,
                                                      final ContextualData contextualData) {
-        return getTargetElement(e, currentContextStack)
+        return getTargetElement(e, currentContextStack, contextualData)
                 .flatMap(te -> {
                     if(nodeParser != null) {
                         return Optional.of(nodeParser.getParser(te, currentContextStack, contextualData));

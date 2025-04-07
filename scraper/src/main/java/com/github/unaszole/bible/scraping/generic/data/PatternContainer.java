@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Element that sets or overrides some patterns, or some arguments used in these patterns.
@@ -72,5 +73,15 @@ public class PatternContainer {
             return Optional.empty();
         }
         return Optional.of(VarSubstitution.substituteVars(pattern, a -> argEvaluator.apply(args.get(a))));
+    }
+
+    public final Map<String, String> evaluateAllArgs(Function<String, String> argEvaluator) {
+        if(args == null) {
+            return null;
+        }
+
+        return args.entrySet().stream()
+                .map(e -> Map.entry(e.getKey(), argEvaluator.apply(e.getValue())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }

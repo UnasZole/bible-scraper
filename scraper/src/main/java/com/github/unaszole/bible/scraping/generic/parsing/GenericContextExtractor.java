@@ -17,7 +17,7 @@ public abstract class GenericContextExtractor<Position> {
 
     protected abstract List<? extends GenericContextExtractor<Position>> getDescendants();
 
-    protected abstract String extractValue(Position position);
+    protected abstract String extractValue(Position position, ContextualData contextualData);
 
     private static String stripLeadingZeroes(String parsedNb) {
         return parsedNb.length() == 1 ? parsedNb : parsedNb.replaceAll("^0*(.)", "$1");
@@ -42,7 +42,7 @@ public abstract class GenericContextExtractor<Position> {
             }
         }
 
-        String value = extractValue(position);
+        String value = extractValue(position, contextualData);
         final Object finalValue;
         switch(type.valueType) {
             case BOOK_ID:

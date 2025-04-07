@@ -36,9 +36,14 @@ public class ElementStringExtractor {
                 return opSplit[1];
             case "ownText":
                 return e.ownText();
+            case "wholeOwnText":
+                return e.wholeOwnText();
             case "text":
-            default:
                 return e.text();
+            case "wholeText":
+                return e.wholeText();
+            default:
+                throw new IllegalArgumentException("Unknown operator : " + opSplit[0]);
         }
     }
 

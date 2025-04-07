@@ -2,6 +2,7 @@ package com.github.unaszole.bible.scraping.generic.parsing.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import com.github.unaszole.bible.scraping.generic.parsing.GenericContextExtractor;
 import com.jayway.jsonpath.JsonPath;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ public class JsonNodeContextExtractor extends GenericContextExtractor<JsonParser
     }
 
     @Override
-    protected String extractValue(JsonParserProvider.JsonNodeWrapper jsonNode) {
+    protected String extractValue(JsonParserProvider.JsonNodeWrapper jsonNode, ContextualData contextualData) {
         if(literal != null) {
             return literal;
         }

@@ -30,7 +30,8 @@ public class StringContextExtractor extends GenericContextExtractor<String> {
         return descendants;
     }
 
-    protected String extractValue(String text) {
+    @Override
+    protected String extractValue(String text, ContextualData contextualData) {
         if(regexp == null) {
             return null;
         }

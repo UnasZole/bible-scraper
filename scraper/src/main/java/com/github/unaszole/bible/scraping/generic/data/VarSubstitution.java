@@ -13,6 +13,6 @@ public class VarSubstitution {
 
     public static String substituteVars(String str, final Function<String, String> varGetter) {
         Matcher varRefs = VAR_REFERENCE.matcher(str);
-        return varRefs.replaceAll(r -> varGetter.apply(r.group(1)));
+        return varRefs.replaceAll(r -> Matcher.quoteReplacement(varGetter.apply(r.group(1))));
     }
 }

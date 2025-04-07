@@ -13,6 +13,7 @@ import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.parsing.Parser;
 import com.github.unaszole.bible.scraping.generic.data.*;
 import com.github.unaszole.bible.scraping.generic.parsing.PageListParser;
+import com.github.unaszole.bible.scraping.generic.parsing.html.EvaluatorWrapper;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.CachedDownloader;
 import com.github.unaszole.bible.downloading.HttpSourceFile;
@@ -76,11 +77,11 @@ public class Generic extends Scraper {
     }
 
     private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory()).registerModule(new SimpleModule()
-            .addDeserializer(Evaluator.class, new StdDeserializer<>(Evaluator.class) {
+            .addDeserializer(EvaluatorWrapper.class, new StdDeserializer<>(EvaluatorWrapper.class) {
                 @Override
-                public Evaluator deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
+                public EvaluatorWrapper deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
                         throws IOException {
-                    return QueryParser.parse(jsonParser.readValueAs(String.class));
+                    return new EvaluatorWrapper(jsonParser.readValueAs(String.class));
                 }
             })
             .addDeserializer(JsonPath.class, new StdDeserializer<>(JsonPath.class) {
