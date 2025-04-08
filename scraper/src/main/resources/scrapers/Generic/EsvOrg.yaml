@@ -282,7 +282,9 @@ html:
   elements: []
 
   externalParsers:
-    - selector: "div#bible-content > section[data-reference=\"{BOOK} {CHAPTER}\"]"
+    # The section for a chapter has a data-reference attribute, with either the book and chapter,
+    # Or just the book for books with a single chapter.
+    - selector: "div#bible-content > section:is([data-reference=\"{BOOK} {CHAPTER}\"], [data-reference=\"{BOOK}\"])"
       nodeParser:
         nodes: []
 
