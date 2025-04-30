@@ -4,19 +4,13 @@ import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
 import com.github.unaszole.bible.parsing.PositionBufferedParserCore;
-import com.github.unaszole.bible.scraping.generic.parsing.ContextStackAware;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import org.jsoup.nodes.Element;
 
 import java.util.Deque;
 import java.util.List;
 
-public class ElementParser extends ContextStackAware {
-
-    /**
-     * A selector used to test if an element can be parsed by this parser.
-     */
-    public EvaluatorWrapper selector;
+public class ElementParser extends ElementAndContextStackAware {
 
     /**
      * Instructions to extract a sequence of contexts from the selected HTML element.
@@ -33,7 +27,7 @@ public class ElementParser extends ContextStackAware {
                              ContextualData contextualData) {
         // If the first context of the sequence matches the requested type, and the context stack is valid.
         return contexts != null && !contexts.isEmpty() && contexts.get(0).type == nextContextType
-                && isContextStackValid(ancestorStack) && e.is(selector.get(contextualData));
+                && areElementAndContextStackValid(e, ancestorStack, contextualData);
     }
 
     public List<PositionBufferedParserCore.ContextReader> parse(final Element e, Deque<ContextMetadata> ancestorStack,

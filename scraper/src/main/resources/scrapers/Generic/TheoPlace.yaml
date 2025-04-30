@@ -334,19 +334,35 @@ html:
         - type: PARAGRAPH_BREAK
         - type: TEXT
           op: text
+    # h2 is either a major or a normal section title... (See https://theo.place/bible-tob-1-1 or https://theo.place/bible-dby-7-3)
+    # We consider it a major section only if immediately followed by a minor (ie h3).
     - selector: "#logos > h2"
+      nextElement:
+        matchesSelector: "h3"
       contexts:
         - type: MAJOR_SECTION_TITLE
           descendants:
             - type: TEXT
               op: text
-    - selector: "#logos > h3:not(:has(> em))"
+    - selector: "#logos > h2"
+      nextElement:
+        matchesSelector: ":not(h3)"
       contexts:
         - type: SECTION_TITLE
           descendants:
             - type: TEXT
               op: text
-    - selector: "#logos > h3:has(> em)"
+    - selector: "#logos > h3"
+      previousElement:
+        matchesSelector: "h2"
+      contexts:
+        - type: SECTION_TITLE
+          descendants:
+            - type: TEXT
+              op: text
+    - selector: "#logos > h3"
+      previousElement:
+        matchesSelector: ":not(h2)"
       contexts:
         - type: MINOR_SECTION_TITLE
           descendants:
@@ -358,18 +374,48 @@ html:
         - type: VERSE
           op: text
 
+    # If we have a poetry block, the following line break marks the end of poetry.
+    - selector: "#logos > span[data-verset]:has(blockquote) + br"
+      contexts:
+        - type: POETRY_STANZA_BREAK
+
   externalParsers:
+    # A span[data-verset] directly contains verse text nodes and elements.
     - selector: "#logos > span[data-verset]"
       withAncestors: [ VERSE ]
-      withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
       nodeParser:
         nodes:
-          - contexts:
+          - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+            contexts:
               - type: TEXT
                 regexp: (.*)
 
         elements:
-          - selector: "#logos > span[data-verset] > *:not(button.footnote):not(br)"
+          # Outside of a blockquote, we take <br> into account.
+          # If a br is found at the end of verse text, consider it a paragraph break. (See https://theo.place/bible-mdm-40-5)
+          - selector: "#logos > span[data-verset] > br"
+            nextNode:
+              exists: false
+            contexts:
+              - type: PARAGRAPH_BREAK
+          # If a br is found before the end of verse text, it could be considered a poetry line start (See https://theo.place/bible-tob-4-21), but then we wouldn't be able to detect the end of poetry.
+          # So we just replace it by a space instead.
+          - selector: "#logos > span[data-verset] > br"
+            nextNode:
+              exists: true
+            contexts:
+              - type: TEXT
+                op: "literal= "
+
+          # Parsing of verse text.
+          # TODO : in verse 1 or 2 of psalms, should be interpreted as psalm title instead...
+          - selector: "i"
+            contexts:
+              - type: OT_QUOTE
+                descendants:
+                  - type: TEXT
+                    op: text
+          - selector: "em"
             contexts:
               - type: TEXT
                 op: text
@@ -377,21 +423,103 @@ html:
             contexts:
               - type: NOTE
                 descendants:
-                - type: TEXT
-                  op: attribute=data-bs-content
+                  - type: TEXT
+                    op: attribute=data-bs-content
+          - selector: "span.sr"
+            contexts:
+              - type: NOTE
+                descendants:
+                  - type: TEXT
+                    op: text
 
-          # theo.place does not have explicit poetry markup, but uses line breaks inside verses.
-          # The following rules interpret that in a "best-effort" mode, such that verses which contain line breaks are treated as poetry.
-          # It leads to some false positives : when the poetry starts or end in the middle of a verse, the full verse will be tagged as poetry anyway.
-          # See Num 21:14 in the "tob" bible for example.
-          - selector: "#logos > span[data-verset]:has(> br)"
-            contexts:
-              - type: POETRY_LINE_START
-                op: literal=1
-          - selector: "#logos > span[data-verset] > br"
-            contexts:
-              - type: POETRY_LINE_START
-                op: literal=1
-          - selector: "#logos > span[data-verset]:has(> br) + br + span.verset + span[data-verset]:not(:has(> br))"
-            contexts:
-              - type: POETRY_STANZA_BREAK
+        externalParsers:
+          # blockquote marks start of a poetry block
+          - selector: "#logos > span[data-verset] > blockquote"
+            nodeParser:
+              nodes:
+                - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                  contexts:
+                    - type: TEXT
+                      regexp: (.*)
+              elements:
+                # Blockquote means poetry block, so start a poetry line.
+                - selector: "blockquote"
+                  contexts:
+                    - type: POETRY_LINE_START
+                      op: literal=1
+                # If a line break is the first child of the poetry block, it's a new poetry line after initial verse text.
+                - selector: "blockquote > br:first-child"
+                  contexts:
+                    - type: POETRY_LINE_START
+                      op: literal=1
+
+                # Nested verse number inside a blockquote poetry block.
+                - selector: "span.verset"
+                  contexts:
+                    - type: VERSE
+                      op: text
+
+                # Parsing of verse text, identical to the parent parser.
+                - selector: "i"
+                  contexts:
+                    - type: OT_QUOTE
+                      descendants:
+                        - type: TEXT
+                          op: text
+                - selector: "em"
+                  contexts:
+                    - type: TEXT
+                      op: text
+                - selector: "#logos button.footnote"
+                  contexts:
+                    - type: NOTE
+                      descendants:
+                        - type: TEXT
+                          op: attribute=data-bs-content
+                - selector: "span.sr"
+                  contexts:
+                    - type: NOTE
+                      descendants:
+                        - type: TEXT
+                          op: text
+
+              externalParsers:
+                # Nested verse inside a blockquote poetry block.
+                - selector: "blockquote span[data-verset]"
+                  nodeParser:
+                    nodes:
+                      - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                        contexts:
+                          - type: TEXT
+                            regexp: (.*)
+
+                    elements:
+                      # Inside poetry, line break means new poetry line.
+                      - selector: "br"
+                        contexts:
+                          - type: POETRY_LINE_START
+                            op: literal=1
+
+                      # Parsing of verse text, identical to the parent parser.
+                      - selector: "i"
+                        contexts:
+                          - type: OT_QUOTE
+                            descendants:
+                              - type: TEXT
+                                op: text
+                      - selector: "em"
+                        contexts:
+                          - type: TEXT
+                            op: text
+                      - selector: "#logos button.footnote"
+                        contexts:
+                          - type: NOTE
+                            descendants:
+                              - type: TEXT
+                                op: attribute=data-bs-content
+                      - selector: "span.sr"
+                        contexts:
+                          - type: NOTE
+                            descendants:
+                              - type: TEXT
+                                op: text

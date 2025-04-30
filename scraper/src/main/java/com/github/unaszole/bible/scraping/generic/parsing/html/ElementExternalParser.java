@@ -1,21 +1,17 @@
 package com.github.unaszole.bible.scraping.generic.parsing.html;
 
 import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.parsing.Parser;
-import com.github.unaszole.bible.scraping.generic.parsing.ContextStackAware;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import org.jsoup.nodes.Element;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ElementExternalParser extends ContextStackAware {
-
-    /**
-     * Selector to check if the current element triggers this external parser.
-     */
-    public EvaluatorWrapper selector;
+public class ElementExternalParser extends ElementAndContextStackAware {
 
     /**
      * If the selector field selected an element with an href attribute pointing to another anchor in the page,
@@ -33,14 +29,8 @@ public class ElementExternalParser extends ContextStackAware {
      */
     public ElementTextParser textParser;
 
-    private boolean canTriggerAtPosition(Element e, Deque<Context> currentContextStack, ContextualData contextualData) {
-        return e.is(selector.get(contextualData)) && isContextStackValid(
-                currentContextStack.stream().map(c -> c.metadata).collect(Collectors.toList())
-        );
-    }
-
-    private Optional<Element> getTargetElement(Element e, Deque<Context> currentContextStack, ContextualData contextualData) {
-        if(!canTriggerAtPosition(e, currentContextStack, contextualData)) {
+    private Optional<Element> getTargetElement(Element e, Deque<ContextMetadata> currentContextStack, ContextualData contextualData) {
+        if(!areElementAndContextStackValid(e, currentContextStack, contextualData)) {
             return Optional.empty();
         }
 
@@ -55,9 +45,15 @@ public class ElementExternalParser extends ContextStackAware {
         return Optional.ofNullable(target);
     }
 
+    private Deque<ContextMetadata> toMetadataStack(Deque<Context> currentContextStack) {
+        return currentContextStack.stream()
+                .map(c -> c.metadata)
+                .collect(Collectors.toCollection(ArrayDeque::new));
+    }
+
     public Optional<Parser<?>> getParserIfApplicable(final Element e, final Deque<Context> currentContextStack,
                                                      final ContextualData contextualData) {
-        return getTargetElement(e, currentContextStack, contextualData)
+        return getTargetElement(e, toMetadataStack(currentContextStack), contextualData)
                 .flatMap(te -> {
                     if(nodeParser != null) {
                         return Optional.of(nodeParser.getParser(te, currentContextStack, contextualData));
