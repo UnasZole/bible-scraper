@@ -26,7 +26,7 @@ public class IntegerValue implements ValueType.Definition<Integer> {
         if(roman.startsWith("V")) { return 5 + parseRomanNumeral(roman.substring(1)); }
         if(roman.startsWith("IV")) { return 4 + parseRomanNumeral(roman.substring(2)); }
         if(roman.startsWith("I")) { return 1 + parseRomanNumeral(roman.substring(1)); }
-        throw new IllegalArgumentException(roman + " is not a valid roman numeral");
+        throw new NumberFormatException(roman + " is not a valid roman numeral");
     }
 
     public static int parseInt(String str) {
@@ -36,7 +36,7 @@ public class IntegerValue implements ValueType.Definition<Integer> {
         else if(ROMAN_NUM.matcher(str.toUpperCase()).matches()) {
             return parseRomanNumeral(str.toUpperCase());
         }
-        throw new IllegalArgumentException(str + " is not a valid integer");
+        throw new NumberFormatException(str + " is not a valid integer");
     }
 
     @Override

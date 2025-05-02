@@ -106,7 +106,7 @@ public class Book extends PagesContainer {
         if(bookStream != null && edit != null) {
             ContextStreamEditor<ContextStream.Single> editor = bookStream.edit();
             for(StreamEditorConfig cfg: edit) {
-                cfg.configureEditor(editor, ((BibleBook)bookCtxMeta.id.get(IdField.BIBLE_BOOK)), 0);
+                cfg.configureEditor(editor, bookCtxMeta.id.get(IdField.BIBLE_BOOK), 0);
             }
             bookStream = editor.process();
         }

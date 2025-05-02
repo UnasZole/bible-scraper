@@ -289,14 +289,14 @@ public class TheoPlace extends Scraper {
         BookRef bookRef;
         switch(rootContextMeta.type) {
             case CHAPTER:
-                BibleBook chapterBook = (BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK);
-                int chapterNb = (int) rootContextMeta.id.get(IdField.BIBLE_CHAPTER);
+                BibleBook chapterBook = rootContextMeta.id.get(IdField.BIBLE_BOOK);
+                int chapterNb = rootContextMeta.id.get(IdField.BIBLE_CHAPTER);
                 bookRef = BOOKS.get(chapterBook);
                 Context chapterCtx = new Context(rootContextMeta, Integer.toString(chapterNb));
                 return getContextStream(downloader, bookRef.getChapterUrl(bible, chapterNb), chapterCtx);
 
             case BOOK:
-                BibleBook bookId = (BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK);
+                BibleBook bookId = rootContextMeta.id.get(IdField.BIBLE_BOOK);
                 bookRef = BOOKS.get(bookId);
                 Context bookCtx = new Context(rootContextMeta, bookId.getOSIS());
 

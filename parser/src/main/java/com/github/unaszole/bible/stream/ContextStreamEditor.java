@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.stream;
 
+import com.github.unaszole.bible.datamodel.ContextId;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.IdField;
@@ -207,24 +208,23 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         }
 
         public ContextEvent apply(ContextEvent e) {
-            Map<IdField, Object> newId = e.metadata.id;
+            ContextId newId = e.metadata.id;
             if(newId != null) {
-                newId = new HashMap<>(newId);
-                for(Map.Entry<IdField, Object> field: newId.entrySet()) {
-                    switch (field.getKey()) {
+                for(IdField field: e.metadata.type.idType.fields) {
+                    switch (field) {
                         case BIBLE_BOOK:
                             if(bookUpdater != null) {
-                                field.getKey().setOnId(newId, bookUpdater.apply(e.metadata));
+                                newId = newId.with(field, bookUpdater.apply(e.metadata));
                             }
                             break;
                         case BIBLE_CHAPTER:
                             if(chapterNbUpdater != null) {
-                                field.getKey().setOnId(newId, chapterNbUpdater.applyAsInt(e.metadata));
+                                newId = newId.with(field, chapterNbUpdater.applyAsInt(e.metadata));
                             }
                             break;
                         case BIBLE_VERSES:
                             if(verseNbsUpdater != null) {
-                                field.getKey().setOnId(newId, Arrays.stream(verseNbsUpdater.apply(e.metadata)).boxed().collect(Collectors.toList()));
+                                newId = newId.with(field, Arrays.stream(verseNbsUpdater.apply(e.metadata)).boxed().collect(Collectors.toList()));
                             }
                             break;
                         default:
@@ -241,7 +241,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
             }
 
             return new ContextEvent(e.type,
-                    new ContextMetadata(e.metadata.type, newId != null ? Collections.unmodifiableMap(newId) : null),
+                    new ContextMetadata(e.metadata.type, newId),
                     newValue
             );
         }

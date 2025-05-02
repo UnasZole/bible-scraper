@@ -101,8 +101,8 @@ public class ChapterSeq extends PagesContainer {
     public ContextStream.Single streamChapter(PatternContainer bookDefaults, ContextMetadata chapterCtxMeta,
                                               SourceFile.Builder sourceFileBuilder,
                                               BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
-        BibleBook chapterBook = (BibleBook) chapterCtxMeta.id.get(IdField.BIBLE_BOOK);
-        int chapterNb = (int) chapterCtxMeta.id.get(IdField.BIBLE_CHAPTER);
+        BibleBook chapterBook = chapterCtxMeta.id.get(IdField.BIBLE_BOOK);
+        int chapterNb = chapterCtxMeta.id.get(IdField.BIBLE_CHAPTER);
         assert chapterCtxMeta.type == ContextType.CHAPTER && containsChapter(chapterNb);
 
         List<PageData> chapterPages = getChapterPages(bookDefaults, chapterNb, sourceFileBuilder);

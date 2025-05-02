@@ -210,7 +210,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 						String chapterNbStr = extract(CHAPTER_TITLE_PATTERN, 1, e.text());
 						int chapterNb = Integer.parseInt(chapterNbStr);
 
-						Map<IdField, Object> expectedId = IdType.BIBLE_CHAPTER.getNewId(previousOfType, ancestors).get();
+						ContextId expectedId = IdType.BIBLE_CHAPTER.getNewId(previousOfType, ancestors).get();
 
 						if(expectedId.get(IdField.BIBLE_BOOK) == BibleBook.ESTH_GR && chapterNb == 0) {
 							// The first chapter parsed for Esther greek is chapter 0.
@@ -298,7 +298,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 				switch(type) {
 					case VERSE:
 						String verseNb = verseMatch.group(1);
-						Map<IdField, Object> expectedVerseId = IdType.BIBLE_VERSE.getNewId(
+						ContextId expectedVerseId = IdType.BIBLE_VERSE.getNewId(
 								previousOfType, ancestors
 						).orElseThrow(() -> new IllegalStateException("plop"));
 

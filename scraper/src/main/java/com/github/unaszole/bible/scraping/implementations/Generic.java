@@ -204,11 +204,11 @@ public class Generic extends Scraper {
         switch (rootContextMeta.type) {
             case CHAPTER:
                 // Fetch book and chapter sequence. If we can't find them, nothing to load, return null.
-                book = config.bible.getBook((BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK));
+                book = config.bible.getBook(rootContextMeta.id.get(IdField.BIBLE_BOOK));
                 if(book == null) {
                     return null;
                 }
-                seq = book.getChapterSeq((Integer) rootContextMeta.id.get(IdField.BIBLE_CHAPTER));
+                seq = book.getChapterSeq(rootContextMeta.id.get(IdField.BIBLE_CHAPTER));
                 if(seq == null) {
                     return null;
                 }
@@ -219,7 +219,7 @@ public class Generic extends Scraper {
 
             case BOOK:
                 // Fetch book. If we can't find it, nothing to load, return null.
-                book = config.bible.getBook((BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK));
+                book = config.bible.getBook(rootContextMeta.id.get(IdField.BIBLE_BOOK));
                 if(book == null) {
                     return null;
                 }

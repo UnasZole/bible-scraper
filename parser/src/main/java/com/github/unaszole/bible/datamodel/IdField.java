@@ -77,8 +77,4 @@ public enum IdField {
     public Map.Entry<IdField, Object> of(Object value) {
         return Map.entry(this, fieldType.of(value));
     }
-
-    public void setOnId(Map<IdField, Object> id, Object value) {
-        id.put(this, fieldType.of(value));
-    }
 }

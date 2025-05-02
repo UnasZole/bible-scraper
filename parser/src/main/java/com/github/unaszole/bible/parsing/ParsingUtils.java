@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.parsing;
 
 import com.github.unaszole.bible.datamodel.*;
+import com.github.unaszole.bible.datamodel.valuetypes.IntegerValue;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -31,16 +32,16 @@ public class ParsingUtils {
                                                      ContextMetadata previousChapter,
                                                      String parsedNb) {
         // Expected chapter ID based on the previous and ancestors.
-        Map<IdField, Object> expectedChapterId = IdType.BIBLE_CHAPTER.getNewId(previousChapter, ancestorStack)
+        ContextId expectedChapterId = IdType.BIBLE_CHAPTER.getNewId(previousChapter, ancestorStack)
                 .orElseThrow(() -> new IllegalArgumentException("Could not find a next chapter ID following" + previousChapter + " with " + ancestorStack));
 
         // Parse the received chapter number.
         try {
             // Parseable number : use the maximum between this and the expected (to handle skipped chapters).
-            int nb = Integer.parseInt(parsedNb);
+            int nb = IntegerValue.parseInt(parsedNb);
             return new ContextMetadata(ContextType.CHAPTER, IdType.BIBLE_CHAPTER.ofFields(
                     IdField.BIBLE_BOOK.of(expectedChapterId.get(IdField.BIBLE_BOOK)),
-                    IdField.BIBLE_CHAPTER.of(Math.max(nb, (Integer) expectedChapterId.get(IdField.BIBLE_CHAPTER)))
+                    IdField.BIBLE_CHAPTER.of(Math.max(nb, expectedChapterId.get(IdField.BIBLE_CHAPTER)))
             ));
         }
         catch (NumberFormatException e) {
@@ -50,16 +51,16 @@ public class ParsingUtils {
     }
 
     public static ContextMetadata getVerseMetadata(Deque<ContextMetadata> ancestorStack, ContextMetadata previousVerse, String parsedNb) {
-        Map<IdField, Object> expectedVerseId = IdType.BIBLE_VERSE.getNewId(previousVerse, ancestorStack)
+        ContextId expectedVerseId = IdType.BIBLE_VERSE.getNewId(previousVerse, ancestorStack)
                 .orElseThrow(() -> new IllegalArgumentException("Could not find a next verse ID following" + previousVerse + " with " + ancestorStack));
 
         // A number may contain a dash, denoting an interval.
         String[] parsedNbs = parsedNb.split("-");
         try {
-            int startNb = Integer.parseInt(parsedNbs[0]);
+            int startNb = IntegerValue.parseInt(parsedNbs[0]);
             int nbAdditionalVerses = 0;
             if(parsedNbs.length > 1) {
-                int endNb = Integer.parseInt(parsedNbs[1]);
+                int endNb = IntegerValue.parseInt(parsedNbs[1]);
                 nbAdditionalVerses = endNb - startNb;
             }
 

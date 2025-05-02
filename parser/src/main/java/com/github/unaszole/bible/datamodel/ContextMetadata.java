@@ -3,13 +3,13 @@ package com.github.unaszole.bible.datamodel;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 public class ContextMetadata {
 	public final ContextType type;
-	public final Map<IdField, Object> id;
+	public final ContextId id;
 	
-	public ContextMetadata(ContextType type, Map<IdField, Object> id) {
+	public ContextMetadata(ContextType type, ContextId id) {
 		this.type = type;
 		this.id = id;
 	}
@@ -46,5 +46,17 @@ public class ContextMetadata {
 	@Override
 	public String toString() {
 		return type + (id != null ? "=" + id : "");
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null || getClass() != o.getClass()) return false;
+		ContextMetadata that = (ContextMetadata) o;
+		return type == that.type && Objects.equals(id, that.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(type, id);
 	}
 }

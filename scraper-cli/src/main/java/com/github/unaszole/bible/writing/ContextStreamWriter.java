@@ -261,16 +261,16 @@ public class ContextStreamWriter {
 
     public void writeBookContents(StructuredTextWriter.BookContentsWriter writer) {
         if(isOpen(ContextType.CHAPTER, getCurrent())) {
-            BibleBook chapterBook = (BibleBook) getCurrent().metadata.id.get(IdField.BIBLE_BOOK);
-            int chapterNb = (int) getCurrent().metadata.id.get(IdField.BIBLE_CHAPTER);
+            BibleBook chapterBook = getCurrent().metadata.id.get(IdField.BIBLE_BOOK);
+            int chapterNb = getCurrent().metadata.id.get(IdField.BIBLE_CHAPTER);
             currentLocalRef = new BibleRef(chapterBook, chapterNb, 0);
             writer.chapter(chapterNb, (String) getCurrent().value);
         }
 
         writeStructuredText(writer, (w, event) -> {
             if(isOpen(ContextType.CHAPTER, event)) {
-                BibleBook chapterBook = (BibleBook) event.metadata.id.get(IdField.BIBLE_BOOK);
-                int chapterNb = (int) event.metadata.id.get(IdField.BIBLE_CHAPTER);
+                BibleBook chapterBook = event.metadata.id.get(IdField.BIBLE_BOOK);
+                int chapterNb = event.metadata.id.get(IdField.BIBLE_CHAPTER);
                 currentLocalRef = new BibleRef(chapterBook, chapterNb, 0);
                 w.chapter(chapterNb, (String) event.value);
             }
@@ -324,8 +324,8 @@ public class ContextStreamWriter {
             ContextEvent event = next();
 
             if(isOpen(ContextType.BOOK, event)) {
-                currentLocalRef = new BibleRef((BibleBook) event.metadata.id.get(IdField.BIBLE_BOOK), 0, 0);
-                w.book((BibleBook) event.metadata.id.get(IdField.BIBLE_BOOK), this::writeBook);
+                currentLocalRef = new BibleRef(event.metadata.id.get(IdField.BIBLE_BOOK), 0, 0);
+                w.book(event.metadata.id.get(IdField.BIBLE_BOOK), this::writeBook);
             }
         }
     }
@@ -333,12 +333,12 @@ public class ContextStreamWriter {
     public void writeBibleSubset(BibleWriter w, ContextMetadata rootMetadata) {
         switch (rootMetadata.type) {
             case CHAPTER:
-                w.book((BibleBook) rootMetadata.id.get(IdField.BIBLE_BOOK), wb -> {
+                w.book(rootMetadata.id.get(IdField.BIBLE_BOOK), wb -> {
                     wb.contents(this::writeBookContents);
                 });
                 break;
             case BOOK:
-                w.book((BibleBook) rootMetadata.id.get(IdField.BIBLE_BOOK), this::writeBook);
+                w.book(rootMetadata.id.get(IdField.BIBLE_BOOK), this::writeBook);
                 break;
             case BIBLE:
                 writeBible(w);

@@ -113,7 +113,7 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 
 	private Optional<ContextMetadata> getImplicitChildOfType(ContextType implicitType, ContextMetadata previousOfType,
 															 Deque<ContextMetadata> ancestorStack) {
-		if(implicitType.idType == IdType.NO_ID) {
+		if(implicitType.idType.fields == null) {
 			// If the requested type has no ID, then we can return an implicit child with no ID.
 			return Optional.of(new ContextMetadata(implicitType));
 		}
