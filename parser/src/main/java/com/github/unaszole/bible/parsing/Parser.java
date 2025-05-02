@@ -111,18 +111,29 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 		}
 	}
 
+	private Optional<ContextMetadata> getImplicitChildOfType(ContextType implicitType, ContextMetadata previousOfType,
+															 Deque<ContextMetadata> ancestorStack) {
+		if(implicitType.idType == IdType.NO_ID) {
+			// If the requested type has no ID, then we can return an implicit child with no ID.
+			return Optional.of(new ContextMetadata(implicitType));
+		}
+
+		return implicitType.idType.getNewId(previousOfType, ancestorStack)
+				.map(nextId -> new ContextMetadata(implicitType, nextId));
+    }
+
 	private ContextState parseDescendantContext(ContextState baseState, Position position) {
 		Context baseContext = baseState.contextStack.get(0);
+		Deque<ContextMetadata> ancestorStack = baseState.contextStack.stream()
+				.map(c -> c.metadata)
+				.collect(Collectors.toCollection(LinkedList::new));
 
 		// Loop through all allowed types for the next child of the head context.
 		for(ContextType eltType: baseContext.getAllowedTypesForNextChild()) {
 			ContextMetadata previousOfType = baseContext.getLastChildOfTypeMeta(eltType);
 
 			// Try to extract a real context of this type.
-			ParserCore.PositionParseOutput out = core.readContext(baseState.contextStack.stream()
-							.map(c -> c.metadata)
-							.collect(Collectors.toCollection(LinkedList::new)),
-					eltType, previousOfType, position);
+			ParserCore.PositionParseOutput out = core.readContext(ancestorStack, eltType, previousOfType, position);
 
 			if(out.parsedContext != null) {
 				// Found a matching context : return a new state with it.
@@ -133,7 +144,8 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 				return resultState;
 			}
 
-			Optional<ContextMetadata> implicitMeta = baseContext.metadata.getImplicitChildOfType(eltType, previousOfType);
+			// We couldn't extract a real context : check if an implicit context of that type can be created.
+			Optional<ContextMetadata> implicitMeta = getImplicitChildOfType(eltType, previousOfType, ancestorStack);
 			if(implicitMeta.isPresent() && eltType.implicitValue.implicitAllowed) {
 				// If this element type can be created implicitly, build one and look recursively.
 

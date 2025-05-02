@@ -3,9 +3,11 @@ package com.github.unaszole.bible.scraping.generic.data;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
+import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -99,16 +101,18 @@ public class ChapterSeq extends PagesContainer {
     public ContextStream.Single streamChapter(PatternContainer bookDefaults, ContextMetadata chapterCtxMeta,
                                               SourceFile.Builder sourceFileBuilder,
                                               BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
-        assert chapterCtxMeta.type == ContextType.CHAPTER && containsChapter(chapterCtxMeta.chapter);
+        BibleBook chapterBook = (BibleBook) chapterCtxMeta.id.get(IdField.BIBLE_BOOK);
+        int chapterNb = (int) chapterCtxMeta.id.get(IdField.BIBLE_CHAPTER);
+        assert chapterCtxMeta.type == ContextType.CHAPTER && containsChapter(chapterNb);
 
-        List<PageData> chapterPages = getChapterPages(bookDefaults, chapterCtxMeta.chapter, sourceFileBuilder);
+        List<PageData> chapterPages = getChapterPages(bookDefaults, chapterNb, sourceFileBuilder);
 
         if(!chapterPages.isEmpty()) {
             // We have pages for this chapter, proceed.
 
             // Compute chapter value
             String chapterValue = String.join("-",
-                    getChapterNumbers(bookDefaults, chapterCtxMeta.chapter)
+                    getChapterNumbers(bookDefaults, chapterNb)
             );
 
             // Prepare context with the provided filler.
@@ -119,7 +123,7 @@ public class ChapterSeq extends PagesContainer {
             if(edit != null) {
                 ContextStreamEditor<ContextStream.Single> editor = chapterStream.edit();
                 for(StreamEditorConfig cfg: edit) {
-                    cfg.configureEditor(editor, chapterCtxMeta.book, chapterCtxMeta.chapter);
+                    cfg.configureEditor(editor, chapterBook, chapterNb);
                 }
                 chapterStream = editor.process();
             }

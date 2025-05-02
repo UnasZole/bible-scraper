@@ -10,6 +10,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.unaszole.bible.JarUtils;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.parsing.Parser;
 import com.github.unaszole.bible.scraping.generic.data.*;
 import com.github.unaszole.bible.scraping.generic.parsing.PageListParser;
@@ -22,8 +23,6 @@ import com.github.unaszole.bible.scraping.generic.parsing.TextParser;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.jayway.jsonpath.JsonPath;
 import org.crosswire.jsword.versification.BibleBook;
-import org.jsoup.select.Evaluator;
-import org.jsoup.select.QueryParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,11 +204,11 @@ public class Generic extends Scraper {
         switch (rootContextMeta.type) {
             case CHAPTER:
                 // Fetch book and chapter sequence. If we can't find them, nothing to load, return null.
-                book = config.bible.getBook(rootContextMeta.book);
+                book = config.bible.getBook((BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK));
                 if(book == null) {
                     return null;
                 }
-                seq = book.getChapterSeq(rootContextMeta.chapter);
+                seq = book.getChapterSeq((Integer) rootContextMeta.id.get(IdField.BIBLE_CHAPTER));
                 if(seq == null) {
                     return null;
                 }
@@ -220,7 +219,7 @@ public class Generic extends Scraper {
 
             case BOOK:
                 // Fetch book. If we can't find it, nothing to load, return null.
-                book = config.bible.getBook(rootContextMeta.book);
+                book = config.bible.getBook((BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK));
                 if(book == null) {
                     return null;
                 }

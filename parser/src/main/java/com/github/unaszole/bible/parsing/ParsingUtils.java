@@ -1,13 +1,11 @@
 package com.github.unaszole.bible.parsing;
 
-import com.github.unaszole.bible.datamodel.Context;
-import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.*;
 
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ParsingUtils {
 
@@ -29,64 +27,57 @@ public class ParsingUtils {
         return hasAncestor(ContextType.VERSE, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors);
     }
 
-    private static final Pattern CHAPTER_NB = Pattern.compile("^(\\d+)$");
-    private static final Pattern VERSE_NB = Pattern.compile("^(\\d+)?([A-Za-z])?$");
+    public static ContextMetadata getChapterMetadata(Deque<ContextMetadata> ancestorStack,
+                                                     ContextMetadata previousChapter,
+                                                     String parsedNb) {
+        // Expected chapter ID based on the previous and ancestors.
+        Map<IdField, Object> expectedChapterId = IdType.BIBLE_CHAPTER.getNewId(previousChapter, ancestorStack)
+                .orElseThrow(() -> new IllegalArgumentException("Could not find a next chapter ID following" + previousChapter + " with " + ancestorStack));
 
-    public static ContextMetadata getChapterMetadata(ContextMetadata parent, ContextMetadata previousChapter, String parsedNb) {
-        int previousChapterNb = previousChapter != null ? previousChapter.chapter : 0;
-
-        int chapterNb;
-        Matcher nbMatcher = CHAPTER_NB.matcher(parsedNb);
-        if(nbMatcher.matches()) {
-            int nb = Integer.parseInt(nbMatcher.group(1));
-            if(nb > previousChapterNb) {
-                // If the number we parsed is above the previous chapter number, trust it.
-                chapterNb = nb;
-            }
-            else {
-                // Else, we just increment the previous chapter number.
-                chapterNb = previousChapterNb + 1;
-            }
+        // Parse the received chapter number.
+        try {
+            // Parseable number : use the maximum between this and the expected (to handle skipped chapters).
+            int nb = Integer.parseInt(parsedNb);
+            return new ContextMetadata(ContextType.CHAPTER, IdType.BIBLE_CHAPTER.ofFields(
+                    IdField.BIBLE_BOOK.of(expectedChapterId.get(IdField.BIBLE_BOOK)),
+                    IdField.BIBLE_CHAPTER.of(Math.max(nb, (Integer) expectedChapterId.get(IdField.BIBLE_CHAPTER)))
+            ));
         }
-        else {
-            // Unparseable number : just increment the previous one.
-            chapterNb = previousChapterNb + 1;
+        catch (NumberFormatException e) {
+            // Unparseable number : just return the expected.
+            return new ContextMetadata(ContextType.CHAPTER, expectedChapterId);
         }
-
-        return ContextMetadata.forChapter(parent.book, chapterNb);
     }
 
-    public static ContextMetadata getVerseMetadata(ContextMetadata parent, ContextMetadata previousVerse, String parsedNb) {
-        int previousVerseNb = previousVerse != null ? Arrays.stream(previousVerse.verses).max().orElse(0) : 0;
+    public static ContextMetadata getVerseMetadata(Deque<ContextMetadata> ancestorStack, ContextMetadata previousVerse, String parsedNb) {
+        Map<IdField, Object> expectedVerseId = IdType.BIBLE_VERSE.getNewId(previousVerse, ancestorStack)
+                .orElseThrow(() -> new IllegalArgumentException("Could not find a next verse ID following" + previousVerse + " with " + ancestorStack));
 
+        // A number may contain a dash, denoting an interval.
         String[] parsedNbs = parsedNb.split("-");
-        int[] actualVerseNbs = new int[parsedNbs.length];
+        try {
+            int startNb = Integer.parseInt(parsedNbs[0]);
+            int nbAdditionalVerses = 0;
+            if(parsedNbs.length > 1) {
+                int endNb = Integer.parseInt(parsedNbs[1]);
+                nbAdditionalVerses = endNb - startNb;
+            }
 
-        for(int i = 0; i < parsedNbs.length; i++) {
-            Matcher nbMatcher = VERSE_NB.matcher(parsedNbs[i]);
-            boolean matches = nbMatcher.matches();
-            if(matches && nbMatcher.group(1) != null && nbMatcher.group(2) == null) {
-                // We got a regular verse number. Parse it.
-                int nb = Integer.parseInt(nbMatcher.group(1));
-                if(nb > previousVerseNb) {
-                    // If the number we parsed is above the previous verse number, trust it.
-                    previousVerseNb = nb;
-                }
-                else if(nb != 0 || previousVerseNb != 0) {
-                    // Else, we just increment the previous verse number (except for verse 0 at start of a chapter).
-                    previousVerseNb++;
-                }
-                actualVerseNbs[i] = previousVerseNb;
-            }
-            else {
-                // We got a lettered verse number, or an unparseable number.
-                // Just increment and use the previous verse number.
-                previousVerseNb++;
-                actualVerseNbs[i] = previousVerseNb;
-            }
+            int realStartNb = Math.max(startNb, ((List<Integer>) expectedVerseId.get(IdField.BIBLE_VERSES)).get(0));
+
+            return new ContextMetadata(ContextType.VERSE, IdType.BIBLE_VERSE.ofFields(
+                    IdField.BIBLE_BOOK.of(expectedVerseId.get(IdField.BIBLE_BOOK)),
+                    IdField.BIBLE_CHAPTER.of(expectedVerseId.get(IdField.BIBLE_CHAPTER)),
+                    IdField.BIBLE_VERSES.of(IntStream.rangeClosed(realStartNb, realStartNb + nbAdditionalVerses)
+                            .boxed()
+                            .collect(Collectors.toList())
+                    )
+            ));
         }
-
-        return ContextMetadata.forMergedVerses(parent.book, parent.chapter, actualVerseNbs);
+        catch(NumberFormatException e) {
+            // Unparseable number : just return the expected.
+            return new ContextMetadata(ContextType.VERSE, expectedVerseId);
+        }
     }
 
     public static <T> int indexOf(List<T> list, Predicate<? super T> predicate) {

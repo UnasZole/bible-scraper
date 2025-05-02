@@ -3,6 +3,7 @@ package com.github.unaszole.bible.scraping.implementations;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.CachedDownloader;
 import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
@@ -160,22 +161,22 @@ public class TheoPlace extends Scraper {
             for(Node n: e.childNodes()) {
                 if(n instanceof Element) {
                     if(((Element) n).is(NOTE_SELECTOR)) {
-                        contentsBuilder.followedBy(ContextMetadata.forNote(),
-                                context(ContextMetadata.forText(), n.attr("data-bs-content"))
+                        contentsBuilder.followedBy(new ContextMetadata(ContextType.NOTE),
+                                context(new ContextMetadata(ContextType.TEXT), n.attr("data-bs-content"))
                         );
                     }
                     else if(((Element) n).is("br")) {
-                        contentsBuilder.followedBy(ContextMetadata.forText(), " ");
+                        contentsBuilder.followedBy(new ContextMetadata(ContextType.TEXT), " ");
                     }
                     else {
-                        contentsBuilder.followedBy(ContextMetadata.forText(), ((Element) n).text());
+                        contentsBuilder.followedBy(new ContextMetadata(ContextType.TEXT), ((Element) n).text());
                     }
                 }
                 else if(n instanceof TextNode) {
-                    contentsBuilder.followedBy(ContextMetadata.forText(), ((TextNode) n).text());
+                    contentsBuilder.followedBy(new ContextMetadata(ContextType.TEXT), ((TextNode) n).text());
                 }
             }
-            return context(ContextMetadata.forFlatText(), contentsBuilder).build();
+            return context(new ContextMetadata(ContextType.FLAT_TEXT), contentsBuilder).build();
         }
 
         private boolean isMajorSectionTitle(Element e) {
@@ -196,8 +197,8 @@ public class TheoPlace extends Scraper {
             switch(type) {
                 case BOOK_TITLE:
                     return e.is(DOC_TITLE_SELECTOR) ?
-                            context(ContextMetadata.forBookTitle(parent.book),
-                                    context(ContextMetadata.forText(), e.ownText())
+                            context(new ContextMetadata(ContextType.BOOK_TITLE),
+                                    context(new ContextMetadata(ContextType.TEXT), e.ownText())
                             ).build() : List.of();
 
                 /*
@@ -213,25 +214,25 @@ public class TheoPlace extends Scraper {
 
                 case VERSE:
                     return e.is(VERSE_START_SELECTOR) ? context(
-                            ParsingUtils.getVerseMetadata(parent, previousOfType, e.text()), e.text()
+                            ParsingUtils.getVerseMetadata(ancestors, previousOfType, e.text()), e.text()
                     ).build() : List.of();
 
                 case MAJOR_SECTION_TITLE:
                     return isMajorSectionTitle(e) ?
-                            context(ContextMetadata.forMajorSectionTitle(),
-                                    context(ContextMetadata.forText(), e.text())
+                            context(new ContextMetadata(ContextType.MAJOR_SECTION_TITLE),
+                                    context(new ContextMetadata(ContextType.TEXT), e.text())
                             ).build() : List.of();
 
                 case SECTION_TITLE:
                     return isSectionTitle(e) ?
-                            context(ContextMetadata.forSectionTitle(),
-                                    context(ContextMetadata.forText(), e.text())
+                            context(new ContextMetadata(ContextType.SECTION_TITLE),
+                                    context(new ContextMetadata(ContextType.TEXT), e.text())
                             ).build() : List.of();
 
                 case MINOR_SECTION_TITLE:
                     return e.is(MINOR_SECTION_TITLE_SELECTOR) ?
-                            context(ContextMetadata.forMinorSectionTitle(),
-                                    context(ContextMetadata.forText(), e.text())
+                            context(new ContextMetadata(ContextType.MINOR_SECTION_TITLE),
+                                    context(new ContextMetadata(ContextType.TEXT), e.text())
                             ).build() : List.of();
 
                 case FLAT_TEXT:
@@ -288,18 +289,21 @@ public class TheoPlace extends Scraper {
         BookRef bookRef;
         switch(rootContextMeta.type) {
             case CHAPTER:
-                bookRef = BOOKS.get(rootContextMeta.book);
-                Context chapterCtx = new Context(rootContextMeta, Integer.toString(rootContextMeta.chapter));
-                return getContextStream(downloader, bookRef.getChapterUrl(bible, rootContextMeta.chapter), chapterCtx);
+                BibleBook chapterBook = (BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK);
+                int chapterNb = (int) rootContextMeta.id.get(IdField.BIBLE_CHAPTER);
+                bookRef = BOOKS.get(chapterBook);
+                Context chapterCtx = new Context(rootContextMeta, Integer.toString(chapterNb));
+                return getContextStream(downloader, bookRef.getChapterUrl(bible, chapterNb), chapterCtx);
 
             case BOOK:
-                bookRef = BOOKS.get(rootContextMeta.book);
-                Context bookCtx = new Context(rootContextMeta, rootContextMeta.book.getOSIS());
+                BibleBook bookId = (BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK);
+                bookRef = BOOKS.get(bookId);
+                Context bookCtx = new Context(rootContextMeta, bookId.getOSIS());
 
                 ContextStream.Single bookStream = getContextStream(downloader, bookRef.getBookIntroUrl(bible), bookCtx);
                 List<ContextStream.Single> chapterStreams = new ArrayList<>();
                 for(int i = 1; i <= bookRef.nbChapters; i++) {
-                    ContextStream.Single cs = getContextStreamFor(ContextMetadata.forChapter(rootContextMeta.book, i));
+                    ContextStream.Single cs = getContextStreamFor(ContextMetadata.forChapter(bookId, i));
                     if(cs != null) {
                         chapterStreams.add(cs);
                     }

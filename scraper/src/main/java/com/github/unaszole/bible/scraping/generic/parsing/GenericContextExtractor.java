@@ -6,6 +6,7 @@ import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
 import com.github.unaszole.bible.parsing.ParsingUtils;
 
 import java.net.URI;
+import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,14 +24,14 @@ public abstract class GenericContextExtractor<Position> {
         return parsedNb.length() == 1 ? parsedNb : parsedNb.replaceAll("^0*(.)", "$1");
     }
 
-    protected ContextMetadata getContextMetadata(ContextMetadata parent, ContextMetadata previousOfType, Object value) {
+    protected ContextMetadata getContextMetadata(Deque<ContextMetadata> ancestorStack, ContextMetadata previousOfType, Object value) {
         switch (type) {
             case CHAPTER:
-                return ParsingUtils.getChapterMetadata(parent, previousOfType, (String) value);
+                return ParsingUtils.getChapterMetadata(ancestorStack, previousOfType, (String) value);
             case VERSE:
-                return ParsingUtils.getVerseMetadata(parent, previousOfType, stripLeadingZeroes((String)value));
+                return ParsingUtils.getVerseMetadata(ancestorStack, previousOfType, stripLeadingZeroes((String)value));
             default:
-                return new ContextMetadata(type, parent.book, parent.chapter, parent.verses);
+                return new ContextMetadata(type);
         }
     }
 
@@ -58,7 +59,7 @@ public abstract class GenericContextExtractor<Position> {
         }
 
         builder.followedBy(
-                (as, pot) -> getContextMetadata(as.peekFirst(), pot, finalValue),
+                (as, pot) -> getContextMetadata(as, pot, finalValue),
                 finalValue,
                 descendantsBuilder
         );

@@ -2,12 +2,10 @@ package com.github.unaszole.bible.stream;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.IdField;
 import org.crosswire.jsword.versification.BibleBook;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -209,15 +207,30 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         }
 
         public ContextEvent apply(ContextEvent e) {
-            BibleBook newBook = bookUpdater != null && e.metadata.book != null
-                    ? bookUpdater.apply(e.metadata)
-                    : e.metadata.book;
-            int newChapterNb = chapterNbUpdater != null && e.metadata.chapter > 0
-                    ? chapterNbUpdater.applyAsInt(e.metadata)
-                    : e.metadata.chapter;
-            int[] newVerseNbs = verseNbsUpdater != null && e.metadata.verses != null
-                    ? verseNbsUpdater.apply(e.metadata)
-                    : e.metadata.verses;
+            Map<IdField, Object> newId = e.metadata.id;
+            if(newId != null) {
+                newId = new HashMap<>(newId);
+                for(Map.Entry<IdField, Object> field: newId.entrySet()) {
+                    switch (field.getKey()) {
+                        case BIBLE_BOOK:
+                            if(bookUpdater != null) {
+                                field.getKey().setOnId(newId, bookUpdater.apply(e.metadata));
+                            }
+                            break;
+                        case BIBLE_CHAPTER:
+                            if(chapterNbUpdater != null) {
+                                field.getKey().setOnId(newId, chapterNbUpdater.applyAsInt(e.metadata));
+                            }
+                            break;
+                        case BIBLE_VERSES:
+                            if(verseNbsUpdater != null) {
+                                field.getKey().setOnId(newId, Arrays.stream(verseNbsUpdater.apply(e.metadata)).boxed().collect(Collectors.toList()));
+                            }
+                            break;
+                        default:
+                    }
+                }
+            }
 
             Object newValue = e.value;
             if(chapterValueUpdater != null && e.metadata.type == ContextType.CHAPTER) {
@@ -228,7 +241,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
             }
 
             return new ContextEvent(e.type,
-                    new ContextMetadata(e.metadata.type, newBook, newChapterNb, newVerseNbs),
+                    new ContextMetadata(e.metadata.type, newId != null ? Collections.unmodifiableMap(newId) : null),
                     newValue
             );
         }

@@ -2,6 +2,7 @@ package com.github.unaszole.bible.scraping;
 
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.datamodel.ContextType;
@@ -69,11 +70,11 @@ public abstract class Scraper {
 	}
 
 	private static ContextMetadata getAncestor(ContextMetadata meta) {
-		if(meta.type != ContextType.CHAPTER && meta.chapter > 0) {
-			return ContextMetadata.forChapter(meta.book, meta.chapter);
+		if(meta.type == ContextType.VERSE) {
+			return ContextMetadata.forChapter((BibleBook) meta.id.get(IdField.BIBLE_BOOK), (Integer) meta.id.get(IdField.BIBLE_CHAPTER));
 		}
-		else if(meta.type != ContextType.BOOK && meta.book != null) {
-			return ContextMetadata.forBook(meta.book);
+		else if(meta.type == ContextType.CHAPTER) {
+			return ContextMetadata.forBook((BibleBook) meta.id.get(IdField.BIBLE_BOOK));
 		}
 		else if(meta.type != ContextType.BIBLE) {
 			return ContextMetadata.forBible();

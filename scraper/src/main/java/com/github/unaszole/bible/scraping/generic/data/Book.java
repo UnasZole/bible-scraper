@@ -3,6 +3,7 @@ package com.github.unaszole.bible.scraping.generic.data;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
@@ -61,7 +62,7 @@ public class Book extends PagesContainer {
     public ContextStream.Single streamBook(PatternContainer bibleDefaults, ContextMetadata bookCtxMeta,
                                            final SourceFile.Builder sourceFileBuilder,
                                            final BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
-        assert bookCtxMeta.type == ContextType.BOOK && bookCtxMeta.book == osis;
+        assert bookCtxMeta.type == ContextType.BOOK && bookCtxMeta.id.get(IdField.BIBLE_BOOK) == osis;
         final PatternContainer bookDefaults = this.defaultedBy(bibleDefaults);
 
         // Build the list of context streams for all chapters, to append to the book page stream.
@@ -86,7 +87,7 @@ public class Book extends PagesContainer {
         }
 
         // Build the book stream.
-        Context bookCtx = new Context(bookCtxMeta, bookCtxMeta.book.getOSIS());
+        Context bookCtx = new Context(bookCtxMeta, ((BibleBook)bookCtxMeta.id.get(IdField.BIBLE_BOOK)).getOSIS());
         ContextStream.Single bookStream = null;
 
         List<PageData> bookPages = getBookPages(bookDefaults, sourceFileBuilder);
@@ -105,7 +106,7 @@ public class Book extends PagesContainer {
         if(bookStream != null && edit != null) {
             ContextStreamEditor<ContextStream.Single> editor = bookStream.edit();
             for(StreamEditorConfig cfg: edit) {
-                cfg.configureEditor(editor, bookCtxMeta.book, 0);
+                cfg.configureEditor(editor, ((BibleBook)bookCtxMeta.id.get(IdField.BIBLE_BOOK)), 0);
             }
             bookStream = editor.process();
         }
