@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.datamodel;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ContextId {
     private final IdType idType;
@@ -35,6 +36,13 @@ public class ContextId {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public String toString() {
+        return Arrays.stream(idType.fields)
+                .map(field -> field.fieldType.toString(idMap.get(field)))
+                .collect(Collectors.joining("."));
     }
 
     @Override

@@ -47,7 +47,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 			writeStartElement("osisText");
 			writeAttribute("osisRefWork", meta.systemName);
 			writeAttribute("osisIDWork", meta.systemName);
-			writeAttribute("xml:lang", meta.locale.getLanguage());
+			writeAttribute("xml:lang", meta.locale.toLanguageTag());
 			
 				// <header>
 				writeStartElement("header");
@@ -91,7 +91,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 						// <language>
 						writeStartElement("language");
 						writeAttribute("type", "IETF");
-						writeCharacters(meta.locale.getLanguage());
+						writeCharacters(meta.locale.toLanguageTag());
 						writeEndElement();
 						// </language>
 						
