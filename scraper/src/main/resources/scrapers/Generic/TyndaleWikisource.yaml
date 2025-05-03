@@ -1,0 +1,145 @@
+description: "Bible translated by William Tyndale"
+bible:
+  metadata:
+    language: en
+    systemName: EngTyndale
+    title: Tyndale
+    versification: KJV
+
+  patterns:
+    bookUrl: "https://en.wikisource.org/wiki/Bible_(Tyndale)/{BOOK}"
+
+  books:
+    - osis: Gen
+      args: { BOOK: Genesis }
+
+    - osis: Exod
+      args: { BOOK: Exodus }
+
+    - osis: Lev
+      args: { BOOK: Leviticus }
+
+    - osis: Num
+      args: { BOOK: Numbers }
+
+    - osis: Deut
+      args: { BOOK: Deuteronomy }
+
+    - osis: Jonah
+      args: { BOOK: Jonah }
+
+    - osis: Matt
+      args: { BOOK: Matthew }
+
+    - osis: Mark
+      args: { BOOK: Mark }
+
+    - osis: Luke
+      args: { BOOK: Luke }
+
+    - osis: John
+      args: { BOOK: John }
+
+    - osis: Acts
+      args: { BOOK: Acts }
+
+    - osis: Rom
+      args: { BOOK: Romans }
+
+    - osis: 1Cor
+      args: { BOOK: 1_Corinthians }
+
+    - osis: 2Cor
+      args: { BOOK: 2_Corinthians }
+
+    - osis: Gal
+      args: { BOOK: Galatians }
+
+    - osis: Eph
+      args: { BOOK: Ephesians }
+
+    - osis: Phil
+      args: { BOOK: Philippians }
+
+    - osis: Col
+      args: { BOOK: Colossians }
+
+    - osis: 1Thess
+      args: { BOOK: 1_Thessalonians }
+
+    - osis: 2Thess
+      args: { BOOK: 2_Thessalonians }
+
+    - osis: 1Tim
+      args: { BOOK: 1_Timothy }
+
+    - osis: 2Tim
+      args: { BOOK: 2_Timothy }
+
+    - osis: Titus
+      args: { BOOK: Titus }
+
+    - osis: Phlm
+      args: { BOOK: Philemon }
+
+    - osis: 1Pet
+      args: { BOOK: 1_Peter }
+
+    - osis: 2Pet
+      args: { BOOK: 2_Peter }
+
+    - osis: 1John
+      args: { BOOK: 1_John }
+
+    - osis: 2John
+      args: { BOOK: 2_John }
+
+    - osis: 3John
+      args: { BOOK: 3_John }
+
+    - osis: Heb
+      args: { BOOK: Hebrews }
+
+    - osis: Jas
+      args: { BOOK: James }
+
+    - osis: Jude
+      args: { BOOK: Jude }
+
+    - osis: Rev
+      args: { BOOK: Revelation }
+
+html:
+  elements:
+
+    - selector: "span.wst-header-title > div.header-section-text"
+      contexts:
+        - type: BOOK_TITLE
+          descendants:
+            - type: TEXT
+              op: text
+
+    - selector: "div.mw-heading h2"
+      contexts:
+        - type: CHAPTER
+          op: "literal= "
+          descendants:
+            - type: CHAPTER_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+  externalParsers:
+
+    - selector: "p:has(span.wst-verse > sup:not(:empty))"
+      nodeParser:
+        nodes:
+          - contexts:
+              - type: TEXT
+                regexp: (.*)
+        elements:
+          - selector: "span.wst-verse > sup"
+            contexts:
+              - type: VERSE
+                op: ownText
+  
