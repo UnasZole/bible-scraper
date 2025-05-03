@@ -1,0 +1,124 @@
+description: "Hebrew New Testament"
+bible:
+  metadata:
+    language: he
+    systemName: HebNT
+    title: Hebrew New Testament
+    versification: KJV
+
+  patterns:
+    bookUrl: "https://www.ancient-hebrew.org/hebrewnt/{BOOK}.html"
+
+  books:
+    - osis: Matt
+      args: { BOOK: 01_matthew }
+
+    - osis: Mark
+      args: { BOOK: 02_mark }
+
+    - osis: Luke
+      args: { BOOK: 03_luke }
+
+    - osis: John
+      args: { BOOK: 04_john }
+
+    - osis: Acts
+      args: { BOOK: 05_acts }
+
+    - osis: Rom
+      args: { BOOK: 06_romans }
+
+    - osis: 1Cor
+      args: { BOOK: 07_1corinthians }
+
+    - osis: 2Cor
+      args: { BOOK: 08_2corinthians }
+
+    - osis: Gal
+      args: { BOOK: 09_galations }
+
+    - osis: Eph
+      args: { BOOK: 10_ephesians }
+
+    - osis: Phil
+      args: { BOOK: 11_philipians }
+
+    - osis: Col
+      args: { BOOK: 12_colossians }
+
+    - osis: 1Thess
+      args: { BOOK: 13_1thessalonians }
+
+    - osis: 2Thess
+      args: { BOOK: 14_2thessalonians }
+
+    - osis: 1Tim
+      args: { BOOK: 15_1timothy }
+
+    - osis: 2Tim
+      args: { BOOK: 16_2timothy }
+
+    - osis: Titus
+      args: { BOOK: 17_titus }
+
+    - osis: Phlm
+      args: { BOOK: 18_philemon }
+
+    - osis: Heb
+      args: { BOOK: 19_hebrews }
+
+    - osis: Jas
+      args: { BOOK: 20_jacob }
+
+    - osis: 1Pet
+      args: { BOOK: 21_1peter }
+
+    - osis: 2Pet
+      args: { BOOK: 22_2peter }
+
+    - osis: 1John
+      args: { BOOK: 23_1john }
+
+    - osis: 2John
+      args: { BOOK: 24_2john }
+
+    - osis: 3John
+      args: { BOOK: 25_3john }
+
+    - osis: Jude
+      args: { BOOK: 26_judah }
+
+    - osis: Rev
+      args: { BOOK: 27_revelation }
+
+html:
+  elements:
+
+    - selector: "font[size=+3] > b"
+      contexts:
+        - type: BOOK_TITLE
+          descendants:
+            - type: TEXT
+              op: text
+
+    - selector: "table[align=right] font[size=+2] > b"
+      contexts:
+        - type: CHAPTER
+          selector: "a[name]"
+          op: attribute=name
+          descendants:
+            - type: CHAPTER_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+    - selector: "font[size=+1] > table > tbody > tr:has(td)"
+      contexts:
+        - type: VERSE
+          selector: "> td:last-child > b"
+          op: text
+          descendants:
+            - type: TEXT
+              selector: "> td:first-child"
+              op: text
+
