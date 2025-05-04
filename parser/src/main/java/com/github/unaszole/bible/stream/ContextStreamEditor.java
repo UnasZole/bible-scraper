@@ -297,7 +297,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         final int[] currentActionIndex = { -1 };
         final boolean[] currentActionComplete = { true };
 
-        return stream.flatMap(e -> {
+        return StreamUtils.lazyFlatMap(stream, e -> {
             if(currentActionIndex[0] >= 0 && !currentActionComplete[0]) {
                 // There is a current action which is not yet complete.
                 Action currentAction = actions.get(currentActionIndex[0]);

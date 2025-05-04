@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.stream;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.BaseStream;
 import java.util.stream.Collectors;
@@ -36,41 +37,51 @@ public class StreamUtils {
     }
 
     private static class ChainedIterator<T> implements Iterator<T> {
-        private final Queue<Iterator<T>> iterators;
+        private final Iterator<Iterator<T>> iterators;
+        private Iterator<T> currentIterator;
 
-        private ChainedIterator(List<Iterator<T>> iterators) {
-            this.iterators = new LinkedList<>(iterators);
+        private ChainedIterator(Iterator<Iterator<T>> iterators) {
+            this.iterators = iterators;
+            this.currentIterator = null;
         }
 
 
         @Override
         public boolean hasNext() {
-            while(!iterators.isEmpty()) {
-                if(iterators.peek().hasNext()) {
-                    return true;
+            while(currentIterator == null || !currentIterator.hasNext()) {
+                if(iterators.hasNext()) {
+                    currentIterator = iterators.next();
                 }
-                iterators.remove();
+                else {
+                    return false;
+                }
             }
-            return false;
+            return true;
         }
 
         @Override
         public T next() {
-            assert !iterators.isEmpty();
-            assert hasNext();
-            return iterators.peek().next();
+            assert currentIterator != null && currentIterator.hasNext();
+            return currentIterator.next();
         }
     }
 
-    public static <T> Iterator<T> concatIterators(List<Iterator<T>> iterators) {
+    public static <T> Iterator<T> concatIterators(Iterator<Iterator<T>> iterators) {
         return new ChainedIterator<>(iterators);
     }
 
-    public static <T> Stream<T> concatStreams(List<Stream<T>> streams) {
-        return toStream(concatIterators(streams.stream()
-                .map(BaseStream::iterator)
-                .collect(Collectors.toList())
+    public static <T, R> Stream<R> lazyFlatMap(Stream<T> stream, Function<? super T,? extends Stream<R>> mapper) {
+        // This method is functionally equivalent to Stream.flatMap.
+        // However, flatMap is not fully lazy, which causes the data sources of some streams to be called even when not needed.
+        return toStream(concatIterators(
+                stream.map(mapper)
+                        .map(BaseStream::iterator)
+                        .iterator()
         ));
+    }
+
+    public static <T> Stream<T> concatStreams(List<Stream<T>> streams) {
+        return lazyFlatMap(streams.stream(), s -> s);
     }
 
     @SafeVarargs
