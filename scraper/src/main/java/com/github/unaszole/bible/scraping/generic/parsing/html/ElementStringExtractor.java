@@ -33,7 +33,7 @@ public class ElementStringExtractor {
             case "attribute":
                 return e.attr(opSplit[1]);
             case "literal":
-                return opSplit[1];
+                return opSplit.length >= 2 ? opSplit[1] : "";
             case "ownText":
                 return e.ownText();
             case "wholeOwnText":

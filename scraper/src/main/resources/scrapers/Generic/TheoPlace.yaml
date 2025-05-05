@@ -374,6 +374,15 @@ html:
             - type: TEXT
               op: text
 
+    # If a verse 0 is printed, treat it as pre-verse text (not a psalm title or chapter intro)
+    - selector: "#logos > span.verset:matches(^0$)"
+      withAncestors: [ STRUCTURED_TEXT ]
+      withoutAncestors: [ VERSE ]
+      contexts:
+        - type: TEXT
+          op: "literal="
+
+    # Any other verse number starts an actual verse.
     - selector: "#logos > span.verset:not(:matches(^0$))"
       contexts:
         - type: VERSE
