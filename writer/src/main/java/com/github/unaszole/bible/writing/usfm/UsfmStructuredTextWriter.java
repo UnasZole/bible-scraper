@@ -85,12 +85,15 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
         closeStanza();
         inParagraph = false;
     }
-    protected void ensureInParagraph() {
+    protected void ensureReadyForText() {
         if(!inParagraph) {
             out.println();
             out.print(paragraphMarker + " ");
             inParagraph = true;
         }
+
+        // If we have a pending poetry line, process it before writing the text.
+        openPendingPoetryLineIfAny();
     }
 
     protected void writeText(Consumer<TextWriter> writes) {
@@ -139,8 +142,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
     @Override
     public void flatText(Consumer<TextWriter> writes) {
-        ensureInParagraph();
-        openPendingPoetryLineIfAny();
+        ensureReadyForText();
 
         writeText(writes);
     }

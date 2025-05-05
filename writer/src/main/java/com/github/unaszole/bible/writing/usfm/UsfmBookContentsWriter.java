@@ -74,7 +74,7 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
         String verseNbsStr = Arrays.stream(verseNbs)
                 .mapToObj(Integer::toString).collect(Collectors.joining("-"));
 
-        // Do not open the verse immediately, we should print it only after the paragraph marker if any.
+        // Do not open the verse immediately, we should print it only when the text actually begins.
         pendingVerseTags = "\\v " + verseNbsStr + " ";
         if(!verseNbsStr.equals(sourceNb[0])) {
             pendingVerseTags += "\\vp " + sourceNb[0] + "\\vp* ";
@@ -111,12 +111,12 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
     }
 
     @Override
-    protected void ensureInParagraph() {
+    protected void ensureReadyForText() {
         // Note that we are no longer in a psalm title.
         this.inPsalmTitle = false;
 
         // Actually open the paragraph.
-        super.ensureInParagraph();
+        super.ensureReadyForText();
 
         // Open pending verse if any.
         openPendingVerse();

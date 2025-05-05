@@ -296,6 +296,11 @@ bible:
       args: { BOOK_NB: 67, BOOK_NAME: baruch }
       chapters: [ { from: 1, to: 6 } ]
 
+    # I couldn't find any link to a book introduction page : book name is unknown.
+    - osis: EpJer
+      args: { BOOK_NB: 74, BOOK_NAME: "" }
+      chapters: [ { at: 1 } ]
+
     - osis: Tob
       args: { BOOK_NB: 68, BOOK_NAME: tobie }
       chapters: [ { from: 1, to: 14 } ]
@@ -369,7 +374,7 @@ html:
             - type: TEXT
               op: text
 
-    - selector: "#logos > span.verset"
+    - selector: "#logos > span.verset:not(:matches(^0$))"
       contexts:
         - type: VERSE
           op: text
@@ -382,7 +387,6 @@ html:
   externalParsers:
     # A span[data-verset] directly contains verse text nodes and elements.
     - selector: "#logos > span[data-verset]"
-      withAncestors: [ VERSE ]
       nodeParser:
         nodes:
           - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
@@ -406,6 +410,12 @@ html:
             contexts:
               - type: TEXT
                 op: "literal= "
+
+          - selector: "b"
+            contexts:
+              - type: POETRY_ACROSTIC_START
+              - type: TEXT
+                op: text
 
           # Parsing of verse text.
           # TODO : in verse 1 or 2 of psalms, should be interpreted as psalm title instead...
@@ -447,9 +457,30 @@ html:
                   contexts:
                     - type: POETRY_LINE_START
                       op: literal=1
-                # If a line break is the first child of the poetry block, it's a new poetry line after initial verse text.
-                - selector: "blockquote > br:first-child"
+                # A single line break in the middle of blockquote text is a poetry line start.
+                - selector: "blockquote > br"
+                  previousNode:
+                    isTextNodeMatching: ".*[^\\s]+.*"
+                  nextNode:
+                    isTextNodeMatching: ".*[^\\s]+.*"
                   contexts:
+                    - type: POETRY_LINE_START
+                      op: literal=1
+                # Two consecutive line breaks inside the blockquote are the start of a new stanza.
+                - selector: "blockquote > br"
+                  previousNode:
+                    isElementMatching: "br"
+                  contexts:
+                    - type: POETRY_STANZA_BREAK
+                    - type: POETRY_LINE_START
+                      op: literal=1
+                - selector: "blockquote > br"
+                  previousElement:
+                    matchesSelector: "br"
+                  previousNode:
+                    isTextNodeMatching: "\\s*"
+                  contexts:
+                    - type: POETRY_STANZA_BREAK
                     - type: POETRY_LINE_START
                       op: literal=1
 

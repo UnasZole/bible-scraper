@@ -2,7 +2,7 @@ description: "Bible translated by William Tyndale"
 bible:
   metadata:
     language: en
-    systemName: EngTyndale
+    systemName: Tyndale
     title: Tyndale
     versification: KJV
 
@@ -142,4 +142,4 @@ html:
             contexts:
               - type: VERSE
                 op: ownText
-  
+
