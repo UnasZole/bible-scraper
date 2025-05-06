@@ -115,10 +115,14 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
         // Note that we are no longer in a psalm title.
         this.inPsalmTitle = false;
 
-        // Actually open the paragraph.
-        super.ensureReadyForText();
+        // Actually open the paragraph, as well as paragraph-level pending poetry line.
+        super.ensureInParagraph();
+        super.openPendingPoetryLineIfAny(true);
 
         // Open pending verse if any.
         openPendingVerse();
+
+        // Finally, manage remaining pending elements (ie. character-level pending poetry line).
+        super.ensureReadyForText();
     }
 }

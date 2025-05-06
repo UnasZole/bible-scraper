@@ -49,7 +49,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
         }
     }
 
-    private void openPendingPoetryLineIfAny() {
+    protected void openPendingPoetryLineIfAny(boolean paragraphLevelOnly) {
         if(pendingPoetryLine != 0) {
             closeSelah();
 
@@ -60,40 +60,47 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
             ensureInStanza();
 
-            out.println();
             if(isRefrain) {
+                out.println();
                 out.print("\\qr ");
+                this.pendingPoetryLine = 0;
             }
             if(isAcrostic) {
+                out.println();
                 out.print("\\qa ");
+                this.pendingPoetryLine = 0;
             }
-            if(isSelah) {
+            if(isSelah && !paragraphLevelOnly) {
                 out.print("\\qs ");
+                this.pendingPoetryLine = 0;
                 this.inSelah = true;
             }
             if(indentLevel >=1 ) {
+                out.println();
                 out.print("\\q" + indentLevel + " ");
+                this.pendingPoetryLine = 0;
             }
-
-            // Line is opened : no longer pending.
-            this.pendingPoetryLine = 0;
         }
     }
 
     private boolean inParagraph = false;
-    protected void closeParagraph() {
-        closeStanza();
-        inParagraph = false;
-    }
-    protected void ensureReadyForText() {
+    protected void ensureInParagraph() {
         if(!inParagraph) {
             out.println();
             out.print(paragraphMarker + " ");
             inParagraph = true;
         }
+    }
+    protected void closeParagraph() {
+        closeStanza();
+        inParagraph = false;
+    }
+
+    protected void ensureReadyForText() {
+        ensureInParagraph();
 
         // If we have a pending poetry line, process it before writing the text.
-        openPendingPoetryLineIfAny();
+        openPendingPoetryLineIfAny(false);
     }
 
     protected void writeText(Consumer<TextWriter> writes) {
