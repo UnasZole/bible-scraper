@@ -296,9 +296,9 @@ bible:
       args: { BOOK_NB: 67, BOOK_NAME: baruch }
       chapters: [ { from: 1, to: 6 } ]
 
-    # I couldn't find any link to a book introduction page : book name is unknown.
+    # I couldn't find any link to a book introduction page : book name is fake, but works (apparently ignored by the server).
     - osis: EpJer
-      args: { BOOK_NB: 74, BOOK_NAME: "" }
+      args: { BOOK_NB: 74, BOOK_NAME: lettrejeremie }
       chapters: [ { at: 1 } ]
 
     - osis: Tob
