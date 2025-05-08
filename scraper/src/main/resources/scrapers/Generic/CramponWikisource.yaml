@@ -436,15 +436,26 @@ html:
                   contexts:
                     - type: TEXT
                       op: text
-                # Italic elements in notes are usually quotes.
+                # Italic elements in notes are usually quotes - unless they are first, or preceded by a text containing "—"
                 - selector: "span.reference-text > i ~ i"
+                  previousNode:
+                    isTextNodeMatching: "[^—]*"
                   contexts:
                     - type: QUOTE
                       descendants:
                         - type: TEXT
                           op: text
-                # But the first italic element of the note is the catchphrase.
-                - selector: "span.reference-text > i"
+                # First italic element of the note is the catchphrase.
+                - selector: "span.reference-text > i:first-of-type"
+                  contexts:
+                    - type: CATCHPHRASE
+                      descendants:
+                        - type: TEXT
+                          op: text
+                # Italic element following a text containing "—" is a subsequent catchphrase.
+                - selector: "span.reference-text > i ~ i"
+                  previousNode:
+                    isTextNodeMatching: ".*—.*"
                   contexts:
                     - type: CATCHPHRASE
                       descendants:
