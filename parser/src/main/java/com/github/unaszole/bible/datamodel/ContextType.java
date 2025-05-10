@@ -65,12 +65,12 @@ public enum ContextType {
 	 * An inline text, ie. a text that does not have any structure or any note whatsoever.
 	 * It may only contain semantic or formatting markup around portions of the text.
 	 */
-	INLINE_TEXT(NO_ID, NO_VALUE, NULL, atLeastOne(TEXT, MARKUP)),
+	INLINE_TEXT(NO_ID, NO_VALUE, NULL, atLeastOne(MARKUP, TEXT)),
 
 	CATCHPHRASE(NO_ID, NO_VALUE, NO_IMPLICIT, atLeastOne(TEXT)),
 	ALTERNATE_TRANSLATION(NO_ID, NO_VALUE, NO_IMPLICIT, atLeastOne(TEXT)),
 	NOTE_MARKUP(NO_ID, NO_VALUE, NULL, one(MARKUP, CATCHPHRASE, ALTERNATE_TRANSLATION)),
-	NOTE_TEXT(NO_ID, NO_VALUE, NULL, atLeastOne(TEXT, NOTE_MARKUP)),
+	NOTE_TEXT(NO_ID, NO_VALUE, NULL, atLeastOne(NOTE_MARKUP, TEXT)),
 
 	/**
 	 * A note that may be inserted at any point in a flat text, and has access to specific markup.

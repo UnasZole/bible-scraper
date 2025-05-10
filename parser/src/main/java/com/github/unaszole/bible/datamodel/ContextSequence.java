@@ -30,7 +30,16 @@ public class ContextSequence {
 	public final List<ContextType> allowedTypes;
 	public final int minOccurrences;
 	public final int maxOccurrences;
-	
+
+	/**
+	 *
+	 * @param allowedTypes A set of allowed context types in this sequence, ordered by match priority : the parser will
+	 *                     attempt matching the first type first, etc.
+	 *                     Contexts that can be opened implicitly should be defined last (so that explicit contexts have
+	 *                     priority).
+	 * @param minOccurrences Minimum number of occurrences to consider the sequence complete.
+	 * @param maxOccurrences Maximum number of occurrences after which the sequence should be closed.
+	 */
 	public ContextSequence(ContextType[] allowedTypes, int minOccurrences, int maxOccurrences) {
 		this.allowedTypes = List.of(allowedTypes);
 		this.minOccurrences = minOccurrences;

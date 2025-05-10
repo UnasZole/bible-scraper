@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+/**
+ * This parses the input string as a JSON document, and iterates on the JSON nodes in breadth-first fashion following array item orders.
+ */
 public class JsonParserProvider implements TextParser.Provider<JsonParserProvider.JsonNodeWrapper> {
 
     public static class JsonNodeWrapper {

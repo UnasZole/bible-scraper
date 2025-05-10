@@ -11,6 +11,9 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * This parses the input string as an HTML document, and iterates on its elements in document order.
+ */
 public class HtmlParserProvider implements TextParser.Provider<Element> {
 
     public List<ElementParser> elements;
