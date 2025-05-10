@@ -11,6 +11,7 @@ import com.github.unaszole.bible.JarUtils;
 import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.IdField;
+import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.parsing.Parser;
 import com.github.unaszole.bible.scraping.generic.data.*;
 import com.github.unaszole.bible.scraping.generic.parsing.PageListParser;
@@ -180,10 +181,45 @@ public class Generic extends Scraper {
         this.downloader = new CachedDownloader(getCacheSubPath(cachePath, inputs));
     }
 
+    private static class NotifyingIterator<T> implements Iterator<T> {
+
+        private final Iterator<T> wrapped;
+        private final Runnable startCallback;
+        private boolean startNotified = false;
+        private final Runnable endCallback;
+        private boolean endNotified = false;
+
+        private NotifyingIterator(Iterator<T> wrapped, Runnable startCallback, Runnable endCallback) {
+            this.wrapped = wrapped;
+            this.startCallback = startCallback;
+            this.endCallback = endCallback;
+        }
+
+        @Override
+        public boolean hasNext() {
+            if(!startNotified) {
+                startNotified = true;
+                startCallback.run();
+            }
+            boolean res = wrapped.hasNext();
+            if(!res && !endNotified) {
+                endNotified = true;
+                endCallback.run();
+            }
+            return res;
+        }
+
+        @Override
+        public T next() {
+            return wrapped.next();
+        }
+    }
+
     private ContextStream.Single contextStreamer(Context ctx, List<PageData> pages) {
+        final ExecutionMonitor.Item statusItem = ExecutionMonitor.INSTANCE.register(ctx.metadata.id.toString());
         return new Parser.TerminalParser<>(
                 new PageListParser(config, downloader, config.bible.getBookReferences()),
-                pages.iterator(),
+                new NotifyingIterator<>(pages.iterator(), statusItem::start, statusItem::complete),
                 ctx
         ).asContextStream();
     }

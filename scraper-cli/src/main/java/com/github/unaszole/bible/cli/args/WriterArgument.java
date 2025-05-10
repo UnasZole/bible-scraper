@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.cli.args;
 
+import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.writing.Typography;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
@@ -37,16 +38,24 @@ public class WriterArgument {
         return Typography.getFixer(typographyFixer);
     }
 
+    private void printStatus(ExecutionMonitor.Status status) {
+        System.out.printf("### Scraping: %5s / %s - %10s \r", status.completedItems, status.registeredItems, status.lastStartedItem);
+    }
+
     public BibleWriter get(DocumentMetadata docMeta) throws Exception {
         switch(writer) {
             case OSIS:
                 if(outputPath.isPresent()) {
+                    // We're not using stdout for actual output : plug the progress bar.
+                    ExecutionMonitor.INSTANCE.registerUpdateCallback(this::printStatus);
                     return new OsisBibleWriter(outputPath.get(), docMeta);
                 }
                 return new OsisBibleWriter(System.out, docMeta);
 
             case USFM:
                 if(outputPath.isPresent()) {
+                    // We're not using stdout for actual output : plug the progress bar.
+                    ExecutionMonitor.INSTANCE.registerUpdateCallback(this::printStatus);
                     return new UsfmBibleWriter(outputPath.get());
                 }
                 return new UsfmBibleWriter(new PrintWriter(System.out));

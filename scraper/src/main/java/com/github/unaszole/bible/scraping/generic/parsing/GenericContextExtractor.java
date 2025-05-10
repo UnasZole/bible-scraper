@@ -2,8 +2,12 @@ package com.github.unaszole.bible.scraping.generic.parsing;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
 import com.github.unaszole.bible.parsing.ParsingUtils;
+import org.crosswire.jsword.versification.BibleBook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.Deque;
@@ -11,6 +15,8 @@ import java.util.List;
 import java.util.Optional;
 
 public abstract class GenericContextExtractor<Position> {
+    private static final Logger LOG = LoggerFactory.getLogger(GenericContextExtractor.class);
+
     /**
      * The type of contexts this extractor produces.
      */
@@ -47,7 +53,13 @@ public abstract class GenericContextExtractor<Position> {
         final Object finalValue;
         switch(type.valueType) {
             case BOOK_ID:
-                finalValue = Optional.<Object>ofNullable(contextualData.bookRefs.get(value)).orElse(value);
+                finalValue = Optional.<Object>ofNullable(contextualData.bookRefs.get(value))
+                        .or(() -> Optional.ofNullable(BibleBook.fromOSIS(value)))
+                        .orElseGet(() -> {
+                            LOG.warn("Unknown book {} : replacing by BIBLE_INTRO to proceed.", value);
+                            ExecutionMonitor.INSTANCE.message("Unknown book " + value);
+                            return BibleBook.INTRO_BIBLE;
+                        });
                 break;
             case URI:
                 finalValue = Optional.ofNullable(contextualData.baseUri)

@@ -61,30 +61,37 @@ bible:
       chapters: [ { from: 1, to: 4 } ]
 
     - osis: 1Sam
+      names: [ "1 Sa" ]
       args: { BOOK_NB: 9, BOOK_NAME: 1samuel }
       chapters: [ { from: 1, to: 31 } ]
 
     - osis: 2Sam
+      names: [ "2 Sa" ]
       args: { BOOK_NB: 10, BOOK_NAME: 2samuel }
       chapters: [ { from: 1, to: 24 } ]
 
     - osis: 1Kgs
+      names: [ "1 Ro" ]
       args: { BOOK_NB: 11, BOOK_NAME: 1rois }
       chapters: [ { from: 1, to: 22 } ]
 
     - osis: 2Kgs
+      names: [ "2 Ro" ]
       args: { BOOK_NB: 12, BOOK_NAME: 2rois }
       chapters: [ { from: 1, to: 25 } ]
 
     - osis: 1Chr
+      names: [ "1 Ch" ]
       args: { BOOK_NB: 13, BOOK_NAME: 1chroniques }
       chapters: [ { from: 1, to: 29 } ]
 
     - osis: 2Chr
+      names: [ "2 Ch" ]
       args: { BOOK_NB: 14, BOOK_NAME: 2chroniques }
       chapters: [ { from: 1, to: 36 } ]
 
     - osis: Ezra
+      names: [ Esd ]
       args: { BOOK_NB: 15, BOOK_NAME: esdras }
       chapters: [ { from: 1, to: 10 } ]
 
@@ -185,18 +192,22 @@ bible:
       chapters: [ { from: 1, to: 4 } ]
 
     - osis: Matt
+      names: [ Mt ]
       args: { BOOK_NB: 40, BOOK_NAME: matthieu }
       chapters: [ { from: 1, to: 28 } ]
 
     - osis: Mark
+      names: [ Mc ]
       args: { BOOK_NB: 41, BOOK_NAME: marc }
       chapters: [ { from: 1, to: 16 } ]
 
     - osis: Luke
+      names: [ Lc ]
       args: { BOOK_NB: 42, BOOK_NAME: luc }
       chapters: [ { from: 1, to: 24 } ]
 
     - osis: John
+      names: [ Jn ]
       args: { BOOK_NB: 43, BOOK_NAME: jean }
       chapters: [ { from: 1, to: 21 } ]
 
@@ -439,14 +450,41 @@ html:
                 descendants:
                   - type: TEXT
                     op: attribute=data-bs-content
-          - selector: "span.sr"
-            contexts:
-              - type: NOTE
-                descendants:
-                  - type: TEXT
-                    op: text
 
         externalParsers:
+          # span.sr is a note containing cross references.
+          - selector: "#logos > span[data-verset] > span.sr"
+            contextsBefore:
+              - type: NOTE
+            textParser:
+              stringExtractor:
+                op: text
+              sliding:
+                rules:
+                  # Match a single-chapter cross-reference.
+                  - regexp: "(?:\\d )?[a-zA-Z0-9]+ \\d+\\.\\d+(?:-\\d+)?"
+                    contexts:
+                      - type: REFERENCE
+                        descendants:
+                          - type: FULL_REF
+                            descendants:
+                              - type: REF_BOOK
+                                regexp: "^((?:\\d )?[a-zA-Z0-9]+) \\d+\\.\\d+(?:-\\d+)?$"
+                              - type: REF_CHAPTER
+                                regexp: "^(?:\\d )?[a-zA-Z0-9]+ (\\d+)\\.\\d+(?:-\\d+)?$"
+                              - type: REF_VERSES
+                                regexp: "^(?:\\d )?[a-zA-Z0-9]+ \\d+\\.(\\d+(?:-\\d+)?)$"
+                          - type: TEXT
+                            regexp: "(.*)"
+
+                  # Match everything until the next space.
+                  - regexp: "\\s*[^\\s]+\\s*"
+                    withoutAncestors: [ MARKUP ]
+                    contexts:
+                      - type: TEXT
+                        regexp: "(.*)"
+
+
           # blockquote marks start of a poetry block
           - selector: "#logos > span[data-verset] > blockquote"
 

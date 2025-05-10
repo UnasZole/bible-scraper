@@ -4,12 +4,12 @@ import com.github.unaszole.bible.ScraperEntrypoint;
 import com.github.unaszole.bible.cli.args.ScraperArgument;
 import com.github.unaszole.bible.cli.args.WantedMetadataArgument;
 import com.github.unaszole.bible.cli.args.WriterArgument;
+import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.writing.ContextStreamWriter;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import picocli.CommandLine;
 
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
@@ -58,6 +58,8 @@ public class ScrapeCommand implements Callable<Integer> {
         }
 
         System.out.println();
+
+        ExecutionMonitor.INSTANCE.printMessages();
 
         return 0;
     }
