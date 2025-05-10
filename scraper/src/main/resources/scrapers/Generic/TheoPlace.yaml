@@ -388,11 +388,6 @@ html:
         - type: VERSE
           op: text
 
-    # If we have a poetry block, the following line break marks the end of poetry.
-    - selector: "#logos > span[data-verset]:has(blockquote) + br"
-      contexts:
-        - type: POETRY_STANZA_BREAK
-
   externalParsers:
     # A span[data-verset] directly contains verse text nodes and elements.
     - selector: "#logos > span[data-verset]"
@@ -454,6 +449,15 @@ html:
         externalParsers:
           # blockquote marks start of a poetry block
           - selector: "#logos > span[data-verset] > blockquote"
+
+            contextsBefore:
+              # Start a poetry line at the beginning of the blockquote.
+              - type: POETRY_LINE_START
+                op: literal=1
+            contextsAfter:
+              # Stanza break (potentially ending poetry) at the end of the blockquote.
+              - type: POETRY_STANZA_BREAK
+
             nodeParser:
               nodes:
                 - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
@@ -461,11 +465,6 @@ html:
                     - type: TEXT
                       regexp: (.*)
               elements:
-                # Blockquote means poetry block, so start a poetry line.
-                - selector: "blockquote"
-                  contexts:
-                    - type: POETRY_LINE_START
-                      op: literal=1
                 # A single line break in the middle of blockquote text is a poetry line start.
                 - selector: "blockquote > br"
                   previousNode:

@@ -1,5 +1,7 @@
 package com.github.unaszole.bible.scraping.generic.parsing.html;
 
+import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
+import com.github.unaszole.bible.parsing.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import com.github.unaszole.bible.scraping.generic.parsing.GenericContextExtractor;
 import org.jsoup.nodes.Element;
@@ -77,5 +79,16 @@ public class ElementContextExtractor extends GenericContextExtractor<Element> {
         stringExtractor.regexp = regexp;
 
         return stringExtractor.extractString(actualTargetElt);
+    }
+
+    public static List<PositionBufferedParserCore.ContextReader> getReaders(List<ElementContextExtractor> contexts,
+                                                                            final Element e,
+                                                                            final ContextualData contextualData) {
+        if(contexts != null && !contexts.isEmpty()) {
+            final ContextReaderListBuilder builder = new ContextReaderListBuilder();
+            contexts.forEach(ex -> ex.appendTo(builder, e, contextualData));
+            return builder.build();
+        }
+        return List.of();
     }
 }

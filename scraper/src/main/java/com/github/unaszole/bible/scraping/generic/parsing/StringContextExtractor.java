@@ -38,11 +38,11 @@ public class StringContextExtractor extends GenericContextExtractor<String> {
 
         Matcher matcher = regexp.matcher(text);
         if(!matcher.matches()) {
-            LOG.warn("Regexp " + regexp + " failed to match " + text);
+            LOG.warn("Regexp {} failed to match {}", regexp, text);
             return "";
         }
         if(matcher.groupCount() == 0) {
-            LOG.warn("If specified, regexp " + regexp + " should have one single capturing group.");
+            LOG.warn("If specified, regexp {} should have one single capturing group.", regexp);
             return text;
         }
         return matcher.group(1);

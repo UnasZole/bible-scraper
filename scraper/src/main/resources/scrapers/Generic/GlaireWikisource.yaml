@@ -597,6 +597,9 @@ html:
         externalParsers:
           - selector: "sup.reference > a"
             linkTargetSelector: "> span.reference-text"
+            contextsBefore:
+              # Open a note before parsing its contents.
+              - type: NOTE
             nodeParser:
               nodes:
                 - withoutAncestors: [ NOTE_MARKUP ]
@@ -604,10 +607,6 @@ html:
                     - type: TEXT
                       regexp: (.*)
               elements:
-                # The opening span marks the opening of the note context.
-                - selector: "span.reference-text"
-                  contexts:
-                    - type: NOTE
                 # i elements in notes indicate quoted text.
                 - selector: "span.reference-text > i"
                   contexts:

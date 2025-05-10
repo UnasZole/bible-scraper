@@ -34,13 +34,7 @@ public class ElementParser extends ElementAndContextStackAware {
                                                                 ContextType nextContextType,
                                                                 ContextualData contextualData) {
         if(canParse(e, ancestorStack, nextContextType, contextualData)) {
-            if(!contexts.isEmpty()) {
-                final ContextReaderListBuilder builder = new ContextReaderListBuilder();
-                contexts.forEach(ex -> ex.appendTo(builder, e, contextualData));
-                return builder.build();
-            }
-
-            return List.of();
+            return ElementContextExtractor.getReaders(contexts, e, contextualData);
         }
         return null;
     }

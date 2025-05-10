@@ -324,6 +324,9 @@ html:
 
   externalParsers:
     - selector: "span#ctl00_ContentLB table p.bibl"
+      contextsBefore:
+        # Open a paragraph before parsing its contents.
+        - type: PARAGRAPH_BREAK
       nodeParser:
         nodes:
           - withoutAncestors: [ NOTE, MARKUP, PSALM_TITLE ]
@@ -332,10 +335,6 @@ html:
                 regexp: (.*)
 
         elements:
-          - selector: "p.bibl"
-            contexts:
-              - type: PARAGRAPH_BREAK
-
           - selector: "p.bibl > sup:matches(^\\d+$)"
             contexts:
               - type: VERSE
@@ -355,6 +354,9 @@ html:
 
         externalParsers:
           - selector: "p.bibl > sup > a[onMouseOver]"
+            contextsBefore:
+              # Open a note before parsing its contents.
+              - type: NOTE
             textParser:
               stringExtractor:
                 op: attribute=onMouseOver
@@ -372,10 +374,6 @@ html:
                               regexp: (.*)
 
                       elements:
-
-                        - selector: "body"
-                          contexts:
-                            - type: NOTE
 
                         - selector: "i"
                           withAncestors: [ QUOTE ]
