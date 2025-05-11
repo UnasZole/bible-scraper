@@ -5,15 +5,8 @@ import com.github.unaszole.bible.cli.args.ScraperArgument;
 import com.github.unaszole.bible.scraping.Scraper;
 import picocli.CommandLine;
 
-import java.net.URI;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Stream;
 
 @CommandLine.Command(name = "help", description = "Help on specific features.",
         subcommands = {  HelpCommand.ScraperList.class, HelpCommand.ScraperHelp.class })

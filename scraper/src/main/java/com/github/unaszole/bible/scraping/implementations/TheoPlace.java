@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.scraping.implementations;
 
-import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.IdField;
@@ -190,10 +190,8 @@ public class TheoPlace extends Scraper {
         }
 
         @Override
-        protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestors, ContextType type,
+        protected List<ContextReader> readContexts(List<Context> ancestors, ContextType type,
                                       ContextMetadata previousOfType, Element e) {
-            ContextMetadata parent = ancestors.peekFirst();
-
             switch(type) {
                 case BOOK_TITLE:
                     return e.is(DOC_TITLE_SELECTOR) ?

@@ -1,17 +1,15 @@
 package com.github.unaszole.bible.parsing;
 
-import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
 public class ContextReaderListBuilder {
 
-    public static ContextReaderListBuilder context(final BiFunction<Deque<ContextMetadata>, ContextMetadata,
+    public static ContextReaderListBuilder context(final BiFunction<List<Context>, ContextMetadata,
             ContextMetadata> buildMeta, final Object value, ContextReaderListBuilder descendants) {
         return new ContextReaderListBuilder().followedBy(buildMeta, value, descendants);
     }
@@ -37,12 +35,12 @@ public class ContextReaderListBuilder {
 
     private final ContextMetadata[] lastObjectMeta = new ContextMetadata[] { null };
 
-    public ContextReaderListBuilder followedBy(final BiFunction<Deque<ContextMetadata>, ContextMetadata,
+    public ContextReaderListBuilder followedBy(final BiFunction<List<Context>, ContextMetadata,
             ContextMetadata> buildMeta, final Object value, ContextReaderListBuilder descendants) {
         // Add a reader for this context.
         readers.add((as, type, pot) -> {
             ContextMetadata meta = buildMeta.apply(as, pot);
-            if(type == meta.type && !as.contains(lastObjectMeta[0])) {
+            if(type == meta.type && as.stream().noneMatch(c -> c.metadata.equals(lastObjectMeta[0]))) {
                 // If the requested type matches the one provided by the builder
                 // AND we are outside the previous sibling, then we return a context.
                 lastObjectMeta[0] = meta;

@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.scraping;
 
-import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;

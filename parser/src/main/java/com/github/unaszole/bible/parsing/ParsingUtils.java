@@ -13,22 +13,18 @@ public class ParsingUtils {
     /**
      * Utility method for parsers : check if the current context is a descendant of a context of a given type.
      * @param searchedAncestorType The type of ancestor to search for.
-     * @param ancestors The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
+     * @param ancestors The ancestor contexts, potentially implicit (first element is the direct parent).
      * @return True if an ancestor of the searched type is present, false otherwise.
      */
-    public static boolean hasAncestor(ContextType searchedAncestorType, Deque<ContextMetadata> ancestors) {
-        return ancestors.stream().anyMatch(a -> a.type == searchedAncestorType);
-    }
-
-    public static boolean hasAncestorCtx(ContextType searchedAncestorType, Deque<Context> ancestors) {
+    public static boolean hasAncestor(ContextType searchedAncestorType, Collection<Context> ancestors) {
         return ancestors.stream().anyMatch(a -> a.metadata.type == searchedAncestorType);
     }
 
-    public static boolean isInVerseText(Deque<ContextMetadata> ancestors) {
+    public static boolean isInVerseText(Collection<Context> ancestors) {
         return hasAncestor(ContextType.VERSE, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors);
     }
 
-    public static ContextMetadata getChapterMetadata(Deque<ContextMetadata> ancestorStack,
+    public static ContextMetadata getChapterMetadata(List<Context> ancestorStack,
                                                      ContextMetadata previousChapter,
                                                      String parsedNb) {
         // Expected chapter ID based on the previous and ancestors.
@@ -50,7 +46,7 @@ public class ParsingUtils {
         }
     }
 
-    public static ContextMetadata getVerseMetadata(Deque<ContextMetadata> ancestorStack, ContextMetadata previousVerse, String parsedNb) {
+    public static ContextMetadata getVerseMetadata(List<Context> ancestorStack, ContextMetadata previousVerse, String parsedNb) {
         ContextId expectedVerseId = IdType.BIBLE_VERSE.getNewId(previousVerse, ancestorStack)
                 .orElseThrow(() -> new IllegalArgumentException("Could not find a next verse ID following" + previousVerse + " with " + ancestorStack));
 

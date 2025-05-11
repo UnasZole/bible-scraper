@@ -2,10 +2,10 @@ package com.github.unaszole.bible.scraping.generic.parsing.sliding;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.parsing.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 
-import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +21,7 @@ public class ConfiguredSlidingParser extends PositionBufferedParserCore<SlidingV
     }
 
     @Override
-    protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
+    protected List<ContextReader> readContexts(List<Context> ancestorStack, ContextType type,
                                                ContextMetadata previousOfType,
                                                SlidingView view) {
         // Evaluations will refer to a slice starting at the current position in the full contents buffer.

@@ -1,5 +1,7 @@
 package com.github.unaszole.bible.datamodel;
 
+import com.github.unaszole.bible.parsing.Context;
+
 import java.util.*;
 
 public enum IdType {
@@ -14,19 +16,19 @@ public enum IdType {
         this.fields = fields;
     }
 
-    public Optional<ContextId> getFirst(Deque<ContextMetadata> ancestorStack) {
+    public Optional<ContextId> getFirst(List<Context> ancestorStack) {
         IdField lastField = fields[fields.length - 1];
 
         Optional newLastField = lastField.fieldType.getFirst();
         if(newLastField.isPresent()) {
             Map<IdField, Object> nextIdMap = new HashMap<>();
             // Loop through all ancestors to collect their ID fields.
-            for(ContextMetadata ancestor: ancestorStack) {
-                if(ancestor.type.idType.fields != null) {
-                    for(IdField fieldDef: ancestor.type.idType.fields) {
+            for(Context ancestor: ancestorStack) {
+                if(ancestor.metadata.type.idType.fields != null) {
+                    for(IdField fieldDef: ancestor.metadata.type.idType.fields) {
                         if(Arrays.stream(fields).anyMatch(f -> f == fieldDef)){
                             // Field from ancestor is also needed for current ID : take it.
-                            nextIdMap.computeIfAbsent(fieldDef, ancestor.id::get);
+                            nextIdMap.computeIfAbsent(fieldDef, ancestor.metadata.id::get);
                         }
                     }
                 }
@@ -39,7 +41,7 @@ public enum IdType {
         return Optional.empty();
     }
 
-    public Optional<ContextId> getNewId(ContextMetadata previousOfType, Deque<ContextMetadata> ancestorStack) {
+    public Optional<ContextId> getNewId(ContextMetadata previousOfType, List<Context> ancestorStack) {
         if(previousOfType != null) {
             // We have a previous element of this type : try creating a next ID from it.
             return previousOfType.id.next();

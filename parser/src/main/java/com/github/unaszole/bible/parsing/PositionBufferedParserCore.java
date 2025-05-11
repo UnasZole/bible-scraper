@@ -1,6 +1,5 @@
 package com.github.unaszole.bible.parsing;
 
-import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import org.slf4j.Logger;
@@ -25,18 +24,18 @@ public abstract class PositionBufferedParserCore<Position> implements ParserCore
          * @param previousOfType The metadata of the previous sibling context of the requested type.
          * @return A context if one could be read (MUST be of the requested type), empty optional otherwise.
          */
-        Optional<Context> readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
+        Optional<Context> readContext(List<Context> ancestorStack, ContextType type,
                                       ContextMetadata previousOfType);
     }
 
-    protected abstract List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
+    protected abstract List<ContextReader> readContexts(List<Context> ancestorStack, ContextType type,
                                                   ContextMetadata previousOfType, Position position);
 
     private Position currentPosition = null;
     private final Deque<ContextReader> contextBuffer = new LinkedList<>();
 
     @Override
-    public final PositionParseOutput readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
+    public final PositionParseOutput readContext(List<Context> ancestorStack, ContextType type,
                                                  ContextMetadata previousOfType, Position position) {
         if(!contextBuffer.isEmpty() && !Objects.equals(currentPosition, position)) {
             LOG.warn("Parser moved to a new position {} while position {} still had buffered contexts : {}",

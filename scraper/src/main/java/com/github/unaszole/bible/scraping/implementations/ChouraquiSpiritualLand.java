@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.scraping.implementations;
 
 import com.github.unaszole.bible.datamodel.*;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.CachedDownloader;
 import com.github.unaszole.bible.parsing.Parser;
@@ -186,7 +187,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 		}
 		
 		@Override
-		protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestors, ContextType type,
+		protected List<ContextReader> readContexts(List<Context> ancestors, ContextType type,
 									  ContextMetadata previousOfType, Element e) {
 			
 			switch(type) {
@@ -292,9 +293,8 @@ public class ChouraquiSpiritualLand extends Scraper {
 		private static class UnformattedChapterParser extends PositionBufferedParserCore<MatchResult> {
 
 			@Override
-			protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestors, ContextType type,
+			protected List<ContextReader> readContexts(List<Context> ancestors, ContextType type,
 										  ContextMetadata previousOfType, MatchResult verseMatch) {
-				ContextMetadata parent = ancestors.peekFirst();
 				switch(type) {
 					case VERSE:
 						String verseNb = verseMatch.group(1);
@@ -320,7 +320,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 		
 		@Override
 		public Parser<?> parseExternally(Element e, Deque<Context> currentContextStack) {
-			if(ParsingUtils.hasAncestorCtx(ContextType.CHAPTER, currentContextStack) && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
+			if(ParsingUtils.hasAncestor(ContextType.CHAPTER, currentContextStack) && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
 				// If lexeme matches as an unformatted sequence of verses, we parse them and pass them to a dedicated parser.
 				Matcher verseMatcher = UNFORMATTED_VERSE_PATTERN.matcher(e.text());
 				return new Parser<MatchResult>(new UnformattedChapterParser(), verseMatcher.results().iterator(), currentContextStack);

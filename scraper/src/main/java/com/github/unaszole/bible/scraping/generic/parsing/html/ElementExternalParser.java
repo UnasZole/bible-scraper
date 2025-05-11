@@ -1,17 +1,13 @@
 package com.github.unaszole.bible.scraping.generic.parsing.html;
 
-import com.github.unaszole.bible.datamodel.Context;
-import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.parsing.Parser;
-import com.github.unaszole.bible.parsing.PositionBufferedParserCore;
 import com.github.unaszole.bible.parsing.WrappingParserCore;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import org.jsoup.nodes.Element;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class ElementExternalParser extends ElementAndContextStackAware {
 
@@ -41,7 +37,7 @@ public class ElementExternalParser extends ElementAndContextStackAware {
      */
     public ElementTextParser textParser;
 
-    private Optional<Element> getTargetElement(Element e, Deque<ContextMetadata> currentContextStack, ContextualData contextualData) {
+    private Optional<Element> getTargetElement(Element e, List<Context> currentContextStack, ContextualData contextualData) {
         if(!areElementAndContextStackValid(e, currentContextStack, contextualData)) {
             return Optional.empty();
         }
@@ -50,17 +46,11 @@ public class ElementExternalParser extends ElementAndContextStackAware {
         if (linkTargetSelector != null && e.hasAttr("href")) {
             String[] link = e.attr("href").split("#");
             if (!link[0].isEmpty()) {
-                throw new IllegalArgumentException("Cannot follow link " + link + " as it's not local to the page");
+                throw new IllegalArgumentException("Cannot follow link " + link[0] + " as it's not local to the page");
             }
             target = e.ownerDocument().getElementById(link[1]).selectFirst(linkTargetSelector.get(contextualData));
         }
         return Optional.ofNullable(target);
-    }
-
-    private Deque<ContextMetadata> toMetadataStack(Deque<Context> currentContextStack) {
-        return currentContextStack.stream()
-                .map(c -> c.metadata)
-                .collect(Collectors.toCollection(ArrayDeque::new));
     }
 
     public Parser<?> wrap(Function<Deque<Context>, Parser<?>> parserBuilder, Element targetElement,
@@ -75,7 +65,7 @@ public class ElementExternalParser extends ElementAndContextStackAware {
 
     public Optional<Parser<?>> getParserIfApplicable(Element e, final Deque<Context> currentContextStack,
                                                      final ContextualData contextualData) {
-        return getTargetElement(e, toMetadataStack(currentContextStack), contextualData)
+        return getTargetElement(e, new ArrayList<>(currentContextStack), contextualData)
                 .flatMap(te -> {
                     if(nodeParser != null) {
                         return Optional.of(wrap(

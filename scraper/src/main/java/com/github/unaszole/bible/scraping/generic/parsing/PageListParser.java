@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.scraping.generic.parsing;
 
-import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.downloading.CachedDownloader;
@@ -12,6 +12,7 @@ import org.crosswire.jsword.versification.BibleBook;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 
 public class PageListParser implements ParserCore<PageData> {
@@ -42,7 +43,7 @@ public class PageListParser implements ParserCore<PageData> {
     }
 
     @Override
-    public PositionParseOutput readContext(Deque<ContextMetadata> ancestorStack, ContextType type, ContextMetadata previousOfType, PageData pageData) {
+    public PositionParseOutput readContext(List<Context> ancestorStack, ContextType type, ContextMetadata previousOfType, PageData pageData) {
         // Nothing to parse directly from the page data.
         return new PositionParseOutput(null, true);
     }

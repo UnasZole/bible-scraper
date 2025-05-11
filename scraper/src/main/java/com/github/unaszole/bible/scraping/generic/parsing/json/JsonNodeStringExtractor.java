@@ -24,7 +24,7 @@ public class JsonNodeStringExtractor {
             if (matcher.matches()) {
                 str = matcher.group(1);
             } else {
-                LOG.warn("Failed to match " + str + " against " + regexp);
+                LOG.warn("Failed to match {} against {}", str, regexp);
                 str = null;
             }
         }

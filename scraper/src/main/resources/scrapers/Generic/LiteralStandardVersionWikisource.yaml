@@ -1,0 +1,293 @@
+description: "Literal Standard Version Wikisource"
+bible:
+  metadata:
+    language: en
+    systemName: EngLsv
+    title: Literal Standard Version - Covenant Press of the Covenant Christian Coalition
+    versification: KJV
+
+  patterns:
+    bookUrl: "https://en.wikisource.org/wiki/Bible_(Literal_Standard_Version)/{BOOK}"
+
+  books:
+    - osis: Gen
+      args: { BOOK: Genesis }
+
+    - osis: Exod
+      args: { BOOK: Exodus }
+
+    - osis: Lev
+      args: { BOOK: Leviticus }
+
+    - osis: Num
+      args: { BOOK: Numbers }
+
+    - osis: Deut
+      args: { BOOK: Deuteronomy }
+
+    - osis: Josh
+      args: { BOOK: Joshua }
+
+    - osis: Judg
+      args: { BOOK: Judges }
+
+    - osis: Ruth
+      args: { BOOK: Ruth }
+
+    - osis: 1Sam
+      args: { BOOK: 1_Samuel }
+
+    - osis: 2Sam
+      args: { BOOK: 2_Samuel }
+
+    - osis: 1Kgs
+      args: { BOOK: 1_Kings }
+
+    - osis: 2Kgs
+      args: { BOOK: 2_Kings }
+
+    - osis: 1Chr
+      args: { BOOK: 1_Chronicles }
+
+    - osis: 2Chr
+      args: { BOOK: 2_Chronicles }
+
+    - osis: Ezra
+      args: { BOOK: Ezra }
+
+    - osis: Neh
+      args: { BOOK: Nehemiah }
+
+    - osis: Esth
+      args: { BOOK: Esther }
+
+    - osis: Job
+      args: { BOOK: Job }
+
+    - osis: Ps
+      args: { BOOK: Psalms }
+
+    - osis: Prov
+      args: { BOOK: Proverbs }
+
+    - osis: Eccl
+      args: { BOOK: Ecclesiastes }
+
+    - osis: Song
+      args: { BOOK: Song_of_Songs }
+
+    - osis: Isa
+      args: { BOOK: Isaiah }
+
+    - osis: Jer
+      args: { BOOK: Jeremiah }
+
+    - osis: Lam
+      args: { BOOK: Lamentations }
+
+    - osis: Ezek
+      args: { BOOK: Ezekiel }
+
+    - osis: Dan
+      args: { BOOK: Daniel }
+
+    - osis: Hos
+      args: { BOOK: Hosea }
+
+    - osis: Joel
+      args: { BOOK: Joel }
+
+    - osis: Amos
+      args: { BOOK: Amos }
+
+    - osis: Obad
+      args: { BOOK: Obadiah }
+
+    - osis: Jonah
+      args: { BOOK: Jonah }
+
+    - osis: Mic
+      args: { BOOK: Micah }
+
+    - osis: Nah
+      args: { BOOK: Nahum }
+
+    - osis: Hab
+      args: { BOOK: Habakkuk }
+
+    - osis: Zeph
+      args: { BOOK: Zephaniah }
+
+    - osis: Hag
+      args: { BOOK: Haggai }
+
+    - osis: Zech
+      args: { BOOK: Zechariah }
+
+    - osis: Mal
+      args: { BOOK: Malachi }
+
+    - osis: Matt
+      args: { BOOK: Matthew }
+
+    - osis: Mark
+      args: { BOOK: Mark }
+
+    - osis: Luke
+      args: { BOOK: Luke }
+
+    - osis: John
+      args: { BOOK: John }
+
+    - osis: Acts
+      args: { BOOK: Acts }
+
+    - osis: Rom
+      args: { BOOK: Romans }
+
+    - osis: 1Cor
+      args: { BOOK: 1_Corinthians }
+
+    - osis: 2Cor
+      args: { BOOK: 2_Corinthians }
+
+    - osis: Gal
+      args: { BOOK: Galatians }
+
+    - osis: Eph
+      args: { BOOK: Ephesians }
+
+    - osis: Phil
+      args: { BOOK: Philippians }
+
+    - osis: Col
+      args: { BOOK: Colossians }
+
+    - osis: 1Thess
+      args: { BOOK: 1_Thessalonians }
+
+    - osis: 2Thess
+      args: { BOOK: 2_Thessalonians }
+
+    - osis: 1Tim
+      args: { BOOK: 1_Timothy }
+
+    - osis: 2Tim
+      args: { BOOK: 2_Timothy }
+
+    - osis: Titus
+      args: { BOOK: Titus }
+
+    - osis: Phlm
+      args: { BOOK: Philemon }
+
+    - osis: Heb
+      args: { BOOK: Hebrews }
+
+    - osis: Jas
+      args: { BOOK: James }
+
+    - osis: 1Pet
+      args: { BOOK: 1_Peter }
+
+    - osis: 2Pet
+      args: { BOOK: 2_Peter }
+
+    - osis: 1John
+      args: { BOOK: 1_John }
+
+    - osis: 2John
+      args: { BOOK: 2_John }
+
+    - osis: 3John
+      args: { BOOK: 3_John }
+
+    - osis: Jude
+      args: { BOOK: Jude }
+
+    - osis: Rev
+      args: { BOOK: Revelation }
+
+html:
+  elements:
+    - selector: "span.wst-header-title > div.header-section-text"
+      contexts:
+        - type: BOOK_TITLE
+          descendants:
+            - type: TEXT
+              op: text
+
+    - selector: "div.mw-heading > h2:matches(^(Chapter|Psalm) \\d+)"
+      contexts:
+        - type: CHAPTER
+          op: text
+          regexp: "(?:Chapter|Psalm) (\\d+)"
+
+  externalParsers:
+    - selector: "p"
+      withAncestors: [ CHAPTER ]
+      contextsBefore:
+        - type: PARAGRAPH_BREAK
+      nodeParser:
+        elements:
+          # A verse number which has subsequent double-vertical lines should start a poetry line.
+          - selector: "span.wst-verse"
+            nextNode:
+              isTextNodeMatching: ".*\\|\\|.*"
+            contexts:
+              - type: VERSE
+                selector: "> sup"
+                op: text
+                descendants:
+                  - type: POETRY_LINE_START
+                    op: "literal=1"
+          # Other verse numbers do not.
+          - selector: "span.wst-verse"
+            contexts:
+              - type: VERSE
+                selector: "> sup"
+                op: text
+
+          # an "or" in italic following a bold [[ marks the beginning of an alternate translation.
+          - selector: "i:matches(^or$)"
+            previousNode:
+              isElementMatching: "b:matches(\\[\\[)"
+            contexts:
+              - type: NOTE
+                descendants:
+                  - type: TEXT
+                    op: "literal=or "
+                  - type: ALTERNATE_TRANSLATION
+          # A bold ]] marks the end of an alternate translation, back to regular text.
+          - selector: "b:matches(\\]\\])"
+            withoutAncestors: [ NOTE ]
+            contexts:
+              - type: TEXT
+                op: "literal="
+
+        nodeExternalParsers:
+          - regexp: ".*[^\\s].*"
+            textParser:
+              sliding:
+                rules:
+                  # Text within single brackets is a translation addition.
+                  - regexp: "\\[[^\\[\\]]+\\]"
+                    contexts:
+                      - type: TRANSLATION_ADD
+                        descendants:
+                          - type: TEXT
+                            regexp: "\\[([^\\[\\]]+)\\]"
+
+                  # Two vertical bars signal a line break in poetry.
+                  - regexp: "\\|\\|"
+                    contexts:
+                      - type: POETRY_LINE_START
+                        literal: "1"
+
+                  # Match everything until the next space or special character ( [ or | ) as regular text.
+                  - regexp: ".?[^\\s\\[\\|]+\\s*"
+                    withoutAncestors: [ MARKUP ]
+                    contexts:
+                      - type: TEXT
+                        regexp: "(.*)"
+

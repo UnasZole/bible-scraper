@@ -1,10 +1,10 @@
 package com.github.unaszole.bible.parsing;
 
-import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 
 import java.util.Deque;
+import java.util.List;
 
 /**
  * Logic specific to the parsing of a specific document structure.
@@ -34,14 +34,14 @@ public interface ParserCore<Position> {
     }
 
     /**
-     * @param ancestorStack The metadata of the ancestor contexts, potentially implicit (first element is the direct parent).
+     * @param ancestorStack Read-only stack of ancestor contexts, potentially implicit (first element is the direct parent).
      * @param type The type of context to try creating from this position.
      * @param previousOfType Metadata of the previous sibling of the same type, or null if there is none.
      * @param position The position to check for a context opening.
      * @return The result of trying to build a context from this position.
      */
-    PositionParseOutput readContext(Deque<ContextMetadata> ancestorStack, ContextType type,
-                        ContextMetadata previousOfType, Position position);
+    PositionParseOutput readContext(List<Context> ancestorStack, ContextType type,
+                                    ContextMetadata previousOfType, Position position);
 
     /**
      * Handle the position using external parsing logic if needed. That's useful if you are using a lexeme based parser,

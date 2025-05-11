@@ -55,7 +55,7 @@ public class ElementStringExtractor {
             if (matcher.matches()) {
                 opResult = matcher.group(1);
             } else {
-                LOG.warn("Failed to match " + opResult + " against " + regexp);
+                LOG.warn("Failed to match {} against {}", opResult, regexp);
                 opResult = null;
             }
         }

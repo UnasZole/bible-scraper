@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 
 public class ContextSequence {
 

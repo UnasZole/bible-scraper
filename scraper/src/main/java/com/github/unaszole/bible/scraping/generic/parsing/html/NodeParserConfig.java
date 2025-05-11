@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.scraping.generic.parsing.html;
 
-import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.parsing.PositionBufferedParserCore;
@@ -20,27 +20,31 @@ public class NodeParserConfig {
     public List<TextNodeParser> nodes;
     public List<ElementParser> elements;
     public List<ElementExternalParser> externalParsers;
+    public List<TextNodeExternalParser> nodeExternalParsers;
 
-    private List<PositionBufferedParserCore.ContextReader> parseElement(Deque<ContextMetadata> ancestorStack,
+    private List<PositionBufferedParserCore.ContextReader> parseElement(List<Context> ancestorStack,
                                                                         ContextType type, Element e,
                                                                         ContextualData contextualData) {
-        for(ElementParser eltParser: elements) {
-            List<PositionBufferedParserCore.ContextReader> result = eltParser.parse(e, ancestorStack, type, contextualData);
-            if(result != null) {
-                return result;
+        if(elements != null) {
+            for (ElementParser eltParser : elements) {
+                List<PositionBufferedParserCore.ContextReader> result = eltParser.parse(e, ancestorStack, type, contextualData);
+                if (result != null) {
+                    return result;
+                }
             }
         }
         return List.of();
     }
 
-    private List<PositionBufferedParserCore.ContextReader> parseTextNode(Deque<ContextMetadata> ancestorStack,
+    private List<PositionBufferedParserCore.ContextReader> parseTextNode(List<Context> ancestorStack,
                                                                          ContextType type, TextNode t,
                                                                          ContextualData contextualData) {
-
-        for(TextNodeParser nodeParser: nodes) {
-            List<PositionBufferedParserCore.ContextReader> result = nodeParser.parse(t, ancestorStack, type, contextualData);
-            if(result != null) {
-                return result;
+        if(nodes != null) {
+            for (TextNodeParser nodeParser : nodes) {
+                List<PositionBufferedParserCore.ContextReader> result = nodeParser.parse(t, ancestorStack, type, contextualData);
+                if (result != null) {
+                    return result;
+                }
             }
         }
         return List.of();
@@ -97,16 +101,26 @@ public class NodeParserConfig {
 
             @Override
             public Parser<?> parseExternally(Node n, Deque<Context> currentContextStack) {
-                if(externalParsers == null || !(n instanceof Element)) {
-                    return null;
-                }
-                Element e = (Element) n;
+                if(externalParsers != null && n instanceof Element) {
+                    Element e = (Element) n;
 
-                for(ElementExternalParser elementExternalParser : externalParsers) {
-                    Optional<Parser<?>> parser = elementExternalParser.getParserIfApplicable(e, currentContextStack,
-                            contextualData);
-                    if(parser.isPresent()) {
-                        return parser.get();
+                    for(ElementExternalParser elementExternalParser : externalParsers) {
+                        Optional<Parser<?>> parser = elementExternalParser.getParserIfApplicable(e, currentContextStack,
+                                contextualData);
+                        if(parser.isPresent()) {
+                            return parser.get();
+                        }
+                    }
+                }
+                else if(nodeExternalParsers != null && n instanceof TextNode) {
+                    TextNode t = (TextNode) n;
+
+                    for(TextNodeExternalParser textNodeExternalParser: nodeExternalParsers) {
+                        Optional<Parser<?>> parser = textNodeExternalParser.getParserIfApplicable(t,
+                                currentContextStack, contextualData);
+                        if(parser.isPresent()) {
+                            return parser.get();
+                        }
                     }
                 }
 
@@ -115,7 +129,7 @@ public class NodeParserConfig {
             }
 
             @Override
-            protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
+            protected List<ContextReader> readContexts(List<Context> ancestorStack, ContextType type,
                                                        ContextMetadata previousOfType, Node n) {
                 if(n instanceof Element) {
                     return parseElement(ancestorStack, type, (Element) n, contextualData);

@@ -1,4 +1,7 @@
-package com.github.unaszole.bible.datamodel;
+package com.github.unaszole.bible.parsing;
+
+import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.datamodel.ContextType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +14,7 @@ public class Context {
 
 	public final ContextMetadata metadata;
 	public final Object value;
-	public final List<Context> children;
+	private final List<Context> children;
 	public final long contextUniqueId;
 
 	private Context(ContextMetadata metadata, Object value, List<Context> children, long contextUniqueId) {
@@ -34,7 +37,7 @@ public class Context {
 		this(metadata, null);
 	}
 	
-	public Context addChild(Context child) {
+	Context addChild(Context child) {
 		List<Context> newChildren = new ArrayList<>(children);
 		newChildren.add(child);
 		return new Context(metadata, value, newChildren, contextUniqueId);

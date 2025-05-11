@@ -1,13 +1,13 @@
 package com.github.unaszole.bible.scraping.generic.parsing.html;
 
-import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextStackAware;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 
-import java.util.Deque;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -77,7 +77,7 @@ public class ElementAndContextStackAware extends ContextStackAware {
     public ElementMatcher nextElement;
     public NodeMatcher nextNode;
 
-    public boolean areElementAndContextStackValid(Element e, Deque<ContextMetadata> currentContextStack, ContextualData contextualData) {
+    public boolean areElementAndContextStackValid(Element e, List<Context> currentContextStack, ContextualData contextualData) {
         if(!isContextStackValid(currentContextStack)) {
             return false;
         }

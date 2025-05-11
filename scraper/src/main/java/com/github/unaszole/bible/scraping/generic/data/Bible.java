@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.scraping.generic.data;
 
-import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;

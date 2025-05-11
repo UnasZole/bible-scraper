@@ -69,7 +69,7 @@ public class ElementContextExtractor extends GenericContextExtractor<Element> {
         if (linkTargetSelector != null && actualTargetElt.hasAttr("href")) {
             String[] link = actualTargetElt.attr("href").split("#");
             if (!link[0].isEmpty()) {
-                throw new IllegalArgumentException("Cannot follow link " + link + " as it's not local to the page");
+                throw new IllegalArgumentException("Cannot follow link " + link[0] + " as it's not local to the page");
             }
             actualTargetElt = targetElt.ownerDocument().getElementById(link[1]).selectFirst(linkTargetSelector.get(contextualData));
         }

@@ -1,20 +1,12 @@
 package com.github.unaszole.bible;
 
-import com.github.unaszole.bible.cli.args.ScraperArgument;
-import com.github.unaszole.bible.cli.args.WantedMetadataArgument;
-import com.github.unaszole.bible.cli.args.WriterArgument;
 import com.github.unaszole.bible.cli.commands.HelpCommand;
 import com.github.unaszole.bible.cli.commands.ScrapeCommand;
-import com.github.unaszole.bible.writing.ContextStreamWriter;
-import com.github.unaszole.bible.writing.Typography;
-import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import picocli.CommandLine;
 
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "bible-scraper", subcommands = { ScrapeCommand.class, HelpCommand.class })
 public class ScraperEntrypoint {

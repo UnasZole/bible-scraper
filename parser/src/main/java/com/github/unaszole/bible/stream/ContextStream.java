@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.stream;
 
-import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.parsing.PositionBufferedParserCore;
@@ -69,7 +69,7 @@ public abstract class ContextStream<StreamType extends ContextStream<StreamType>
         Context extractedContext = new Context(wantedMetadata);
         new Parser.TerminalParser<ContextEvent>(new PositionBufferedParserCore<ContextEvent>() {
             @Override
-            protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
+            protected List<ContextReader> readContexts(List<Context> ancestorStack, ContextType type,
                                                  ContextMetadata previousOfType, ContextEvent event) {
                 if(event.type == ContextEvent.Type.OPEN && event.metadata.type == type) {
                     return context(event.metadata, event.value).build();

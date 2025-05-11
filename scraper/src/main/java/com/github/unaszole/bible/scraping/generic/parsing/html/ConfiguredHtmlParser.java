@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.scraping.generic.parsing.html;
 
-import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.parsing.PositionBufferedParserCore;
@@ -46,7 +46,7 @@ public class ConfiguredHtmlParser extends PositionBufferedParserCore<Element> {
     }
 
     @Override
-    public List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
+    public List<ContextReader> readContexts(List<Context> ancestorStack, ContextType type,
                                   ContextMetadata previousOfType, Element e) {
         if(elements == null) {
             return List.of();

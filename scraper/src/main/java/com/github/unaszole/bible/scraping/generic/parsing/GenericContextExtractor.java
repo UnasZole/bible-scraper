@@ -3,6 +3,7 @@ package com.github.unaszole.bible.scraping.generic.parsing;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.monitor.ExecutionMonitor;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
 import com.github.unaszole.bible.parsing.ParsingUtils;
 import org.crosswire.jsword.versification.BibleBook;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +30,7 @@ public abstract class GenericContextExtractor<Position> {
         return parsedNb.length() == 1 ? parsedNb : parsedNb.replaceAll("^0*(.)", "$1");
     }
 
-    protected ContextMetadata getContextMetadata(Deque<ContextMetadata> ancestorStack, ContextMetadata previousOfType, Object value) {
+    protected ContextMetadata getContextMetadata(List<Context> ancestorStack, ContextMetadata previousOfType, Object value) {
         switch (type) {
             case CHAPTER:
                 return ParsingUtils.getChapterMetadata(ancestorStack, previousOfType, (String) value);

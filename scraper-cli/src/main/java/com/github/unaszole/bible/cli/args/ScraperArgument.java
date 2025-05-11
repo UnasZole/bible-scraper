@@ -4,8 +4,6 @@ import com.github.unaszole.bible.scraping.Scraper;
 import picocli.CommandLine;
 
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 
 public class ScraperArgument {
 

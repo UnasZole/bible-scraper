@@ -21,6 +21,11 @@ public class StringContextExtractor extends GenericContextExtractor<String> {
     public Pattern regexp;
 
     /**
+     * Literal value for the context. Mutually exclusive with regexp.
+     */
+    public String literal;
+
+    /**
      * Configuration to extract additional contexts as descendants of this one from the same text node.
      */
     public List<StringContextExtractor> descendants;
@@ -33,7 +38,7 @@ public class StringContextExtractor extends GenericContextExtractor<String> {
     @Override
     protected String extractValue(String text, ContextualData contextualData) {
         if(regexp == null) {
-            return null;
+            return literal;
         }
 
         Matcher matcher = regexp.matcher(text);

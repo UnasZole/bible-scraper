@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.scraping.generic.parsing;
 
-import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextType;
 
 import java.util.Collection;
@@ -19,13 +19,13 @@ public abstract class ContextStackAware {
      */
     public List<ContextType> withoutAncestors;
 
-    protected boolean isContextStackValid(Collection<ContextMetadata> ancestorStack) {
+    protected boolean isContextStackValid(Collection<Context> ancestorStack) {
         return
                 (this.withAncestors == null || this.withAncestors.stream().allMatch(
-                        t -> ancestorStack.stream().anyMatch(a -> a.type == t)
+                        t -> ancestorStack.stream().anyMatch(a -> a.metadata.type == t)
                 )) &&
                 (this.withoutAncestors == null || ancestorStack.stream().noneMatch(
-                        a -> this.withoutAncestors.contains(a.type)
+                        a -> this.withoutAncestors.contains(a.metadata.type)
                 ));
     }
 }

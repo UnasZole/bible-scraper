@@ -2,15 +2,14 @@ package com.github.unaszole.bible.scraping.generic.parsing.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
 import com.github.unaszole.bible.parsing.PositionBufferedParserCore;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextStackAware;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import com.jayway.jsonpath.JsonPath;
 
-import java.util.Deque;
 import java.util.List;
 
 public class JsonNodeParser extends ContextStackAware {
@@ -37,14 +36,14 @@ public class JsonNodeParser extends ContextStackAware {
      * @param nextContextType The type of context we're asked to open.
      * @return True if this extractor can indeed open a context here, false otherwise.
      */
-    private boolean canParse(JsonParserProvider.JsonNodeWrapper e, Deque<ContextMetadata> ancestorStack, ContextType nextContextType) {
+    private boolean canParse(JsonParserProvider.JsonNodeWrapper e, List<Context> ancestorStack, ContextType nextContextType) {
         // If the first context of the sequence matches the requested type, and the context stack is valid.
         return contexts != null && !contexts.isEmpty() && contexts.get(0).type == nextContextType
                 && isContextStackValid(ancestorStack) && nodeMatches(e);
     }
 
     public List<PositionBufferedParserCore.ContextReader> parse(final JsonParserProvider.JsonNodeWrapper e,
-                                                                Deque<ContextMetadata> ancestorStack,
+                                                                List<Context> ancestorStack,
                                                                 ContextType nextContextType,
                                                                 ContextualData contextualData) {
         if(canParse(e, ancestorStack, nextContextType)) {

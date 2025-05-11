@@ -1,6 +1,5 @@
 package com.github.unaszole.bible.parsing;
 
-import com.github.unaszole.bible.datamodel.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 
@@ -31,7 +30,7 @@ public class WrappingParserCore extends PositionBufferedParserCore<WrappingParse
     }
 
     @Override
-    protected List<ContextReader> readContexts(Deque<ContextMetadata> ancestorStack, ContextType type,
+    protected List<ContextReader> readContexts(List<Context> ancestorStack, ContextType type,
                                                ContextMetadata previousOfType, Position position) {
         switch (position) {
             case BEFORE:

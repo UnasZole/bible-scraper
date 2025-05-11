@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.scraping.generic.parsing;
 
-import com.github.unaszole.bible.datamodel.Context;
+import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.parsing.Parser;
 import com.github.unaszole.bible.parsing.ParserCore;
 import com.github.unaszole.bible.scraping.generic.parsing.html.HtmlParserProvider;
