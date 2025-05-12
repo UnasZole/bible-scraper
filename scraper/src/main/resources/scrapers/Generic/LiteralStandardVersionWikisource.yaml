@@ -224,7 +224,7 @@ html:
           regexp: "(?:Chapter|Psalm) (\\d+)"
 
   externalParsers:
-    - selector: "p"
+    - selector: "p:not([class])"
       withAncestors: [ CHAPTER ]
       contextsBefore:
         - type: PARAGRAPH_BREAK
@@ -247,6 +247,8 @@ html:
               - type: VERSE
                 selector: "> sup"
                 op: text
+                descendants:
+                  - type: POETRY_STANZA_BREAK
 
           # an "or" in italic following a bold [[ marks the beginning of an alternate translation.
           - selector: "i:matches(^or$)"
