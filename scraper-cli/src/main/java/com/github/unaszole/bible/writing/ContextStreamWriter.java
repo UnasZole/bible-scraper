@@ -1,6 +1,9 @@
 package com.github.unaszole.bible.writing;
 
 import com.github.unaszole.bible.datamodel.IdField;
+import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
+import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
+import com.github.unaszole.bible.datamodel.contexttypes.StructureMarkers;
 import com.github.unaszole.bible.writing.datamodel.BibleRef;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
@@ -101,19 +104,19 @@ public class ContextStreamWriter {
 
     private BibleRef[] buildRefs(Map<ContextType, List<Object>> values, BibleRef inheritFrom) {
         BibleBook book = inheritFrom != null ? inheritFrom.book : null;
-        if(values.containsKey(ContextType.REF_BOOK)) {
-            book = (BibleBook) values.get(ContextType.REF_BOOK).get(0);
+        if(values.containsKey(FlatText.REF_BOOK)) {
+            book = (BibleBook) values.get(FlatText.REF_BOOK).get(0);
         }
 
         int chapter = inheritFrom != null ? inheritFrom.chapter : 0;
-        if(values.containsKey(ContextType.REF_CHAPTER)) {
-            chapter = (int) values.get(ContextType.REF_CHAPTER).get(0);
+        if(values.containsKey(FlatText.REF_CHAPTER)) {
+            chapter = (int) values.get(FlatText.REF_CHAPTER).get(0);
         }
 
         int firstVerse = 0;
         int lastVerse = 0;
-        if(values.containsKey(ContextType.REF_VERSES)) {
-            int[] verseRange = (int[]) values.get(ContextType.REF_VERSES).get(0);
+        if(values.containsKey(FlatText.REF_VERSES)) {
+            int[] verseRange = (int[]) values.get(FlatText.REF_VERSES).get(0);
             firstVerse = verseRange[0];
             if(verseRange.length > 1) {
                 lastVerse = verseRange[1];
@@ -135,37 +138,37 @@ public class ContextStreamWriter {
         while(hasNext()) {
             ContextEvent event = next();
 
-            if(isOpen(ContextType.TRANSLATION_ADD, event)) {
+            if(isOpen(FlatText.TRANSLATION_ADD, event)) {
                 w.translationAdd(consumeAndAggregateValues(event.metadata));
             }
-            if(isOpen(ContextType.QUOTE, event)) {
+            if(isOpen(FlatText.QUOTE, event)) {
                 w.quote(consumeAndAggregateValues(event.metadata));
             }
-            if(isOpen(ContextType.OT_QUOTE, event)) {
+            if(isOpen(FlatText.OT_QUOTE, event)) {
                 w.oldTestamentQuote(consumeAndAggregateValues(event.metadata));
             }
-            if(isOpen(ContextType.SPEAKER, event)) {
+            if(isOpen(FlatText.SPEAKER, event)) {
                 w.speaker(consumeAndAggregateValues(event.metadata));
             }
-            if(isClose(ContextType.TEXT, event)) {
+            if(isClose(FlatText.TEXT, event)) {
                 w.text(textTransformer.apply((String) event.value));
             }
-            if(isOpen(ContextType.NOTE, event)) {
-                w.note(iw -> writeText(iw, ContextType.NOTE));
+            if(isOpen(FlatText.NOTE, event)) {
+                w.note(iw -> writeText(iw, FlatText.NOTE));
             }
 
-            if(isOpen(ContextType.REFERENCE, event)) {
+            if(isOpen(FlatText.REFERENCE, event)) {
                 Map<ContextType, List<Object>> values = consumeAndListValuesByType(event.metadata);
 
                 BibleRef[] refs = null;
-                if(values.containsKey(ContextType.FULL_REF)) {
+                if(values.containsKey(FlatText.FULL_REF)) {
                     refs = buildRefs(values, null);
                     currentFullRef = refs[0];
                 }
-                else if(values.containsKey(ContextType.CONTINUED_REF)) {
+                else if(values.containsKey(FlatText.CONTINUED_REF)) {
                     refs = buildRefs(values, currentFullRef);
                 }
-                else if(values.containsKey(ContextType.LOCAL_REF)) {
+                else if(values.containsKey(FlatText.LOCAL_REF)) {
                     refs = buildRefs(values, currentLocalRef);
                 }
                 else {
@@ -173,24 +176,24 @@ public class ContextStreamWriter {
                 }
 
                 StringBuilder fullString = new StringBuilder();
-                for(Object textValue: values.get(ContextType.TEXT)) {
+                for(Object textValue: values.get(FlatText.TEXT)) {
                     fullString.append(textValue);
                 }
 
                 w.reference(refs[0], refs.length > 1 ? refs[1] : null, fullString.toString());
             }
 
-            if(isOpen(ContextType.LINK, event)) {
+            if(isOpen(FlatText.LINK, event)) {
                 w.link((URI) event.value, consumeAndAggregateValues(event.metadata));
             }
 
             // If inside a note, we have other specific markup available.
-            if(endCtx == ContextType.NOTE) {
+            if(endCtx == FlatText.NOTE) {
                 NoteTextWriter nw = (NoteTextWriter) w;
-                if(isOpen(ContextType.CATCHPHRASE, event)) {
+                if(isOpen(FlatText.CATCHPHRASE, event)) {
                     nw.catchphraseQuote(consumeAndAggregateValues(event.metadata));
                 }
-                if(isOpen(ContextType.ALTERNATE_TRANSLATION, event)) {
+                if(isOpen(FlatText.ALTERNATE_TRANSLATION, event)) {
                     nw.alternateTranslationQuote(consumeAndAggregateValues(event.metadata));
                 }
             }
@@ -202,44 +205,44 @@ public class ContextStreamWriter {
     }
 
     private <W extends TextWriter> void writeFlatText(W w) {
-        writeText(w, ContextType.FLAT_TEXT);
+        writeText(w, FlatText.FLAT_TEXT);
     }
 
     private <W extends StructuredTextWriter> void writeStructuredText(W w, BiPredicate<W, ContextEvent> specialisedBehaviour) {
         while(hasNext()) {
             ContextEvent event = next();
 
-            if(isOpen(ContextType.MAJOR_SECTION_TITLE, event)) {
+            if(isOpen(StructureMarkers.MAJOR_SECTION_TITLE, event)) {
                 w.majorSection(this::writeFlatText);
             }
-            if(isOpen(ContextType.SECTION_TITLE, event)) {
+            if(isOpen(StructureMarkers.SECTION_TITLE, event)) {
                 w.section(this::writeFlatText);
             }
-            if(isOpen(ContextType.MINOR_SECTION_TITLE, event)) {
+            if(isOpen(StructureMarkers.MINOR_SECTION_TITLE, event)) {
                 w.minorSection(this::writeFlatText);
             }
 
-            if(isOpen(ContextType.POETRY_LINE_START, event)) {
+            if(isOpen(StructureMarkers.POETRY_LINE_START, event)) {
                 w.poetryLine((Integer) event.value);
             }
-            if(isOpen(ContextType.POETRY_REFRAIN_START, event)) {
+            if(isOpen(StructureMarkers.POETRY_REFRAIN_START, event)) {
                 w.poetryRefrainLine();
             }
-            if(isOpen(ContextType.POETRY_ACROSTIC_START, event)) {
+            if(isOpen(StructureMarkers.POETRY_ACROSTIC_START, event)) {
                 w.poetryAcrosticLine();
             }
-            if(isOpen(ContextType.POETRY_SELAH_START, event)) {
+            if(isOpen(StructureMarkers.POETRY_SELAH_START, event)) {
                 w.poetrySelahLine();
             }
 
-            if(isOpen(ContextType.FLAT_TEXT, event)) {
+            if(isOpen(FlatText.FLAT_TEXT, event)) {
                 w.flatText(this::writeFlatText);
             }
 
-            if(isClose(ContextType.POETRY_STANZA_BREAK, event)) {
+            if(isClose(StructureMarkers.POETRY_STANZA_BREAK, event)) {
                 w.poetryStanza();
             }
-            if(isClose(ContextType.PARAGRAPH_BREAK, event)) {
+            if(isClose(StructureMarkers.PARAGRAPH_BREAK, event)) {
                 w.paragraph();
             }
 
@@ -251,16 +254,16 @@ public class ContextStreamWriter {
 
     public void writeBookIntro(StructuredTextWriter.BookIntroWriter writer) {
         writeStructuredText(writer, (w, event) -> {
-            if(isOpen(ContextType.BOOK_INTRO_TITLE, event)) {
+            if(isOpen(BibleContainers.BOOK_INTRO_TITLE, event)) {
                 w.title(this::writeFlatText);
             }
 
-            return isClose(ContextType.BOOK_INTRO, event);
+            return isClose(BibleContainers.BOOK_INTRO, event);
         });
     }
 
     public void writeBookContents(StructuredTextWriter.BookContentsWriter writer) {
-        if(isOpen(ContextType.CHAPTER, getCurrent())) {
+        if(isOpen(BibleContainers.CHAPTER, getCurrent())) {
             BibleBook chapterBook = getCurrent().metadata.id.get(IdField.BIBLE_BOOK);
             int chapterNb = getCurrent().metadata.id.get(IdField.BIBLE_CHAPTER);
             currentLocalRef = new BibleRef(chapterBook, chapterNb, 0);
@@ -268,19 +271,19 @@ public class ContextStreamWriter {
         }
 
         writeStructuredText(writer, (w, event) -> {
-            if(isOpen(ContextType.CHAPTER, event)) {
+            if(isOpen(BibleContainers.CHAPTER, event)) {
                 BibleBook chapterBook = event.metadata.id.get(IdField.BIBLE_BOOK);
                 int chapterNb = event.metadata.id.get(IdField.BIBLE_CHAPTER);
                 currentLocalRef = new BibleRef(chapterBook, chapterNb, 0);
                 w.chapter(chapterNb, (String) event.value);
             }
-            if(isOpen(ContextType.CHAPTER_TITLE, event)) {
+            if(isOpen(BibleContainers.CHAPTER_TITLE, event)) {
                 w.chapterTitle(this::writeFlatText);
             }
-            if(isOpen(ContextType.CHAPTER_INTRO, event)) {
+            if(isOpen(BibleContainers.CHAPTER_INTRO, event)) {
                 w.chapterIntro(this::writeFlatText);
             }
-            if(isOpen(ContextType.VERSE, event)) {
+            if(isOpen(BibleContainers.VERSE, event)) {
                 w.verse(
                         ((List<Integer>) event.metadata.id.get(IdField.BIBLE_VERSES)).stream()
                                 .mapToInt(v -> v)
@@ -288,11 +291,11 @@ public class ContextStreamWriter {
                         (String) event.value
                 );
             }
-            if(isOpen(ContextType.PSALM_TITLE, event)) {
+            if(isOpen(BibleContainers.PSALM_TITLE, event)) {
                 w.psalmTitle(this::writeFlatText);
             }
 
-            return isClose(ContextType.BOOK, event);
+            return isClose(BibleContainers.BOOK, event);
         });
     }
 
@@ -300,20 +303,20 @@ public class ContextStreamWriter {
         while(hasNext()) {
             ContextEvent event = next();
 
-            if(isOpen(ContextType.BOOK_TITLE, event)) {
+            if(isOpen(BibleContainers.BOOK_TITLE, event)) {
                 w.title(consumeAndAggregateValues(event.metadata));
             }
-            if(isOpen(ContextType.BOOK_INTRO, event)) {
+            if(isOpen(BibleContainers.BOOK_INTRO, event)) {
                 w.introduction(this::writeBookIntro);
             }
-            if(isOpen(ContextType.CHAPTER, event)) {
+            if(isOpen(BibleContainers.CHAPTER, event)) {
                 w.contents(this::writeBookContents);
-                if(isClose(ContextType.BOOK, getCurrent())) {
+                if(isClose(BibleContainers.BOOK, getCurrent())) {
                     return;
                 }
             }
 
-            if(isClose(ContextType.BOOK, getCurrent())) {
+            if(isClose(BibleContainers.BOOK, getCurrent())) {
                 return;
             }
         }
@@ -323,7 +326,7 @@ public class ContextStreamWriter {
         while(hasNext()) {
             ContextEvent event = next();
 
-            if(isOpen(ContextType.BOOK, event)) {
+            if(isOpen(BibleContainers.BOOK, event)) {
                 currentLocalRef = new BibleRef(event.metadata.id.get(IdField.BIBLE_BOOK), 0, 0);
                 w.book(event.metadata.id.get(IdField.BIBLE_BOOK), this::writeBook);
             }
@@ -331,18 +334,16 @@ public class ContextStreamWriter {
     }
 
     public void writeBibleSubset(BibleWriter w, ContextMetadata rootMetadata) {
-        switch (rootMetadata.type) {
-            case CHAPTER:
-                w.book(rootMetadata.id.get(IdField.BIBLE_BOOK), wb -> {
-                    wb.contents(this::writeBookContents);
-                });
-                break;
-            case BOOK:
-                w.book(rootMetadata.id.get(IdField.BIBLE_BOOK), this::writeBook);
-                break;
-            case BIBLE:
-                writeBible(w);
-                break;
+        if(rootMetadata.type == BibleContainers.CHAPTER) {
+            w.book(rootMetadata.id.get(IdField.BIBLE_BOOK), wb -> {
+                wb.contents(this::writeBookContents);
+            });
+        }
+        else if(rootMetadata.type == BibleContainers.BOOK) {
+            w.book(rootMetadata.id.get(IdField.BIBLE_BOOK), this::writeBook);
+        }
+        else if(rootMetadata.type == BibleContainers.BIBLE) {
+            writeBible(w);
         }
     }
 }

@@ -2,6 +2,7 @@ package com.github.unaszole.bible.writing.mybible;
 
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
+import com.github.unaszole.bible.writing.interfaces.BookGroupWriter;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import org.crosswire.jsword.versification.BibleBook;
 
@@ -21,6 +22,16 @@ public class MyBibleBibleWriter implements BibleWriter {
 
     public MyBibleBibleWriter(PrintWriter outWriter) {
         this.sink = new PrintSink(outWriter);
+    }
+
+    @Override
+    public void bookGroup(Consumer<BookGroupWriter> writes) {
+        // No support for book groups in MyBible : all contained books are passed-through.
+        try(BookGroupWriter writer = new BookGroupWriter.Passthrough(this::book)) {
+            writes.accept(writer);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

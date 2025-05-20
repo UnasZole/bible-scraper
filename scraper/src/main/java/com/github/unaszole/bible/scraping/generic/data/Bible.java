@@ -1,8 +1,9 @@
 package com.github.unaszole.bible.scraping.generic.data;
 
+import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.scraping.ScrapingUtils;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.stream.ContextStream;
@@ -60,7 +61,7 @@ public class Bible extends PagesContainer {
     public ContextStream.Single streamBible(PatternContainer globalDefaults, ContextMetadata bibleCtxMeta,
                                             final SourceFile.Builder sourceFileBuilder,
                                             final BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
-        assert bibleCtxMeta.type == ContextType.BIBLE;
+        assert bibleCtxMeta.type == BibleContainers.BIBLE;
         final PatternContainer bibleDefaults = this.defaultedBy(globalDefaults);
 
         // Build the list of context streams for all books, to append to the bible page stream.
@@ -68,7 +69,7 @@ public class Bible extends PagesContainer {
         if(books != null && !books.isEmpty()) {
             // If we have a books defined, build context streams for each.
             bookStreams = books.stream()
-                    .map(book -> book.streamBook(bibleDefaults, ContextMetadata.forBook(book.osis),
+                    .map(book -> book.streamBook(bibleDefaults, ScrapingUtils.forBook(book.osis),
                             sourceFileBuilder, ctxStreamer))
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());

@@ -2,15 +2,10 @@ package com.github.unaszole.bible.stream;
 
 import com.github.unaszole.bible.datamodel.ContextId;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.IdField;
-import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.*;
-import java.util.function.BiPredicate;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.ToIntFunction;
+import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -175,80 +170,48 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         return inject(pos, target);
     }
 
-    public static class VersificationUpdater {
-        private Function<ContextMetadata, BibleBook> bookUpdater = null;
-        private ToIntFunction<ContextMetadata> chapterNbUpdater = null;
-        private Function<ContextMetadata, String> chapterValueUpdater = null;
-        private Function<ContextMetadata, int[]> verseNbsUpdater = null;
-        private Function<ContextMetadata, String> verseValueUpdater = null;
+    public static class ContextUpdater {
+        private final Map<IdField, BiFunction<ContextMetadata, Object, Optional<?>>> idFieldUpdaters = new HashMap<>();
+        private BiFunction<ContextMetadata, Object, Optional<?>> valueUpdater = null;
 
-        public VersificationUpdater book(Function<ContextMetadata, BibleBook> bookUpdater) {
-            this.bookUpdater = bookUpdater;
+        public ContextUpdater idField(IdField idField, BiFunction<ContextMetadata, Object, Optional<?>> updater) {
+            idFieldUpdaters.put(idField, updater);
             return this;
         }
 
-        public VersificationUpdater chapterNb(ToIntFunction<ContextMetadata> chapterNbUpdater) {
-            this.chapterNbUpdater = chapterNbUpdater;
-            return this;
-        }
-
-        public VersificationUpdater chapterValue(Function<ContextMetadata, String> chapterValueUpdater) {
-            this.chapterValueUpdater = chapterValueUpdater;
-            return this;
-        }
-
-        public VersificationUpdater verseNbs(Function<ContextMetadata, int[]> verseNbsUpdater) {
-            this.verseNbsUpdater = verseNbsUpdater;
-            return this;
-        }
-
-        public VersificationUpdater verseValue(Function<ContextMetadata, String> verseValueUpdater) {
-            this.verseValueUpdater = verseValueUpdater;
+        public ContextUpdater value(BiFunction<ContextMetadata, Object, Optional<?>> valueUpdater) {
+            this.valueUpdater = valueUpdater;
             return this;
         }
 
         public ContextEvent apply(ContextEvent e) {
-            ContextId newId = e.metadata.id;
-            if(newId != null) {
-                for(IdField field: e.metadata.type.idType.fields) {
-                    switch (field) {
-                        case BIBLE_BOOK:
-                            if(bookUpdater != null) {
-                                newId = newId.with(field, bookUpdater.apply(e.metadata));
-                            }
-                            break;
-                        case BIBLE_CHAPTER:
-                            if(chapterNbUpdater != null) {
-                                newId = newId.with(field, chapterNbUpdater.applyAsInt(e.metadata));
-                            }
-                            break;
-                        case BIBLE_VERSES:
-                            if(verseNbsUpdater != null) {
-                                newId = newId.with(field, Arrays.stream(verseNbsUpdater.apply(e.metadata)).boxed().collect(Collectors.toList()));
-                            }
-                            break;
-                        default:
-                    }
+            final ContextId[] newId = new ContextId[] { e.metadata.id };
+            if(newId[0] != null) {
+                // Loop through all ID fields to check for an updater.
+                for (IdField field : e.metadata.type.idType().fields) {
+                    Optional.ofNullable(idFieldUpdaters.get(field))
+                            .flatMap(u -> u.apply(e.metadata, e.value))
+                            .ifPresent(nfv -> {
+                                // If we have an updater for this field, and it returns a value : set it.
+                                newId[0] = newId[0].with(field, nfv);
+                    });
                 }
             }
 
-            Object newValue = e.value;
-            if(chapterValueUpdater != null && e.metadata.type == ContextType.CHAPTER) {
-                newValue = chapterValueUpdater.apply(e.metadata);
-            }
-            else if(verseValueUpdater != null && e.metadata.type == ContextType.VERSE) {
-                newValue = verseValueUpdater.apply(e.metadata);
-            }
+            // If we have a value updater, and it returns a new value, use it.
+            Object newValue = Optional.ofNullable(valueUpdater)
+                    .flatMap(u -> (Optional<Object>) u.apply(e.metadata, e.value))
+                    .orElse(e.value);
 
             return new ContextEvent(e.type,
-                    new ContextMetadata(e.metadata.type, newId),
+                    new ContextMetadata(e.metadata.type, newId[0]),
                     newValue
             );
         }
     }
 
-    public ContextStreamEditor<StreamType> updateVersification(final ContextMetadata from, final ContextMetadata until,
-                                               final VersificationUpdater updater) {
+    public ContextStreamEditor<StreamType> updateContexts(final ContextMetadata from, final ContextMetadata until,
+                                                          final ContextUpdater updater) {
         actions.add(new Action(
                 e -> e.type == ContextEvent.Type.OPEN && Objects.equals(e.metadata, from),
                 true,
@@ -259,7 +222,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
         return this;
     }
 
-    public ContextStreamEditor<StreamType> updateVersificationUntilTheEnd(final VersificationUpdater updater) {
+    public ContextStreamEditor<StreamType> updateContextsUntilTheEnd(final ContextUpdater updater) {
         actions.add(new Action(
                 e -> true,
                 true,

@@ -6,9 +6,11 @@ import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.datamodel.IdType;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
+import com.github.unaszole.bible.scraping.VersificationUpdater;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class StreamEditorConfig {
     public static class Metadata {
@@ -18,7 +20,7 @@ public class StreamEditorConfig {
         public Integer verse;
 
         public ContextMetadata get(BibleBook defaultBook, int defaultChapter) {
-            switch(type.idType) {
+            switch(type.idType()) {
                 case BIBLE_BOOK:
                     return new ContextMetadata(type, IdType.BIBLE_BOOK.ofFields(
                             IdField.BIBLE_BOOK.of(book != null ? book : defaultBook)
@@ -44,13 +46,15 @@ public class StreamEditorConfig {
         public Integer shiftChapter;
         public Integer shiftVerse;
 
-        public ContextStreamEditor.VersificationUpdater getUpdater() {
-            ContextStreamEditor.VersificationUpdater updater = new ContextStreamEditor.VersificationUpdater();
+        public VersificationUpdater getUpdater() {
+            VersificationUpdater updater = new VersificationUpdater();
             if (shiftChapter != null) {
                 updater.chapterNb(m -> (Integer)m.id.get(IdField.BIBLE_CHAPTER) + shiftChapter);
             }
             if (shiftVerse != null) {
-                updater.verseNbs(m -> ((List<Integer>)m.id.get(IdField.BIBLE_VERSES)).stream().mapToInt(v -> v + shiftVerse).toArray());
+                updater.verseNbs(m -> ((List<Integer>)m.id.get(IdField.BIBLE_VERSES)).stream()
+                        .map(v -> v + shiftVerse)
+                        .collect(Collectors.toList()));
             }
             return updater;
         }
@@ -64,7 +68,7 @@ public class StreamEditorConfig {
         ContextMetadata fromMeta = from.get(defaultBook, defaultChapter);
         ContextMetadata toMeta = to.get(defaultBook, defaultChapter);
         if (updateVersification != null) {
-            editor.updateVersification(fromMeta, toMeta, updateVersification.getUpdater());
+            editor.updateContexts(fromMeta, toMeta, updateVersification.getUpdater());
         }
         return editor;
     }

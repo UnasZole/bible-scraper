@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.writing.usfm;
 
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
+import com.github.unaszole.bible.writing.interfaces.BookGroupWriter;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import org.crosswire.jsword.versification.BibleBook;
 
@@ -40,12 +41,26 @@ public class UsfmBibleWriter implements BibleWriter {
         this.outFolder = null;
     }
 
-    private BookWriter getBookWriter(BibleBook book) throws IOException {
+    private BookWriter getBookWriter(BibleBook book) {
         if(outFolder != null) {
-            return new UsfmBookWriter(book, bookNb++, outFolder);
+            try {
+                return new UsfmBookWriter(book, bookNb++, outFolder);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         else {
             return new UsfmBookWriter(book, outWriter);
+        }
+    }
+
+    @Override
+    public void bookGroup(Consumer<BookGroupWriter> writes) {
+        // No support for book groups in USFM : all contained books are passed-through.
+        try(BookGroupWriter writer = new BookGroupWriter.Passthrough(this::book)) {
+            writes.accept(writer);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

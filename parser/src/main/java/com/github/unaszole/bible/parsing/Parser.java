@@ -112,12 +112,12 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 
 	private Optional<ContextMetadata> getImplicitChildOfType(ContextType implicitType, ContextMetadata previousOfType,
 															 List<Context> ancestorStack) {
-		if(implicitType.idType.fields == null) {
+		if(implicitType.idType().fields == null) {
 			// If the requested type has no ID, then we can return an implicit child with no ID.
 			return Optional.of(new ContextMetadata(implicitType));
 		}
 
-		return implicitType.idType.getNewId(previousOfType, ancestorStack)
+		return implicitType.idType().getNewId(previousOfType, ancestorStack)
 				.map(nextId -> new ContextMetadata(implicitType, nextId));
     }
 
@@ -142,11 +142,11 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 
 			// We couldn't extract a real context : check if an implicit context of that type can be created.
 			Optional<ContextMetadata> implicitMeta = getImplicitChildOfType(eltType, previousOfType, baseState.contextStack);
-			if(implicitMeta.isPresent() && eltType.implicitValue.implicitAllowed) {
+			if(implicitMeta.isPresent() && eltType.implicitValue().implicitAllowed) {
 				// If this element type can be created implicitly, build one and look recursively.
 
 				// Build an implicit context for this element.
-				Context newContext = new Context(implicitMeta.get(), eltType.implicitValue.implicitValue);
+				Context newContext = new Context(implicitMeta.get(), eltType.implicitValue().implicitValue);
 
 				// Call recursively until we get a real state.
 				ContextState reachedState = parseDescendantContext(baseState.openChildContext(newContext), position);

@@ -1,14 +1,42 @@
-package com.github.unaszole.bible.parsing;
+package com.github.unaszole.bible.scraping;
 
 import com.github.unaszole.bible.datamodel.*;
+import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
+import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
 import com.github.unaszole.bible.datamodel.valuetypes.IntegerValue;
+import com.github.unaszole.bible.parsing.Context;
+import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class ParsingUtils {
+public class ScrapingUtils {
+
+    public static ContextMetadata forBible() {
+        return new ContextMetadata(BibleContainers.BIBLE);
+    }
+
+    public static ContextMetadata forBook(BibleBook book) {
+        return new ContextMetadata(BibleContainers.BOOK, IdType.BIBLE_BOOK.ofFields(
+                IdField.BIBLE_BOOK.of(book)
+        ));
+    }
+
+    public static ContextMetadata forChapter(BibleBook book, int chapter) {
+        return new ContextMetadata(BibleContainers.CHAPTER, IdType.BIBLE_CHAPTER.ofFields(
+                IdField.BIBLE_BOOK.of(book),
+                IdField.BIBLE_CHAPTER.of(chapter)
+        ));
+    }
+
+    public static ContextMetadata forVerse(BibleBook book, int chapter, int verse) {
+        return new ContextMetadata(BibleContainers.VERSE, IdType.BIBLE_VERSE.ofFields(
+                IdField.BIBLE_BOOK.of(book),
+                IdField.BIBLE_CHAPTER.of(chapter),
+                IdField.BIBLE_VERSES.of(List.of(verse))
+        ));
+    }
 
     /**
      * Utility method for parsers : check if the current context is a descendant of a context of a given type.
@@ -21,7 +49,7 @@ public class ParsingUtils {
     }
 
     public static boolean isInVerseText(Collection<Context> ancestors) {
-        return hasAncestor(ContextType.VERSE, ancestors) && hasAncestor(ContextType.FLAT_TEXT, ancestors);
+        return hasAncestor(BibleContainers.VERSE, ancestors) && hasAncestor(FlatText.FLAT_TEXT, ancestors);
     }
 
     public static ContextMetadata getChapterMetadata(List<Context> ancestorStack,
@@ -35,14 +63,14 @@ public class ParsingUtils {
         try {
             // Parseable number : use the maximum between this and the expected (to handle skipped chapters).
             int nb = IntegerValue.parseInt(parsedNb);
-            return new ContextMetadata(ContextType.CHAPTER, IdType.BIBLE_CHAPTER.ofFields(
+            return new ContextMetadata(BibleContainers.CHAPTER, IdType.BIBLE_CHAPTER.ofFields(
                     IdField.BIBLE_BOOK.of(expectedChapterId.get(IdField.BIBLE_BOOK)),
                     IdField.BIBLE_CHAPTER.of(Math.max(nb, expectedChapterId.get(IdField.BIBLE_CHAPTER)))
             ));
         }
         catch (NumberFormatException e) {
             // Unparseable number : just return the expected.
-            return new ContextMetadata(ContextType.CHAPTER, expectedChapterId);
+            return new ContextMetadata(BibleContainers.CHAPTER, expectedChapterId);
         }
     }
 
@@ -62,7 +90,7 @@ public class ParsingUtils {
 
             int realStartNb = Math.max(startNb, ((List<Integer>) expectedVerseId.get(IdField.BIBLE_VERSES)).get(0));
 
-            return new ContextMetadata(ContextType.VERSE, IdType.BIBLE_VERSE.ofFields(
+            return new ContextMetadata(BibleContainers.VERSE, IdType.BIBLE_VERSE.ofFields(
                     IdField.BIBLE_BOOK.of(expectedVerseId.get(IdField.BIBLE_BOOK)),
                     IdField.BIBLE_CHAPTER.of(expectedVerseId.get(IdField.BIBLE_CHAPTER)),
                     IdField.BIBLE_VERSES.of(IntStream.rangeClosed(realStartNb, realStartNb + nbAdditionalVerses)
@@ -73,16 +101,7 @@ public class ParsingUtils {
         }
         catch(NumberFormatException e) {
             // Unparseable number : just return the expected.
-            return new ContextMetadata(ContextType.VERSE, expectedVerseId);
+            return new ContextMetadata(BibleContainers.VERSE, expectedVerseId);
         }
-    }
-
-    public static <T> int indexOf(List<T> list, Predicate<? super T> predicate) {
-        for(ListIterator<T> iter = list.listIterator(); iter.hasNext(); ) {
-            if (predicate.test(iter.next())) {
-                return iter.previousIndex();
-            }
-        }
-        return -1;
     }
 }

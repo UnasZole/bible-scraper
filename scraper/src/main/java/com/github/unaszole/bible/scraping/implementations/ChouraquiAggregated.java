@@ -2,6 +2,7 @@ package com.github.unaszole.bible.scraping.implementations;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.IdField;
+import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.stream.ContextStream;
@@ -42,16 +43,15 @@ public class ChouraquiAggregated extends Scraper {
 
     @Override
     protected ContextStream.Single getContextStreamFor(ContextMetadata rootContextMeta) {
-        switch (rootContextMeta.type) {
-            case BOOK:
-                switch ((BibleBook)rootContextMeta.id.get(IdField.BIBLE_BOOK)) {
-                    case JOB:
-                        return theoPlace.stream(rootContextMeta);
-                    default:
-                        return spiritualLand.stream(rootContextMeta);
-                }
-            case BIBLE:
-                return autoGetBibleStream(getBookList());
+        if (rootContextMeta.type.equals(BibleContainers.BOOK)) {
+            switch ((BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK)) {
+                case JOB:
+                    return theoPlace.stream(rootContextMeta);
+                default:
+                    return spiritualLand.stream(rootContextMeta);
+            }
+        } else if (rootContextMeta.type.equals(BibleContainers.BIBLE)) {
+            return autoGetBibleStream(getBookList());
         }
         return null;
     }

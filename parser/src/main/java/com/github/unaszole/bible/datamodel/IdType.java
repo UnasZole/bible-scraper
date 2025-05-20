@@ -24,8 +24,8 @@ public enum IdType {
             Map<IdField, Object> nextIdMap = new HashMap<>();
             // Loop through all ancestors to collect their ID fields.
             for(Context ancestor: ancestorStack) {
-                if(ancestor.metadata.type.idType.fields != null) {
-                    for(IdField fieldDef: ancestor.metadata.type.idType.fields) {
+                if(ancestor.metadata.type.idType().fields != null) {
+                    for(IdField fieldDef: ancestor.metadata.type.idType().fields) {
                         if(Arrays.stream(fields).anyMatch(f -> f == fieldDef)){
                             // Field from ancestor is also needed for current ID : take it.
                             nextIdMap.computeIfAbsent(fieldDef, ancestor.metadata.id::get);

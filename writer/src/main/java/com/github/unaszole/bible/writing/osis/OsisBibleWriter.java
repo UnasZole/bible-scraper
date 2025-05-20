@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
+import com.github.unaszole.bible.writing.interfaces.BookGroupWriter;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import com.github.unaszole.bible.writing.osis.stax.IndentingXmlStreamWriter;
 import org.crosswire.jsword.versification.BibleBook;
@@ -122,12 +123,17 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 	public OsisBibleWriter(Path outFile, DocumentMetadata meta) throws IOException, XMLStreamException {
 		this(getOutputStream(outFile), meta);
 	}
-	
-	/**
-		Mark the beginning of a specific book.
-		@param book The book.
-		@return The writer to write the book.
-	*/
+
+	@Override
+	public void bookGroup(Consumer<BookGroupWriter> writes) {
+		try(BookGroupWriter bookGroupWriter = new OsisBookGroupWriter(xmlWriter)) {
+			writes.accept(bookGroupWriter);
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@Override
 	public void book(BibleBook book, Consumer<BookWriter> writes) {
 		try(BookWriter bookWriter = new OsisBookWriter(xmlWriter, book)) {
@@ -136,10 +142,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
             throw new RuntimeException(e);
         }
 	}
-	
-	/**
-		Close the book. Must be called exactly once, and no other method called afterwards.
-	*/
+
 	@Override
 	public void close() throws Exception {
 		

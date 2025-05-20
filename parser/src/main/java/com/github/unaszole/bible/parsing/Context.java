@@ -20,7 +20,7 @@ public class Context {
 	private Context(ContextMetadata metadata, Object value, List<Context> children, long contextUniqueId) {
 		this.metadata = metadata;
 		try {
-			this.value = metadata.type.valueType.of(value);
+			this.value = metadata.type.valueType().of(value);
 		}
 		catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Invalid value " + value + " for context of type " + metadata.type + " : " + e.getMessage());
@@ -48,7 +48,7 @@ public class Context {
 	}
 	
 	public List<ContextType> getAllowedTypesForNextChild() {
-		return metadata.type.getAllowedTypesForNextChild(
+		return metadata.type.childrenSpec().getAllowedTypesForNextChild(
 			children.stream().map(c -> c.metadata.type).collect(Collectors.toList())
 		);
 	}
@@ -62,7 +62,7 @@ public class Context {
 	}
 	
 	public boolean isIncomplete() {
-		return metadata.type.isIncomplete(
+		return metadata.type.childrenSpec().isIncomplete(
 			children.stream().map(c -> c.metadata.type).collect(Collectors.toList())
 		);
 	}

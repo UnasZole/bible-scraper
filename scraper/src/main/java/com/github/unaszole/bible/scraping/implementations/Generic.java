@@ -8,6 +8,10 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.unaszole.bible.JarUtils;
+import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
+import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
+import com.github.unaszole.bible.datamodel.contexttypes.StructureMarkers;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.IdField;
@@ -103,6 +107,26 @@ public class Generic extends Scraper {
                 public Pattern deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
                         throws IOException {
                     return Pattern.compile(jsonParser.readValueAs(String.class), Pattern.DOTALL);
+                }
+            })
+            .addDeserializer(ContextType.class, new StdDeserializer<>(ContextType.class) {
+                @Override
+                public ContextType deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
+                        throws IOException {
+                    String typeStr = jsonParser.readValueAs(String.class);
+                    try {
+                        return FlatText.valueOf(typeStr);
+                    } catch (IllegalArgumentException e) {
+                        try {
+                            return StructureMarkers.valueOf(typeStr);
+                        } catch (IllegalArgumentException ex) {
+                            try {
+                                return BibleContainers.valueOf(typeStr);
+                            } catch (IllegalArgumentException exc) {
+                                throw new RuntimeException("Unknown context type " + typeStr);
+                            }
+                        }
+                    }
                 }
             })
     );
@@ -237,7 +261,7 @@ public class Generic extends Scraper {
     protected ContextStream.Single getContextStreamFor(final ContextMetadata rootContextMeta) {
         Book book;
         ChapterSeq seq;
-        switch (rootContextMeta.type) {
+        switch ((BibleContainers) rootContextMeta.type) {
             case CHAPTER:
                 // Fetch book and chapter sequence. If we can't find them, nothing to load, return null.
                 book = config.bible.getBook(rootContextMeta.id.get(IdField.BIBLE_BOOK));

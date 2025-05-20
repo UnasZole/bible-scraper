@@ -1,6 +1,7 @@
 package com.github.unaszole.bible.cli.args;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
+import com.github.unaszole.bible.scraping.ScrapingUtils;
 import org.crosswire.jsword.versification.BibleBook;
 import picocli.CommandLine;
 
@@ -19,14 +20,14 @@ public class WantedMetadataArgument {
 
     public ContextMetadata get() {
         if(fullBible) {
-            return ContextMetadata.forBible();
+            return ScrapingUtils.forBible();
         }
 
         if(book.isPresent()) {
             if(chapter.isPresent()) {
-                return ContextMetadata.forChapter(BibleBook.fromOSIS(book.get()), chapter.get());
+                return ScrapingUtils.forChapter(BibleBook.fromOSIS(book.get()), chapter.get());
             }
-            return ContextMetadata.forBook(BibleBook.fromOSIS(book.get()));
+            return ScrapingUtils.forBook(BibleBook.fromOSIS(book.get()));
         }
 
         throw new IllegalArgumentException("If not providing a specific book, please specify --fullBible .");

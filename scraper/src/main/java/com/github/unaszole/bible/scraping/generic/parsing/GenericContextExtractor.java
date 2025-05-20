@@ -2,10 +2,11 @@ package com.github.unaszole.bible.scraping.generic.parsing;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
-import com.github.unaszole.bible.parsing.ParsingUtils;
+import com.github.unaszole.bible.scraping.ScrapingUtils;
 import org.crosswire.jsword.versification.BibleBook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +32,13 @@ public abstract class GenericContextExtractor<Position> {
     }
 
     protected ContextMetadata getContextMetadata(List<Context> ancestorStack, ContextMetadata previousOfType, Object value) {
-        switch (type) {
-            case CHAPTER:
-                return ParsingUtils.getChapterMetadata(ancestorStack, previousOfType, (String) value);
-            case VERSE:
-                return ParsingUtils.getVerseMetadata(ancestorStack, previousOfType, stripLeadingZeroes((String)value));
-            default:
-                return new ContextMetadata(type);
+        if(type == BibleContainers.CHAPTER) {
+            return ScrapingUtils.getChapterMetadata(ancestorStack, previousOfType, (String) value);
         }
+        if(type == BibleContainers.VERSE) {
+            return ScrapingUtils.getVerseMetadata(ancestorStack, previousOfType, stripLeadingZeroes((String)value));
+        }
+        return new ContextMetadata(type);
     }
 
     public void appendTo(ContextReaderListBuilder builder, Position position, ContextualData contextualData) {
@@ -51,7 +51,7 @@ public abstract class GenericContextExtractor<Position> {
 
         String value = extractValue(position, contextualData);
         final Object finalValue;
-        switch(type.valueType) {
+        switch(type.valueType()) {
             case BOOK_ID:
                 finalValue = Optional.<Object>ofNullable(contextualData.bookRefs.get(value))
                         .or(() -> Optional.ofNullable(BibleBook.fromOSIS(value)))

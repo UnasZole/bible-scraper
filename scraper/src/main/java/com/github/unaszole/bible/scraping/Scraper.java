@@ -1,11 +1,11 @@
 package com.github.unaszole.bible.scraping;
 
+import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.stream.ContextStream;
-import com.github.unaszole.bible.datamodel.ContextType;
 import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.ArrayList;
@@ -44,10 +44,10 @@ public abstract class Scraper {
 	 * @return The context stream for the book containing all these chapters.
 	 */
 	protected ContextStream.Single autoGetBookStream(BibleBook book, int nbChapters) {
-		Context bookCtx = new Context(ContextMetadata.forBook(book), book.getOSIS());
+		Context bookCtx = new Context(ScrapingUtils.forBook(book), book.getOSIS());
 		List<ContextStream.Single> contextStreams = new ArrayList<>();
 		for(int i = 1; i <= nbChapters; i++) {
-			contextStreams.add(getContextStreamFor(ContextMetadata.forChapter(book, i)));
+			contextStreams.add(getContextStreamFor(ScrapingUtils.forChapter(book, i)));
 		}
 		return ContextStream.fromContents(bookCtx, contextStreams);
 	}
@@ -58,10 +58,10 @@ public abstract class Scraper {
 	 * @return The context stream for a bible containing all these books.
 	 */
 	protected ContextStream.Single autoGetBibleStream(List<BibleBook> books) {
-		Context bibleCtx = new Context(ContextMetadata.forBible());
+		Context bibleCtx = new Context(ScrapingUtils.forBible());
 		List<ContextStream.Single> contextStreams = new ArrayList<>();
 		for(BibleBook book: books) {
-			ContextStream.Single bookStream = getContextStreamFor(ContextMetadata.forBook(book));
+			ContextStream.Single bookStream = getContextStreamFor(ScrapingUtils.forBook(book));
 			if(bookStream != null) {
 				contextStreams.add(bookStream);
 			}
@@ -70,14 +70,14 @@ public abstract class Scraper {
 	}
 
 	private static ContextMetadata getAncestor(ContextMetadata meta) {
-		if(meta.type == ContextType.VERSE) {
-			return ContextMetadata.forChapter((BibleBook) meta.id.get(IdField.BIBLE_BOOK), (Integer) meta.id.get(IdField.BIBLE_CHAPTER));
+		if(meta.type == BibleContainers.VERSE) {
+			return ScrapingUtils.forChapter((BibleBook) meta.id.get(IdField.BIBLE_BOOK), (Integer) meta.id.get(IdField.BIBLE_CHAPTER));
 		}
-		else if(meta.type == ContextType.CHAPTER) {
-			return ContextMetadata.forBook((BibleBook) meta.id.get(IdField.BIBLE_BOOK));
+		else if(meta.type == BibleContainers.CHAPTER) {
+			return ScrapingUtils.forBook((BibleBook) meta.id.get(IdField.BIBLE_BOOK));
 		}
-		else if(meta.type != ContextType.BIBLE) {
-			return ContextMetadata.forBible();
+		else if(meta.type != BibleContainers.BIBLE) {
+			return ScrapingUtils.forBible();
 		}
 		return null;
 	}

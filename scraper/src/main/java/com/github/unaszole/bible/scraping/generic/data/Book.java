@@ -1,10 +1,11 @@
 package com.github.unaszole.bible.scraping.generic.data;
 
+import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.downloading.SourceFile;
+import com.github.unaszole.bible.scraping.ScrapingUtils;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
 import org.crosswire.jsword.versification.BibleBook;
@@ -62,7 +63,7 @@ public class Book extends PagesContainer {
     public ContextStream.Single streamBook(PatternContainer bibleDefaults, ContextMetadata bookCtxMeta,
                                            final SourceFile.Builder sourceFileBuilder,
                                            final BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
-        assert bookCtxMeta.type == ContextType.BOOK && bookCtxMeta.id.get(IdField.BIBLE_BOOK) == osis;
+        assert bookCtxMeta.type == BibleContainers.BOOK && bookCtxMeta.id.get(IdField.BIBLE_BOOK) == osis;
         final PatternContainer bookDefaults = this.defaultedBy(bibleDefaults);
 
         // Build the list of context streams for all chapters, to append to the book page stream.
@@ -73,7 +74,7 @@ public class Book extends PagesContainer {
                     .flatMap(seq -> seq.listChapters()
                             .map(chapterNb -> seq.streamChapter(
                                     bookDefaults,
-                                    ContextMetadata.forChapter(osis, chapterNb),
+                                    ScrapingUtils.forChapter(osis, chapterNb),
                                     sourceFileBuilder,
                                     ctxStreamer
                             ))

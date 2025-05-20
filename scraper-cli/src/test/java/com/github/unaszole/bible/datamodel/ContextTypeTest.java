@@ -1,5 +1,7 @@
 package com.github.unaszole.bible.datamodel;
 
+import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
+import com.github.unaszole.bible.datamodel.contexttypes.StructureMarkers;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -11,9 +13,9 @@ class ContextTypeTest {
     @Test
     public void testAllowedChildren() {
         assertFalse(
-                ContextType.CHAPTER.getAllowedTypesForNextChild(
-                        List.of(ContextType.STRUCTURED_TEXT)
-                ).contains(ContextType.CHAPTER_TITLE),
+                BibleContainers.CHAPTER.childrenSpec().getAllowedTypesForNextChild(
+                        List.of(StructureMarkers.STRUCTURED_TEXT)
+                ).contains(BibleContainers.CHAPTER_TITLE),
                 "Chapter title can't be contained after structured text."
         );
     }
