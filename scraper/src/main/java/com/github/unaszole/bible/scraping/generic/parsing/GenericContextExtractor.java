@@ -2,6 +2,7 @@ package com.github.unaszole.bible.scraping.generic.parsing;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
+import com.github.unaszole.bible.datamodel.valuetypes.StdValueTypes;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.parsing.Context;
@@ -51,23 +52,23 @@ public abstract class GenericContextExtractor<Position> {
 
         String value = extractValue(position, contextualData);
         final Object finalValue;
-        switch(type.valueType()) {
-            case BOOK_ID:
-                finalValue = Optional.<Object>ofNullable(contextualData.bookRefs.get(value))
-                        .or(() -> Optional.ofNullable(BibleBook.fromOSIS(value)))
-                        .orElseGet(() -> {
-                            LOG.warn("Unknown book {} : replacing by BIBLE_INTRO to proceed.", value);
-                            ExecutionMonitor.INSTANCE.message("Unknown book " + value);
-                            return BibleBook.INTRO_BIBLE;
-                        });
-                break;
-            case URI:
-                finalValue = Optional.ofNullable(contextualData.baseUri)
-                        .map(baseUri -> baseUri.resolve(URI.create(value)))
-                        .orElse(URI.create(value));
-                break;
-            default:
-                finalValue = value;
+
+        if(type.valueType() == StdValueTypes.BIBLE_BOOK) {
+            finalValue = Optional.<Object>ofNullable(contextualData.bookRefs.get(value))
+                    .or(() -> Optional.ofNullable(BibleBook.fromOSIS(value)))
+                    .orElseGet(() -> {
+                        LOG.warn("Unknown book {} : replacing by BIBLE_INTRO to proceed.", value);
+                        ExecutionMonitor.INSTANCE.message("Unknown book " + value);
+                        return BibleBook.INTRO_BIBLE;
+                    });
+        }
+        else if(type.valueType() == StdValueTypes.URI) {
+            finalValue = Optional.ofNullable(contextualData.baseUri)
+                    .map(baseUri -> baseUri.resolve(URI.create(value)))
+                    .orElse(URI.create(value));
+        }
+        else {
+            finalValue = value;
         }
 
         builder.followedBy(

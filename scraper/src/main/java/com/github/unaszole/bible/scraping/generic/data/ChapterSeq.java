@@ -1,9 +1,9 @@
 package com.github.unaszole.bible.scraping.generic.data;
 
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
@@ -101,8 +101,8 @@ public class ChapterSeq extends PagesContainer {
     public ContextStream.Single streamChapter(PatternContainer bookDefaults, ContextMetadata chapterCtxMeta,
                                               SourceFile.Builder sourceFileBuilder,
                                               BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
-        BibleBook chapterBook = chapterCtxMeta.id.get(IdField.BIBLE_BOOK);
-        int chapterNb = chapterCtxMeta.id.get(IdField.BIBLE_CHAPTER);
+        BibleBook chapterBook = chapterCtxMeta.id.get(BibleIdFields.BOOK);
+        int chapterNb = chapterCtxMeta.id.get(BibleIdFields.CHAPTER);
         assert chapterCtxMeta.type == BibleContainers.CHAPTER && containsChapter(chapterNb);
 
         List<PageData> chapterPages = getChapterPages(bookDefaults, chapterNb, sourceFileBuilder);

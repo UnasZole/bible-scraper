@@ -1,40 +1,87 @@
 package com.github.unaszole.bible.datamodel;
 
-import com.github.unaszole.bible.datamodel.valuetypes.*;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
 
-public enum ValueType {
-    NO_VALUE(new NoValue()),
-    STRING(new StringValue()),
-    INTEGER(new IntegerValue()),
-    INTEGER_LIST(new IntegerListValue()),
-    URI(new UriValue()),
-    BOOK_ID(new BookIdValue());
+public interface ValueType<ValueClass> {
+    class ClassBased<ValueClass> implements ValueType<ValueClass> {
+        private final Class<ValueClass> valueClass;
+        private final Function<String, ValueClass> parser;
 
-    public interface Definition<ValueClass> {
-        Class<ValueClass> getValueClass();
+        public ClassBased(Class<ValueClass> valueClass, Function<String, ValueClass> parser) {
+            this.valueClass = valueClass;
+            this.parser = parser;
+        }
 
-        ValueClass valueOf(String value) throws IllegalArgumentException;
-
-        default ValueClass of(Object value) throws IllegalArgumentException {
-            if(getValueClass().isInstance(value)) {
+        @Override
+        public ValueClass valueOf(Object value) throws IllegalArgumentException {
+            if(valueClass.isInstance(value)) {
                 return (ValueClass) value;
             }
             else if(value instanceof String) {
-                return valueOf((String) value);
+                return parser.apply((String) value);
             }
             else {
-                throw new IllegalArgumentException("Value '" + value + "' cannot be interpreted as a " + getValueClass());
+                throw new IllegalArgumentException("Value '" + value + "' cannot be interpreted as a " + valueClass);
             }
         }
     }
 
-    public final Definition<?> def;
+    class ClassBasedSequential<ValueClass> extends ClassBased<ValueClass> {
+        private final ValueClass first;
+        private final Function<ValueClass, ValueClass> nextGetter;
 
-    ValueType(Definition<?> def) {
-        this.def = def;
+        public ClassBasedSequential(Class<ValueClass> valueClass, Function<String, ValueClass> parser,
+                                    ValueClass first, Function<ValueClass, ValueClass> nextGetter) {
+            super(valueClass, parser);
+            this.first = first;
+            this.nextGetter = nextGetter;
+        }
+
+        @Override
+        public Optional<ValueClass> first() {
+            return Optional.of(first);
+        }
+
+        @Override
+        public Optional<ValueClass> next(Object previous) {
+            return Optional.of(nextGetter.apply((ValueClass) previous));
+        }
     }
 
-    public Object of(Object value) throws IllegalArgumentException {
-        return def.of(value);
+    /**
+     *
+     * @param value The value as returned by the parser. May be of any type (often String).
+     * @return The value in the canonical representation of this type. This returned object must implement equals and
+     * hashCode properly if this value is used in a context ID field.
+     * @throws IllegalArgumentException If the given value could not be interpreted as a value of this type.
+     */
+    ValueClass valueOf(Object value) throws IllegalArgumentException;
+
+    /**
+     *
+     * @return The first value of this type, if the type defines a discrete order.
+     */
+    default Optional<ValueClass> first() {
+        return Optional.empty();
+    }
+
+    /**
+     *
+     * @param previous A previous value of this type.
+     * @return The following value of this type, if the type defines a discrete order.
+     */
+    default Optional<ValueClass> next(Object previous) {
+        return Optional.empty();
+    }
+
+    /**
+     *
+     * @param value A value of this type.
+     * @return The string representation of this value.
+     */
+    default String toString(ValueClass value) {
+        return Objects.toString(value);
     }
 }

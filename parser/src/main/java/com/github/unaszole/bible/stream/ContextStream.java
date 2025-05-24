@@ -67,11 +67,11 @@ public abstract class ContextStream<StreamType extends ContextStream<StreamType>
                 .iterator();
 
         Context extractedContext = new Context(wantedMetadata);
-        new Parser.TerminalParser<ContextEvent>(new PositionBufferedParserCore<ContextEvent>() {
+        new Parser.TerminalParser<>(new PositionBufferedParserCore<>() {
             @Override
             protected List<ContextReader> readContexts(List<Context> ancestorStack, ContextType type,
-                                                 ContextMetadata previousOfType, ContextEvent event) {
-                if(event.type == ContextEvent.Type.OPEN && event.metadata.type == type) {
+                                                       ContextMetadata previousOfType, ContextEvent event) {
+                if (event.type == ContextEvent.Type.OPEN && event.metadata.type == type) {
                     return context(event.metadata, event.value).build();
                 }
                 return List.of();

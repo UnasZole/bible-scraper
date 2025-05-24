@@ -4,8 +4,9 @@ import com.github.unaszole.bible.datamodel.*;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
 import com.github.unaszole.bible.datamodel.contexttypes.StructureMarkers;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIds;
 import com.github.unaszole.bible.parsing.Context;
-import com.github.unaszole.bible.scraping.VersificationUpdater;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.CachedDownloader;
 import com.github.unaszole.bible.parsing.Parser;
@@ -146,7 +147,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 	private static List<URL> getPageUrls(BibleBook book) {
 		return BOOKS.getOrDefault(book, Collections.emptyList())
 			.stream()
-			.map(p -> getUrl(p))
+			.map(ChouraquiSpiritualLand::getUrl)
 			.collect(Collectors.toList());
 	}
 	
@@ -211,20 +212,20 @@ public class ChouraquiSpiritualLand extends Scraper {
                     String chapterNbStr = extract(CHAPTER_TITLE_PATTERN, 1, e.text());
                     int chapterNb = Integer.parseInt(chapterNbStr);
 
-                    ContextId expectedId = IdType.BIBLE_CHAPTER.getNewId(previousOfType, ancestors).get();
+                    ContextId expectedId = BibleIds.CHAPTER_ID.getNewId(previousOfType, ancestors).get();
 
-                    if (expectedId.get(IdField.BIBLE_BOOK) == BibleBook.ESTH_GR && chapterNb == 0) {
+                    if (expectedId.get(BibleIdFields.BOOK) == BibleBook.ESTH_GR && chapterNb == 0) {
                         // The first chapter parsed for Esther greek is chapter 0.
                         // That's impossible in OSIS : consider it prefix of chapter 1.
                         chapterNb = 1;
                         chapterNbStr = "0-1";
                     }
-                    if (previousOfType != null && chapterNb == (Integer) previousOfType.id.get(IdField.BIBLE_CHAPTER)) {
+                    if (previousOfType != null && chapterNb == previousOfType.id.get(BibleIdFields.CHAPTER)) {
                         // If chapter is the same as previous, ignore.
                         return List.of();
                     }
 
-                    ContextMetadata chapterMeta = ScrapingUtils.forChapter((BibleBook) expectedId.get(IdField.BIBLE_BOOK), chapterNb);
+                    ContextMetadata chapterMeta = ScrapingUtils.forChapter(expectedId.get(BibleIdFields.BOOK), chapterNb);
 
                     return context(chapterMeta, chapterNbStr).build();
                 }
@@ -345,13 +346,13 @@ public class ChouraquiSpiritualLand extends Scraper {
 										  ContextMetadata previousOfType, MatchResult verseMatch) {
                 if (type.equals(BibleContainers.VERSE)) {
                     String verseNb = verseMatch.group(1);
-                    ContextId expectedVerseId = IdType.BIBLE_VERSE.getNewId(
+                    ContextId expectedVerseId = BibleIds.VERSE_ID.getNewId(
                             previousOfType, ancestors
                     ).orElseThrow(() -> new IllegalStateException("plop"));
 
                     ContextMetadata verseMeta = ScrapingUtils.forVerse(
-                            (BibleBook) expectedVerseId.get(IdField.BIBLE_BOOK),
-                            (Integer) expectedVerseId.get(IdField.BIBLE_CHAPTER),
+                            expectedVerseId.get(BibleIdFields.BOOK),
+                            expectedVerseId.get(BibleIdFields.CHAPTER),
                             Integer.parseInt(verseNb)
                     );
 
@@ -370,7 +371,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 			if(ScrapingUtils.hasAncestor(BibleContainers.CHAPTER, currentContextStack) && e.is(UNFORMATTED_CHAPTER_CONTENT_SELECTOR)) {
 				// If lexeme matches as an unformatted sequence of verses, we parse them and pass them to a dedicated parser.
 				Matcher verseMatcher = UNFORMATTED_VERSE_PATTERN.matcher(e.text());
-				return new Parser<MatchResult>(new UnformattedChapterParser(), verseMatcher.results().iterator(), currentContextStack);
+				return new Parser<>(new UnformattedChapterParser(), verseMatcher.results().iterator(), currentContextStack);
 			}
 			return null;
 		}
@@ -477,10 +478,10 @@ public class ChouraquiSpiritualLand extends Scraper {
 						ScrapingUtils.forVerse(BibleBook.DAN, 3, 24),
 						ScrapingUtils.forVerse(BibleBook.DAN, 3, 33),
 						new VersificationUpdater()
-								.verseNbs(m -> ((List<Integer>) m.id.get(IdField.BIBLE_VERSES)).stream()
+								.verseNbs(m -> m.id.get(BibleIdFields.VERSES).stream()
 										.map(v -> v + 67)
 										.collect(Collectors.toList()))
-								.verseValue(m -> ((List<Integer>) m.id.get(IdField.BIBLE_VERSES)).stream()
+								.verseValue(m -> m.id.get(BibleIdFields.VERSES).stream()
 										.map(v -> v + 67)
 										.map(Object::toString)
 										.collect(Collectors.joining("-")))
@@ -502,13 +503,13 @@ public class ChouraquiSpiritualLand extends Scraper {
 				// Move to chapter 5, verse 2B. Remove the second part of verse 2B, and verse 2C, which should not be
 				// in the Greek version of Esther.
 				editor.doNothingUntil(ContextStreamEditor.InjectionPosition.AT_START,
-						(m, v) -> m.type == BibleContainers.VERSE && (Integer)m.id.get(IdField.BIBLE_CHAPTER) == 5 && Objects.equals(v, "2B")
+						(m, v) -> m.type == BibleContainers.VERSE && m.id.get(BibleIdFields.CHAPTER) == 5 && Objects.equals(v, "2B")
 				);
 				editor.remove(
 						(m, v) -> m.type == FlatText.TEXT && ((String)v).startsWith(" Èstér revêt"),
 						(m, v) -> m.type == FlatText.TEXT && ((String)v).endsWith("la maison.")
 				);
-				editor.remove((m, v) -> m.type == BibleContainers.VERSE && (Integer)m.id.get(IdField.BIBLE_CHAPTER) == 5 && Objects.equals(v, "2C"));
+				editor.remove((m, v) -> m.type == BibleContainers.VERSE && m.id.get(BibleIdFields.CHAPTER) == 5 && Objects.equals(v, "2C"));
 
 				// Shift chapter 9 verses 20 to 32 by 1, but not touching the values.
 				// (In catholic bibles, a verse 19A is present, which is missing here.)
@@ -516,7 +517,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 						ScrapingUtils.forVerse(BibleBook.ESTH_GR, 9, 20),
 						ScrapingUtils.forVerse(BibleBook.ESTH_GR, 9, 32),
 						new VersificationUpdater()
-								.verseNbs(m -> ((List<Integer>) m.id.get(IdField.BIBLE_VERSES)).stream()
+								.verseNbs(m -> m.id.get(BibleIdFields.VERSES).stream()
 										.map(v -> v + 1)
 										.collect(Collectors.toList()))
 				);
@@ -546,20 +547,20 @@ public class ChouraquiSpiritualLand extends Scraper {
 	public ContextStream.Single getContextStreamFor(ContextMetadata rootContextMeta) {
 		switch ((BibleContainers) rootContextMeta.type) {
 			case BOOK:
-				BibleBook mappedBook = variant.getMappedBook((BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK));
+				BibleBook mappedBook = variant.getMappedBook(rootContextMeta.id.get(BibleIdFields.BOOK));
 				if(mappedBook == null) {
 					// Book is removed from the variant. Return an empty stream
 					return new ContextStream.Single(rootContextMeta, Stream.of());
 				}
 				else {
-					if(mappedBook != rootContextMeta.id.get(IdField.BIBLE_BOOK)) {
+					if(mappedBook != rootContextMeta.id.get(BibleIdFields.BOOK)) {
 						// Book is remapped : update versification of its contents.
 						return getBookStream(mappedBook).edit().updateContextsUntilTheEnd(
-								new VersificationUpdater().book(b-> (BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK))
+								new VersificationUpdater().book(b-> rootContextMeta.id.get(BibleIdFields.BOOK))
 						).process();
 					}
 					else {
-						return getBookStream((BibleBook) rootContextMeta.id.get(IdField.BIBLE_BOOK));
+						return getBookStream(rootContextMeta.id.get(BibleIdFields.BOOK));
 					}
 				}
 			case BIBLE:

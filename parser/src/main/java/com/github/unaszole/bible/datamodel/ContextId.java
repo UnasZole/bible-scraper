@@ -4,44 +4,74 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ContextId {
-    private final IdType idType;
-    private final Map<IdField, Object> idMap;
+    public static class Builder {
+        private final IdType idType;
+        private final Map<IdField<?>, Object> idMap = new HashMap<>();
 
-    public ContextId(IdType idType, Map<IdField, Object> idMap) {
-        assert idMap.entrySet().stream().allMatch(e ->
-                Arrays.stream(idType.fields).anyMatch(tf -> tf == e.getKey())
-                && e.getKey().fieldType.getFieldClass().isInstance(e.getValue())
-        );
+        private Builder(IdType idType, Map<IdField<?>, Object> idMap) {
+            this.idType = idType;
+            this.idMap.putAll(idMap);
+        }
+
+        public Builder(IdType idType) {
+            this(idType, Collections.emptyMap());
+        }
+
+        public Builder(ContextId id) {
+            this(id.idType, id.idMap);
+        }
+
+        public <T> Builder with(IdField<T> field, T value) {
+            assert Arrays.stream(idType.fields).anyMatch(f -> f == field)
+                    : "Field " + field + " is not allowed in ID type " + idType;
+            this.idMap.put(field, value);
+            return this;
+        }
+
+        public boolean has(IdField<?> field) {
+            return idMap.containsKey(field);
+        }
+
+        public ContextId build() {
+            return new ContextId(idType, idMap);
+        }
+    }
+
+
+    private final IdType idType;
+    private final Map<IdField<?>, Object> idMap;
+
+    public ContextId(IdType idType, Map<IdField<?>, Object> idMap) {
+        assert idType.isValid(idMap);
         this.idType = idType;
         this.idMap = Collections.unmodifiableMap(idMap);
     }
 
-    public <T> T get(IdField field) {
+    public <T> T get(IdField<T> field) {
         return (T) idMap.get(field);
     }
 
-    public ContextId with(IdField field, Object value) {
-        assert Arrays.stream(idType.fields).anyMatch(f -> f == field) : "Field " + field + " is not allowed in ID type " + idType;
-        Map<IdField, Object> newIdMap = new HashMap<>(idMap);
-        newIdMap.put(field, field.fieldType.of(value));
-        return new ContextId(idType, newIdMap);
+    public <T> ContextId with(IdField<T> field, T value) {
+        return new Builder(idType, idMap).with(field, value).build();
+    }
+
+    private <T> Optional<ContextId> withNextValueForField(IdField<T> field) {
+        Optional<T> nextFieldValue = field.type.next(get(field));
+        return nextFieldValue.map(t -> with(field, t));
     }
 
     public Optional<ContextId> next() {
-        IdField lastField = idType.fields[idType.fields.length - 1];
+        return withNextValueForField(idType.fields[idType.fields.length - 1]);
+    }
 
-        Optional nextLastField = lastField.fieldType.getNext(get(lastField));
-        if(nextLastField.isPresent()) {
-            return Optional.of(with(lastField, nextLastField.get()));
-        }
-
-        return Optional.empty();
+    private <T> String fieldToString(IdField<T> field) {
+        return field.type.toString(get(field));
     }
 
     @Override
     public String toString() {
         return Arrays.stream(idType.fields)
-                .map(field -> field.fieldType.toString(idMap.get(field)))
+                .map(this::fieldToString)
                 .collect(Collectors.joining("."));
     }
 

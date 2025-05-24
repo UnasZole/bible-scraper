@@ -1,9 +1,9 @@
 package com.github.unaszole.bible.scraping.generic.data;
 
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.downloading.SourceFile;
 import com.github.unaszole.bible.scraping.ScrapingUtils;
 import com.github.unaszole.bible.stream.ContextStream;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * Specifies the contents of a book to retrieve from the source.
- *
+ * <p>
  * Pages defined at book level, if any, will be scraped to initialise this book's context - else an empty book context
  * will be initialised.
  * If {@link #chapters} are specified, the corresponding pages will be scraped and appended at the end of the book context.
@@ -63,7 +63,7 @@ public class Book extends PagesContainer {
     public ContextStream.Single streamBook(PatternContainer bibleDefaults, ContextMetadata bookCtxMeta,
                                            final SourceFile.Builder sourceFileBuilder,
                                            final BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
-        assert bookCtxMeta.type == BibleContainers.BOOK && bookCtxMeta.id.get(IdField.BIBLE_BOOK) == osis;
+        assert bookCtxMeta.type == BibleContainers.BOOK && bookCtxMeta.id.get(BibleIdFields.BOOK) == osis;
         final PatternContainer bookDefaults = this.defaultedBy(bibleDefaults);
 
         // Build the list of context streams for all chapters, to append to the book page stream.
@@ -88,7 +88,7 @@ public class Book extends PagesContainer {
         }
 
         // Build the book stream.
-        Context bookCtx = new Context(bookCtxMeta, ((BibleBook)bookCtxMeta.id.get(IdField.BIBLE_BOOK)).getOSIS());
+        Context bookCtx = new Context(bookCtxMeta, bookCtxMeta.id.get(BibleIdFields.BOOK).getOSIS());
         ContextStream.Single bookStream = null;
 
         List<PageData> bookPages = getBookPages(bookDefaults, sourceFileBuilder);
@@ -107,7 +107,7 @@ public class Book extends PagesContainer {
         if(bookStream != null && edit != null) {
             ContextStreamEditor<ContextStream.Single> editor = bookStream.edit();
             for(StreamEditorConfig cfg: edit) {
-                cfg.configureEditor(editor, bookCtxMeta.id.get(IdField.BIBLE_BOOK), 0);
+                cfg.configureEditor(editor, bookCtxMeta.id.get(BibleIdFields.BOOK), 0);
             }
             bookStream = editor.process();
         }

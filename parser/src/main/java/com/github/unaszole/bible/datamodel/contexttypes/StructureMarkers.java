@@ -5,7 +5,7 @@ import com.github.unaszole.bible.datamodel.*;
 import static com.github.unaszole.bible.datamodel.ContextChildrenSpec.ContextSequence.*;
 import static com.github.unaszole.bible.datamodel.IdType.NO_ID;
 import static com.github.unaszole.bible.datamodel.ImplicitValue.*;
-import static com.github.unaszole.bible.datamodel.ValueType.*;
+import static com.github.unaszole.bible.datamodel.valuetypes.StdValueTypes.*;
 
 public enum StructureMarkers implements ContextType {
     /**
@@ -42,11 +42,11 @@ public enum StructureMarkers implements ContextType {
     STRUCTURED_TEXT(NO_ID, NO_VALUE, NULL, any(FlatText.FLAT_TEXT, STRUCTURE_MARKER));
 
     private final IdType idType;
-    private final ValueType valueType;
+    private final ValueType<?> valueType;
     private final ImplicitValue implicitValue;
     private final ContextChildrenSpec childrenSpec;
 
-    StructureMarkers(IdType idType, ValueType valueType, ImplicitValue implicitValue, ContextChildrenSpec.ContextSequence... allowedChildren) {
+    StructureMarkers(IdType idType, ValueType<?> valueType, ImplicitValue implicitValue, ContextChildrenSpec.ContextSequence... allowedChildren) {
         assert idType != null && valueType != null && implicitValue != null;
         this.idType = idType;
         this.valueType = valueType;
@@ -60,7 +60,7 @@ public enum StructureMarkers implements ContextType {
     }
 
     @Override
-    public ValueType valueType() {
+    public ValueType<?> valueType() {
         return valueType;
     }
 

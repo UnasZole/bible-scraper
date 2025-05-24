@@ -9,10 +9,10 @@ import java.util.stream.Stream;
 public class StreamUtils {
     public static <T> Iterator<T> toFlatIterator(Iterator<List<T>> listIt) {
         final Deque<T> buffer = new LinkedList<>();
-        return new Iterator<T>() {
+        return new Iterator<>() {
             @Override
             public boolean hasNext() {
-                while(buffer.isEmpty() && listIt.hasNext()) {
+                while (buffer.isEmpty() && listIt.hasNext()) {
                     buffer.addAll(listIt.next());
                 }
                 return !buffer.isEmpty();

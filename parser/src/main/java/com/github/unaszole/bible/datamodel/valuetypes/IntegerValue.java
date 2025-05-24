@@ -4,7 +4,7 @@ import com.github.unaszole.bible.datamodel.ValueType;
 
 import java.util.regex.Pattern;
 
-public class IntegerValue implements ValueType.Definition<Integer> {
+public class IntegerValue extends ValueType.ClassBasedSequential<Integer> {
 
     private static final Pattern INTEGER = Pattern.compile("^\\d+$");
     private static final Pattern ROMAN_NUM = Pattern.compile("^[MDCLXVI]+$");
@@ -39,13 +39,7 @@ public class IntegerValue implements ValueType.Definition<Integer> {
         throw new NumberFormatException(str + " is not a valid integer");
     }
 
-    @Override
-    public Class<Integer> getValueClass() {
-        return Integer.class;
-    }
-
-    @Override
-    public Integer valueOf(String value) throws IllegalArgumentException {
-        return parseInt(value);
+    public IntegerValue() {
+        super(Integer.class, IntegerValue::parseInt, 1, i -> i + 1);
     }
 }

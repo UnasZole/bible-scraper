@@ -54,7 +54,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
     }
 
     private final StreamType originalStream;
-    private Stream<ContextEvent> stream;
+    private final Stream<ContextEvent> stream;
     private final List<Action> actions = new ArrayList<>();
 
     public ContextStreamEditor(StreamType originalStream) {
@@ -171,10 +171,10 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
     }
 
     public static class ContextUpdater {
-        private final Map<IdField, BiFunction<ContextMetadata, Object, Optional<?>>> idFieldUpdaters = new HashMap<>();
+        private final Map<IdField<?>, BiFunction<ContextMetadata, Object, ? extends Optional<?>>> idFieldUpdaters = new HashMap<>();
         private BiFunction<ContextMetadata, Object, Optional<?>> valueUpdater = null;
 
-        public ContextUpdater idField(IdField idField, BiFunction<ContextMetadata, Object, Optional<?>> updater) {
+        public <T> ContextUpdater idField(IdField<T> idField, BiFunction<ContextMetadata, Object, Optional<T>> updater) {
             idFieldUpdaters.put(idField, updater);
             return this;
         }
@@ -184,18 +184,25 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
             return this;
         }
 
+        private <T> Optional<BiFunction<ContextMetadata, Object, Optional<T>>> getUpdater(IdField<T> field) {
+            return Optional.ofNullable((BiFunction<ContextMetadata, Object, Optional<T>>) idFieldUpdaters.get(field));
+        }
+
+        private <T> void updateField(ContextId.Builder builder, ContextEvent e, IdField<T> field) {
+            getUpdater(field)
+                    .flatMap(u -> u.apply(e.metadata, e.value))
+                    .ifPresent(nfv -> builder.with(field, nfv));
+        }
+
         public ContextEvent apply(ContextEvent e) {
-            final ContextId[] newId = new ContextId[] { e.metadata.id };
-            if(newId[0] != null) {
+            ContextId newId = e.metadata.id;
+            if(newId != null) {
+                ContextId.Builder newIdBuilder = new ContextId.Builder(newId);
                 // Loop through all ID fields to check for an updater.
-                for (IdField field : e.metadata.type.idType().fields) {
-                    Optional.ofNullable(idFieldUpdaters.get(field))
-                            .flatMap(u -> u.apply(e.metadata, e.value))
-                            .ifPresent(nfv -> {
-                                // If we have an updater for this field, and it returns a value : set it.
-                                newId[0] = newId[0].with(field, nfv);
-                    });
+                for (IdField<?> field : e.metadata.type.idType().fields) {
+                    updateField(newIdBuilder, e, field);
                 }
+                newId = newIdBuilder.build();
             }
 
             // If we have a value updater, and it returns a new value, use it.
@@ -204,7 +211,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
                     .orElse(e.value);
 
             return new ContextEvent(e.type,
-                    new ContextMetadata(e.metadata.type, newId[0]),
+                    new ContextMetadata(e.metadata.type, newId),
                     newValue
             );
         }

@@ -1,9 +1,9 @@
 package com.github.unaszole.bible.writing;
 
-import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
 import com.github.unaszole.bible.datamodel.contexttypes.StructureMarkers;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
 import com.github.unaszole.bible.writing.datamodel.BibleRef;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
@@ -264,16 +264,16 @@ public class ContextStreamWriter {
 
     public void writeBookContents(StructuredTextWriter.BookContentsWriter writer) {
         if(isOpen(BibleContainers.CHAPTER, getCurrent())) {
-            BibleBook chapterBook = getCurrent().metadata.id.get(IdField.BIBLE_BOOK);
-            int chapterNb = getCurrent().metadata.id.get(IdField.BIBLE_CHAPTER);
+            BibleBook chapterBook = getCurrent().metadata.id.get(BibleIdFields.BOOK);
+            int chapterNb = getCurrent().metadata.id.get(BibleIdFields.CHAPTER);
             currentLocalRef = new BibleRef(chapterBook, chapterNb, 0);
             writer.chapter(chapterNb, (String) getCurrent().value);
         }
 
         writeStructuredText(writer, (w, event) -> {
             if(isOpen(BibleContainers.CHAPTER, event)) {
-                BibleBook chapterBook = event.metadata.id.get(IdField.BIBLE_BOOK);
-                int chapterNb = event.metadata.id.get(IdField.BIBLE_CHAPTER);
+                BibleBook chapterBook = event.metadata.id.get(BibleIdFields.BOOK);
+                int chapterNb = event.metadata.id.get(BibleIdFields.CHAPTER);
                 currentLocalRef = new BibleRef(chapterBook, chapterNb, 0);
                 w.chapter(chapterNb, (String) event.value);
             }
@@ -285,7 +285,7 @@ public class ContextStreamWriter {
             }
             if(isOpen(BibleContainers.VERSE, event)) {
                 w.verse(
-                        ((List<Integer>) event.metadata.id.get(IdField.BIBLE_VERSES)).stream()
+                        event.metadata.id.get(BibleIdFields.VERSES).stream()
                                 .mapToInt(v -> v)
                                 .toArray(),
                         (String) event.value
@@ -327,20 +327,18 @@ public class ContextStreamWriter {
             ContextEvent event = next();
 
             if(isOpen(BibleContainers.BOOK, event)) {
-                currentLocalRef = new BibleRef(event.metadata.id.get(IdField.BIBLE_BOOK), 0, 0);
-                w.book(event.metadata.id.get(IdField.BIBLE_BOOK), this::writeBook);
+                currentLocalRef = new BibleRef(event.metadata.id.get(BibleIdFields.BOOK), 0, 0);
+                w.book(event.metadata.id.get(BibleIdFields.BOOK), this::writeBook);
             }
         }
     }
 
     public void writeBibleSubset(BibleWriter w, ContextMetadata rootMetadata) {
         if(rootMetadata.type == BibleContainers.CHAPTER) {
-            w.book(rootMetadata.id.get(IdField.BIBLE_BOOK), wb -> {
-                wb.contents(this::writeBookContents);
-            });
+            w.book(rootMetadata.id.get(BibleIdFields.BOOK), wb -> wb.contents(this::writeBookContents));
         }
         else if(rootMetadata.type == BibleContainers.BOOK) {
-            w.book(rootMetadata.id.get(IdField.BIBLE_BOOK), this::writeBook);
+            w.book(rootMetadata.id.get(BibleIdFields.BOOK), this::writeBook);
         }
         else if(rootMetadata.type == BibleContainers.BIBLE) {
             writeBible(w);

@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 public class MyBibleBookWriter implements BookWriter {
 
     public static final Map<BibleBook, Integer> OSIS_TO_MYBIBLE = new HashMap<>();
-    {
+    static {
         OSIS_TO_MYBIBLE.put(BibleBook.GEN, 1);
         OSIS_TO_MYBIBLE.put(BibleBook.EXOD, 2);
         OSIS_TO_MYBIBLE.put(BibleBook.LEV, 3);

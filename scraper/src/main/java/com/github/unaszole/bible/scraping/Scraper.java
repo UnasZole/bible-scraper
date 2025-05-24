@@ -1,9 +1,9 @@
 package com.github.unaszole.bible.scraping;
 
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.stream.ContextStream;
 import org.crosswire.jsword.versification.BibleBook;
@@ -71,10 +71,10 @@ public abstract class Scraper {
 
 	private static ContextMetadata getAncestor(ContextMetadata meta) {
 		if(meta.type == BibleContainers.VERSE) {
-			return ScrapingUtils.forChapter((BibleBook) meta.id.get(IdField.BIBLE_BOOK), (Integer) meta.id.get(IdField.BIBLE_CHAPTER));
+			return ScrapingUtils.forChapter(meta.id.get(BibleIdFields.BOOK), meta.id.get(BibleIdFields.CHAPTER));
 		}
 		else if(meta.type == BibleContainers.CHAPTER) {
-			return ScrapingUtils.forBook((BibleBook) meta.id.get(IdField.BIBLE_BOOK));
+			return ScrapingUtils.forBook(meta.id.get(BibleIdFields.BOOK));
 		}
 		else if(meta.type != BibleContainers.BIBLE) {
 			return ScrapingUtils.forBible();

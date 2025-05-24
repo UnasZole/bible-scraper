@@ -2,8 +2,8 @@ package com.github.unaszole.bible.scraping.generic.data;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.datamodel.IdField;
-import com.github.unaszole.bible.datamodel.IdType;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIds;
 import com.github.unaszole.bible.stream.ContextStream;
 import com.github.unaszole.bible.stream.ContextStreamEditor;
 import com.github.unaszole.bible.scraping.VersificationUpdater;
@@ -20,25 +20,28 @@ public class StreamEditorConfig {
         public Integer verse;
 
         public ContextMetadata get(BibleBook defaultBook, int defaultChapter) {
-            switch(type.idType()) {
-                case BIBLE_BOOK:
-                    return new ContextMetadata(type, IdType.BIBLE_BOOK.ofFields(
-                            IdField.BIBLE_BOOK.of(book != null ? book : defaultBook)
-                    ));
-                case BIBLE_CHAPTER:
-                    return new ContextMetadata(type, IdType.BIBLE_CHAPTER.ofFields(
-                            IdField.BIBLE_BOOK.of(book != null ? book : defaultBook),
-                            IdField.BIBLE_CHAPTER.of(chapter != null ? chapter : defaultChapter)
-                    ));
-                case BIBLE_VERSE:
-                    return new ContextMetadata(type, IdType.BIBLE_VERSE.ofFields(
-                            IdField.BIBLE_BOOK.of(book != null ? book : defaultBook),
-                            IdField.BIBLE_CHAPTER.of(chapter != null ? chapter : defaultChapter),
-                            IdField.BIBLE_VERSES.of(List.of(verse))
-                    ));
-                default:
-                    return new ContextMetadata(type);
+            if(type.idType() == BibleIds.BOOK_ID) {
+                return new ContextMetadata(type, BibleIds.BOOK_ID.ofFields(
+                        BibleIdFields.BOOK.of(book != null ? book : defaultBook)
+                ));
             }
+
+            if(type.idType() == BibleIds.CHAPTER_ID) {
+                return new ContextMetadata(type, BibleIds.CHAPTER_ID.ofFields(
+                        BibleIdFields.BOOK.of(book != null ? book : defaultBook),
+                        BibleIdFields.CHAPTER.of(chapter != null ? chapter : defaultChapter)
+                ));
+            }
+
+            if(type.idType() == BibleIds.VERSE_ID) {
+                return new ContextMetadata(type, BibleIds.VERSE_ID.ofFields(
+                        BibleIdFields.BOOK.of(book != null ? book : defaultBook),
+                        BibleIdFields.CHAPTER.of(chapter != null ? chapter : defaultChapter),
+                        BibleIdFields.VERSES.of(List.of(verse))
+                ));
+            }
+
+            return new ContextMetadata(type);
         }
     }
 
@@ -49,10 +52,10 @@ public class StreamEditorConfig {
         public VersificationUpdater getUpdater() {
             VersificationUpdater updater = new VersificationUpdater();
             if (shiftChapter != null) {
-                updater.chapterNb(m -> (Integer)m.id.get(IdField.BIBLE_CHAPTER) + shiftChapter);
+                updater.chapterNb(m -> m.id.get(BibleIdFields.CHAPTER) + shiftChapter);
             }
             if (shiftVerse != null) {
-                updater.verseNbs(m -> ((List<Integer>)m.id.get(IdField.BIBLE_VERSES)).stream()
+                updater.verseNbs(m -> m.id.get(BibleIdFields.VERSES).stream()
                         .map(v -> v + shiftVerse)
                         .collect(Collectors.toList()));
             }

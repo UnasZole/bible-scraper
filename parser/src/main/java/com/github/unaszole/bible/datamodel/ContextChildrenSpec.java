@@ -48,7 +48,7 @@ public class ContextChildrenSpec {
             this.maxOccurrences = maxOccurrences;
         }
 
-        public static enum Status {
+        public enum Status {
             INCOMPLETE, // Requires at least one new element.
             OPEN, // Can accept at least one new element.
             CLOSED // Cannot accept any new element.

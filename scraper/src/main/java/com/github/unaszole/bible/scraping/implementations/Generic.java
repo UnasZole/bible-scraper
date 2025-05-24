@@ -12,9 +12,9 @@ import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
 import com.github.unaszole.bible.datamodel.contexttypes.StructureMarkers;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.parsing.Parser;
 import com.github.unaszole.bible.scraping.generic.data.*;
@@ -264,11 +264,11 @@ public class Generic extends Scraper {
         switch ((BibleContainers) rootContextMeta.type) {
             case CHAPTER:
                 // Fetch book and chapter sequence. If we can't find them, nothing to load, return null.
-                book = config.bible.getBook(rootContextMeta.id.get(IdField.BIBLE_BOOK));
+                book = config.bible.getBook(rootContextMeta.id.get(BibleIdFields.BOOK));
                 if(book == null) {
                     return null;
                 }
-                seq = book.getChapterSeq(rootContextMeta.id.get(IdField.BIBLE_CHAPTER));
+                seq = book.getChapterSeq(rootContextMeta.id.get(BibleIdFields.CHAPTER));
                 if(seq == null) {
                     return null;
                 }
@@ -279,7 +279,7 @@ public class Generic extends Scraper {
 
             case BOOK:
                 // Fetch book. If we can't find it, nothing to load, return null.
-                book = config.bible.getBook(rootContextMeta.id.get(IdField.BIBLE_BOOK));
+                book = config.bible.getBook(rootContextMeta.id.get(BibleIdFields.BOOK));
                 if(book == null) {
                     return null;
                 }

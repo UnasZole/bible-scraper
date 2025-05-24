@@ -3,10 +3,10 @@ package com.github.unaszole.bible.scraping.implementations;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
 import com.github.unaszole.bible.datamodel.contexttypes.StructureMarkers;
+import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.datamodel.IdField;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.CachedDownloader;
 import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
@@ -283,14 +283,14 @@ public class TheoPlace extends Scraper {
         BookRef bookRef;
         switch((BibleContainers) rootContextMeta.type) {
             case CHAPTER:
-                BibleBook chapterBook = rootContextMeta.id.get(IdField.BIBLE_BOOK);
-                int chapterNb = rootContextMeta.id.get(IdField.BIBLE_CHAPTER);
+                BibleBook chapterBook = rootContextMeta.id.get(BibleIdFields.BOOK);
+                int chapterNb = rootContextMeta.id.get(BibleIdFields.CHAPTER);
                 bookRef = BOOKS.get(chapterBook);
                 Context chapterCtx = new Context(rootContextMeta, Integer.toString(chapterNb));
                 return getContextStream(downloader, bookRef.getChapterUrl(bible, chapterNb), chapterCtx);
 
             case BOOK:
-                BibleBook bookId = rootContextMeta.id.get(IdField.BIBLE_BOOK);
+                BibleBook bookId = rootContextMeta.id.get(BibleIdFields.BOOK);
                 bookRef = BOOKS.get(bookId);
                 Context bookCtx = new Context(rootContextMeta, bookId.getOSIS());
 

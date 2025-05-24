@@ -5,7 +5,7 @@ import com.github.unaszole.bible.datamodel.*;
 import static com.github.unaszole.bible.datamodel.ContextChildrenSpec.ContextSequence.*;
 import static com.github.unaszole.bible.datamodel.IdType.NO_ID;
 import static com.github.unaszole.bible.datamodel.ImplicitValue.*;
-import static com.github.unaszole.bible.datamodel.ValueType.*;
+import static com.github.unaszole.bible.datamodel.valuetypes.StdValueTypes.*;
 
 public enum FlatText implements ContextType {
     /**
@@ -25,7 +25,7 @@ public enum FlatText implements ContextType {
     /**
      * Book reference : context value must be a valid OSIS book ID.
      */
-    REF_BOOK(NO_ID, BOOK_ID, NO_IMPLICIT),
+    REF_BOOK(NO_ID, BIBLE_BOOK, NO_IMPLICIT),
     /**
      * Chapter reference : context value must be a valid chapter number, either integer or a roman numeral.
      */
@@ -84,11 +84,11 @@ public enum FlatText implements ContextType {
     FLAT_TEXT(NO_ID, NO_VALUE, NULL, atLeastOne(INLINE_TEXT, NOTE));
 
     private final IdType idType;
-    private final ValueType valueType;
+    private final ValueType<?> valueType;
     private final ImplicitValue implicitValue;
     private final ContextChildrenSpec childrenSpec;
 
-    FlatText(IdType idType, ValueType valueType, ImplicitValue implicitValue, ContextChildrenSpec.ContextSequence... allowedChildren) {
+    FlatText(IdType idType, ValueType<?> valueType, ImplicitValue implicitValue, ContextChildrenSpec.ContextSequence... allowedChildren) {
         assert idType != null && valueType != null && implicitValue != null;
         this.idType = idType;
         this.valueType = valueType;
@@ -102,7 +102,7 @@ public enum FlatText implements ContextType {
     }
 
     @Override
-    public ValueType valueType() {
+    public ValueType<?> valueType() {
         return valueType;
     }
 

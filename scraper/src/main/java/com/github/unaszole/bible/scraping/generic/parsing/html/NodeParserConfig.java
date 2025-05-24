@@ -51,9 +51,9 @@ public class NodeParserConfig {
     }
 
     private Iterator<Node> getNodeIterator(Element e) {
-        return new Iterator<Node>() {
+        return new Iterator<>() {
             private Element root = e;
-            private Iterator<Node> childNodesIterator = e.childNodes().iterator();
+            private final Iterator<Node> childNodesIterator = e.childNodes().iterator();
             private Iterator<Element> elementDescendantsIterator = null;
 
             @Override
@@ -64,27 +64,26 @@ public class NodeParserConfig {
 
             @Override
             public Node next() {
-                if(root != null) {
+                if (root != null) {
                     // If the root element is still present, consume it first.
                     Element ret = root;
                     root = null;
                     return ret;
                 }
 
-                if(elementDescendantsIterator != null) {
+                if (elementDescendantsIterator != null) {
                     // If we're exploring an child Element's descendants.
-                    if(elementDescendantsIterator.hasNext()) {
+                    if (elementDescendantsIterator.hasNext()) {
                         // And there are descendants left, continue.
                         return elementDescendantsIterator.next();
-                    }
-                    else {
+                    } else {
                         // And no descendant left, proceed to next child.
                         elementDescendantsIterator = null;
                     }
                 }
 
                 Node nextNode = childNodesIterator.next();
-                if(nextNode instanceof Element) {
+                if (nextNode instanceof Element) {
                     // If next node is an element, prepare to read its descendants.
                     elementDescendantsIterator = ((Element) nextNode).stream().iterator();
                     // Eliminate the first item of the stream as it's the current element that we're already returning.
@@ -97,28 +96,27 @@ public class NodeParserConfig {
     }
 
     public Parser<?> getParser(Element e, Deque<Context> currentContextStack, final ContextualData contextualData) {
-        return new Parser<Node>(new PositionBufferedParserCore<Node>() {
+        return new Parser<>(new PositionBufferedParserCore<>() {
 
             @Override
             public Parser<?> parseExternally(Node n, Deque<Context> currentContextStack) {
-                if(externalParsers != null && n instanceof Element) {
+                if (externalParsers != null && n instanceof Element) {
                     Element e = (Element) n;
 
-                    for(ElementExternalParser elementExternalParser : externalParsers) {
+                    for (ElementExternalParser elementExternalParser : externalParsers) {
                         Optional<Parser<?>> parser = elementExternalParser.getParserIfApplicable(e, currentContextStack,
                                 contextualData);
-                        if(parser.isPresent()) {
+                        if (parser.isPresent()) {
                             return parser.get();
                         }
                     }
-                }
-                else if(nodeExternalParsers != null && n instanceof TextNode) {
+                } else if (nodeExternalParsers != null && n instanceof TextNode) {
                     TextNode t = (TextNode) n;
 
-                    for(TextNodeExternalParser textNodeExternalParser: nodeExternalParsers) {
+                    for (TextNodeExternalParser textNodeExternalParser : nodeExternalParsers) {
                         Optional<Parser<?>> parser = textNodeExternalParser.getParserIfApplicable(t,
                                 currentContextStack, contextualData);
-                        if(parser.isPresent()) {
+                        if (parser.isPresent()) {
                             return parser.get();
                         }
                     }
@@ -131,10 +129,9 @@ public class NodeParserConfig {
             @Override
             protected List<ContextReader> readContexts(List<Context> ancestorStack, ContextType type,
                                                        ContextMetadata previousOfType, Node n) {
-                if(n instanceof Element) {
+                if (n instanceof Element) {
                     return parseElement(ancestorStack, type, (Element) n, contextualData);
-                }
-                else if(n instanceof TextNode) {
+                } else if (n instanceof TextNode) {
                     return parseTextNode(ancestorStack, type, (TextNode) n, contextualData);
                 }
                 throw new IllegalArgumentException("Received a node of unknown type : " + n);

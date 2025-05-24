@@ -4,41 +4,68 @@ import com.github.unaszole.bible.parsing.Context;
 
 import java.util.*;
 
-public enum IdType {
-    NO_ID(null),
-    BIBLE_BOOK(new IdField[]{ IdField.BIBLE_BOOK }),
-    BIBLE_CHAPTER(new IdField[]{ IdField.BIBLE_BOOK, IdField.BIBLE_CHAPTER }),
-    BIBLE_VERSE(new IdField[]{ IdField.BIBLE_BOOK, IdField.BIBLE_CHAPTER, IdField.BIBLE_VERSES });
+public class IdType {
+    public static final IdType NO_ID = new IdType(null);
 
-    public final IdField[] fields;
+    public final IdField<?>[] fields;
 
-    IdType(IdField[] fields) {
+    public IdType(IdField<?>[] fields) {
         this.fields = fields;
     }
 
-    public Optional<ContextId> getFirst(List<Context> ancestorStack) {
-        IdField lastField = fields[fields.length - 1];
+    public boolean isValid(Map<IdField<?>, ?> idMap) {
+        for(IdField<?> field: fields) {
+            if(!idMap.containsKey(field)) {
+                // ID missing a required field.
+                return false;
+            }
+            Object fieldValue = idMap.get(field);
+            if(field.type.valueOf(fieldValue) != fieldValue) {
+                // The field value is not yet in canonical form.
+                return false;
+            }
+        }
 
-        Optional newLastField = lastField.fieldType.getFirst();
-        if(newLastField.isPresent()) {
-            Map<IdField, Object> nextIdMap = new HashMap<>();
-            // Loop through all ancestors to collect their ID fields.
-            for(Context ancestor: ancestorStack) {
-                if(ancestor.metadata.type.idType().fields != null) {
-                    for(IdField fieldDef: ancestor.metadata.type.idType().fields) {
-                        if(Arrays.stream(fields).anyMatch(f -> f == fieldDef)){
-                            // Field from ancestor is also needed for current ID : take it.
-                            nextIdMap.computeIfAbsent(fieldDef, ancestor.metadata.id::get);
-                        }
+        // All required fields are well defined in the map : ensure there is no additional unexpected fields.
+        return idMap.size() == fields.length;
+    }
+
+    private <T> void withFieldFromAncestor(ContextId.Builder builder, Context ancestor, IdField<T> field) {
+        if(!builder.has(field)) {
+            builder.with(field, ancestor.metadata.id.get(field));
+        }
+    }
+
+    private ContextId.Builder buildFromAncestors(List<Context> ancestorStack) {
+        ContextId.Builder newIdBuilder = new ContextId.Builder(this);
+        // Loop through all ancestors to collect their ID fields.
+        for(Context ancestor: ancestorStack) {
+            if(ancestor.metadata.type.idType().fields != null) {
+                // If the ancestory has an ID, check all of its fields.
+                for(IdField<?> fieldDef: ancestor.metadata.type.idType().fields) {
+                    if(Arrays.stream(fields).anyMatch(f -> f == fieldDef)){
+                        // Field from ancestor is also needed for current ID : take it.
+                        withFieldFromAncestor(newIdBuilder, ancestor, fieldDef);
                     }
                 }
             }
-
-            nextIdMap.put(lastField, newLastField.get());
-            return Optional.of(new ContextId(this, nextIdMap));
         }
+        return newIdBuilder;
+    }
 
+    private <T> Optional<ContextId> withNewValueForField(IdField<T> field, List<Context> ancestorStack) {
+        Optional<T> newLastField = field.type.first();
+        if(newLastField.isPresent()) {
+            ContextId.Builder newIdBuilder = buildFromAncestors(ancestorStack);
+            newIdBuilder.with(field, newLastField.get());
+            return Optional.of(newIdBuilder.build());
+        }
         return Optional.empty();
+    }
+
+    public Optional<ContextId> getFirst(List<Context> ancestorStack) {
+        IdField<?> lastField = fields[fields.length - 1];
+        return withNewValueForField(lastField, ancestorStack);
     }
 
     public Optional<ContextId> getNewId(ContextMetadata previousOfType, List<Context> ancestorStack) {
@@ -53,9 +80,9 @@ public enum IdType {
     }
 
     @SafeVarargs
-    public final ContextId ofFields(Map.Entry<IdField, Object>... fieldEntries) {
-        Map<IdField, Object> idMap = new HashMap<>();
-        for(Map.Entry<IdField, Object> fieldEntry: fieldEntries) {
+    public final ContextId ofFields(Map.Entry<IdField<?>, ?>... fieldEntries) {
+        Map<IdField<?>, Object> idMap = new HashMap<>();
+        for(Map.Entry<IdField<?>, ?> fieldEntry: fieldEntries) {
             if(Arrays.stream(fields).noneMatch(f -> f == fieldEntry.getKey())) {
                 throw new IllegalArgumentException("Wrong fields : unexpected field " + fieldEntry + " for an ID of type " + this);
             }

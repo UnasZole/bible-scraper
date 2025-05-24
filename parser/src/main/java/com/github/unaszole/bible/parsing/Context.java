@@ -20,7 +20,7 @@ public class Context {
 	private Context(ContextMetadata metadata, Object value, List<Context> children, long contextUniqueId) {
 		this.metadata = metadata;
 		try {
-			this.value = metadata.type.valueType().of(value);
+			this.value = metadata.type.valueType().valueOf(value);
 		}
 		catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Invalid value " + value + " for context of type " + metadata.type + " : " + e.getMessage());
