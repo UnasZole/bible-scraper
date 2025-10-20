@@ -30,8 +30,8 @@ bible:
       args: { BOOK: Nombres }
 
     - osis: Deut
-      names: [ Deutéronome, Deut, Deut%C3%A9ronome ]
-      args: { BOOK: Deutéronome, Deutéron. }
+      names: [ Deutéronome, Deut, Deut%C3%A9ronome, Deutéron. ]
+      args: { BOOK: Deutéronome }
 
     - osis: Josh
       names: [ Josué, Josu%C3%A9 ]
