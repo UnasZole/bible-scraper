@@ -396,11 +396,12 @@ html:
           regexp: (?:CHAPITRE|Psaume|PSAUME) (\d+|[MmDdCcLlXxVvIi]+|PREMIER|Premier|UNIQUE).*
 
     - selector: "div.alinea"
-      withAncestors: [ CHAPTER_INTRO ]
       withoutAncestors: [ NOTE ]
       contexts:
-        - type: TEXT
-          op: text
+        - type: CHAPTER_INTRO
+          descendants:
+            - type: TEXT
+              op: text
 
   externalParsers:
     # A paragraph starting with number+dot+space is a verse and must be parsed node-per-node.
