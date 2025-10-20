@@ -116,10 +116,10 @@ public class ContextStreamWriter {
         int firstVerse = 0;
         int lastVerse = 0;
         if(values.containsKey(FlatText.REF_VERSES)) {
-            int[] verseRange = (int[]) values.get(FlatText.REF_VERSES).get(0);
-            firstVerse = verseRange[0];
-            if(verseRange.length > 1) {
-                lastVerse = verseRange[1];
+            List<Integer> verseRange = (List<Integer>) values.get(FlatText.REF_VERSES).get(0);
+            firstVerse = verseRange.getFirst();
+            if(verseRange.size() > 1) {
+                lastVerse = verseRange.getLast();
             }
         }
 

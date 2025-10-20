@@ -44,7 +44,9 @@ public class HttpSourceFile implements SourceFile {
             String method = propertySource.apply("Method").orElse("GET");
             String body = propertySource.apply("Body").orElse(null);
 
-            return Optional.of(new HttpSourceFile(toUrl(url.get()), method, body));
+            String userAgent = propertySource.apply("UserAgent").orElse("BibleScraper/1.0 (https://github.com/UnasZole/bible-scraper)");
+
+            return Optional.of(new HttpSourceFile(toUrl(url.get()), Map.of("User-Agent", userAgent), method, body));
         }
     }
 
