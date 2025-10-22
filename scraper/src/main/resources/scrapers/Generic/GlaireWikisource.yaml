@@ -521,7 +521,7 @@ html:
           op: text
           regexp: (?:CHAPITRE|Psaume|PSAUME) (\d+|[MmDdCcLlXxVvIi]+|PREMIER|Premier|UNIQUE).*
 
-    - selector: "div.alinea"
+    - selector: "h4 + div.alinea"
       withoutAncestors: [ NOTE ]
       contexts:
         - type: CHAPTER_INTRO
