@@ -15,30 +15,37 @@ bible:
 
   books:
     - osis: Gen
+      names: [ Genesis ]
       args: { BOOK: Genesis }
       chapters: [ { from: 1, to: 50 } ]
 
     - osis: Exod
+      names: [ Exodus ]
       args: { BOOK: Exodus }
       chapters: [ { from: 1, to: 40 } ]
 
     - osis: Lev
+      names: [ Leviticus ]
       args: { BOOK: Leviticus }
       chapters: [ { from: 1, to: 27 } ]
 
     - osis: Num
+      names: [ Numbers ]
       args: { BOOK: Numbers }
       chapters: [ { from: 1, to: 36 } ]
 
     - osis: Deut
+      names: [ Deuteronomy ]
       args: { BOOK: Deuteronomy }
       chapters: [ { from: 1, to: 34 } ]
 
     - osis: Josh
+      names: [ Joshua ]
       args: { BOOK: Joshua }
       chapters: [ { from: 1, to: 24 } ]
 
     - osis: Judg
+      names: [ Judges ]
       args: { BOOK: Judges }
       chapters: [ { from: 1, to: 21 } ]
 
@@ -47,26 +54,32 @@ bible:
       chapters: [ { from: 1, to: 4 } ]
 
     - osis: 1Sam
+      names: [ 1 Samuel ]
       args: { BOOK: 1 Samuel }
       chapters: [ { from: 1, to: 31 } ]
 
     - osis: 2Sam
+      names: [ 2 Samuel ]
       args: { BOOK: 2 Samuel }
       chapters: [ { from: 1, to: 24 } ]
 
     - osis: 1Kgs
+      names: [ 1 Kings ]
       args: { BOOK: 1 Kings }
       chapters: [ { from: 1, to: 22 } ]
 
     - osis: 2Kgs
+      names: [ 2 Kings ]
       args: { BOOK: 2 Kings }
       chapters: [ { from: 1, to: 25 } ]
 
     - osis: 1Chr
+      names: [ 1 Chronicles ]
       args: { BOOK: 1 Chronicles }
       chapters: [ { from: 1, to: 29 } ]
 
     - osis: 2Chr
+      names: [ 2 Chronicles ]
       args: { BOOK: 2 Chronicles }
       chapters: [ { from: 1, to: 36 } ]
 
@@ -75,10 +88,12 @@ bible:
       chapters: [ { from: 1, to: 10 } ]
 
     - osis: Neh
+      names: [ Nehemiah ]
       args: { BOOK: Nehemiah }
       chapters: [ { from: 1, to: 13 } ]
 
     - osis: Esth
+      names: [ Esther ]
       args: { BOOK: Esther }
       chapters: [ { from: 1, to: 10 } ]
 
@@ -87,14 +102,17 @@ bible:
       chapters: [ { from: 1, to: 42 } ]
 
     - osis: Ps
+      names: [ Psalms, Psalm ]
       args: { BOOK: Psalms }
       chapters: [ { from: 1, to: 150 } ]
 
     - osis: Prov
+      names: [ Proverbs ]
       args: { BOOK: Proverbs }
       chapters: [ { from: 1, to: 31 } ]
 
     - osis: Eccl
+      names: [ Ecclesiastes ]
       args: { BOOK: Ecclesiastes }
       chapters: [ { from: 1, to: 12 } ]
 
@@ -103,26 +121,32 @@ bible:
       chapters: [ { from: 1, to: 8 } ]
 
     - osis: Isa
+      names: [ Isaiah ]
       args: { BOOK: Isaiah }
       chapters: [ { from: 1, to: 66 } ]
 
     - osis: Jer
+      names: [ Jeremiah ]
       args: { BOOK: Jeremiah }
       chapters: [ { from: 1, to: 52 } ]
 
     - osis: Lam
+      names: [ Lamentations ]
       args: { BOOK: Lamentations }
       chapters: [ { from: 1, to: 5 } ]
 
     - osis: Ezek
+      names: [ Ezekiel ]
       args: { BOOK: Ezekiel }
       chapters: [ { from: 1, to: 48 } ]
 
     - osis: Dan
+      names: [ Daniel ]
       args: { BOOK: Daniel }
       chapters: [ { from: 1, to: 12 } ]
 
     - osis: Hos
+      names: [ Hosea ]
       args: { BOOK: Hosea }
       chapters: [ { from: 1, to: 14 } ]
 
@@ -135,6 +159,7 @@ bible:
       chapters: [ { from: 1, to: 9 } ]
 
     - osis: Obad
+      names: [ Obadiah ]
       args: { BOOK: Obadiah }
       chapters: [ { at: 1 } ]
 
@@ -143,34 +168,42 @@ bible:
       chapters: [ { from: 1, to: 4 } ]
 
     - osis: Mic
+      names: [ Micah ]
       args: { BOOK: Micah }
       chapters: [ { from: 1, to: 7 } ]
 
     - osis: Nah
+      names: [ Nahum ]
       args: { BOOK: Nahum }
       chapters: [ { from: 1, to: 3 } ]
 
     - osis: Hab
+      names: [ Habakkuk ]
       args: { BOOK: Habakkuk }
       chapters: [ { from: 1, to: 3 } ]
 
     - osis: Zeph
+      names: [ Zephaniah ]
       args: { BOOK: Zephaniah }
       chapters: [ { from: 1, to: 3 } ]
 
     - osis: Hag
+      names: [ Haggai ]
       args: { BOOK: Haggai }
       chapters: [ { from: 1, to: 2 } ]
 
     - osis: Zech
+      names: [ Zechariah ]
       args: { BOOK: Zechariah }
       chapters: [ { from: 1, to: 14 } ]
 
     - osis: Mal
+      names: [ Malachi ]
       args: { BOOK: Malachi }
       chapters: [ { from: 1, to: 4 } ]
 
     - osis: Matt
+      names: [ Matthew ]
       args: { BOOK: Matthew }
       chapters: [ { from: 1, to: 28 } ]
 
@@ -191,46 +224,57 @@ bible:
       chapters: [ { from: 1, to: 28 } ]
 
     - osis: Rom
+      names: [ Romans ]
       args: { BOOK: Romans }
       chapters: [ { from: 1, to: 16 } ]
 
     - osis: 1Cor
+      names: [ 1 Corinthians ]
       args: { BOOK: 1+Corinthians }
       chapters: [ { from: 1, to: 16 } ]
 
     - osis: 2Cor
+      names: [ 2 Corinthians ]
       args: { BOOK: 2+Corinthians }
       chapters: [ { from: 1, to: 13 } ]
 
     - osis: Gal
+      names: [ Galatians ]
       args: { BOOK: Galatians }
       chapters: [ { from: 1, to: 6 } ]
 
     - osis: Eph
+      names: [ Ephesians ]
       args: { BOOK: Ephesians }
       chapters: [ { from: 1, to: 6 } ]
 
     - osis: Phil
+      names: [ Philippians ]
       args: { BOOK: Philippians }
       chapters: [ { from: 1, to: 4 } ]
 
     - osis: Col
+      names: [ Colossians ]
       args: { BOOK: Colossians }
       chapters: [ { from: 1, to: 4 } ]
 
     - osis: 1Thess
+      names: [ 1 Thessalonians ]
       args: { BOOK: 1 Thessalonians }
       chapters: [ { from: 1, to: 5 } ]
 
     - osis: 2Thess
+      names: [ 2 Thessalonians ]
       args: { BOOK: 2 Thessalonians }
       chapters: [ { from: 1, to: 3 } ]
 
     - osis: 1Tim
+      names: [ 1 Timothy ]
       args: { BOOK: 1 Timothy }
       chapters: [ { from: 1, to: 6 } ]
 
     - osis: 2Tim
+      names: [ 2 Timothy ]
       args: { BOOK: 2 Timothy }
       chapters: [ { from: 1, to: 4 } ]
 
@@ -239,34 +283,42 @@ bible:
       chapters: [ { from: 1, to: 3 } ]
 
     - osis: Phlm
+      names: [ Phlm ]
       args: { BOOK: Philemon }
       chapters: [ { at: 1 } ]
 
     - osis: Heb
+      names: [ Hebrews ]
       args: { BOOK: Hebrews }
       chapters: [ { from: 1, to: 13 } ]
 
     - osis: Jas
+      names: [ James ]
       args: { BOOK: James }
       chapters: [ { from: 1, to: 5 } ]
 
     - osis: 1Pet
+      names: [ 1 Peter ]
       args: { BOOK: 1 Peter }
       chapters: [ { from: 1, to: 5 } ]
 
     - osis: 2Pet
+      names: [ 2 Peter ]
       args: { BOOK: 2 Peter }
       chapters: [ { from: 1, to: 3 } ]
 
     - osis: 1John
+      names: [ 1 John ]
       args: { BOOK: 1 John }
       chapters: [ { from: 1, to: 5 } ]
 
     - osis: 2John
+      names: [ 2 John ]
       args: { BOOK: 2 John }
       chapters: [ { at: 1 } ]
 
     - osis: 3John
+      names: [ 3 John ]
       args: { BOOK: 3 John }
       chapters: [ { at: 1 } ]
 
@@ -275,6 +327,7 @@ bible:
       chapters: [ { at: 1 } ]
 
     - osis: Rev
+      names: [ Revelation ]
       args: { BOOK: Revelation }
       chapters: [ { from: 1, to: 22 } ]
 
@@ -331,13 +384,6 @@ html:
               - type: TEXT
                 op: wholeText
 
-          - selector: "sup.crossref > a"
-            contexts:
-              - type: NOTE
-                descendants:
-                  - type: TEXT
-                    op: attribute=data-passage
-
         externalParsers:
           - selector: "sup.footnote > a"
             textParser:
@@ -371,3 +417,32 @@ html:
                               descendants:
                                 - type: TEXT
                                   op: text
+
+          - selector: "sup.crossref > a"
+            contextsBefore:
+              - type: NOTE
+            textParser:
+              stringExtractor:
+                op: attribute=data-passage
+              sliding:
+                rules:
+                  # Starting space : just normal text.
+                  - regexp: " "
+                    contexts:
+                      - type: TEXT
+                        literal: " "
+                  # Reference to a single verse or verse range.
+                  - regexp: "[a-zA-Z0-9 ]+ \\d+:\\d+(?:–\\d+)?(?:; |$)"
+                    contexts:
+                      - type: REFERENCE
+                        descendants:
+                          - type: FULL_REF
+                            descendants:
+                              - type: REF_BOOK
+                                regexp: "^([a-zA-Z0-9 ]+) \\d+:\\d+(?:–\\d+)?;? ?$"
+                              - type: REF_CHAPTER
+                                regexp: "^[a-zA-Z0-9 ]+ (\\d+):\\d+(?:–\\d+)?;? ?$"
+                              - type: REF_VERSES
+                                regexp: "^[a-zA-Z0-9 ]+ \\d+:(\\d+(?:–\\d+)?);? ?$"
+                          - type: TEXT
+                            regexp: "(.*)"
