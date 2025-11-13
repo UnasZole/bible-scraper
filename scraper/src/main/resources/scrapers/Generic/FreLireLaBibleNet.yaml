@@ -1,0 +1,395 @@
+description: "Bibles multiples de lire.la-bible.net"
+inputs: [ BIBLE ]
+bible:
+  metadata:
+    language: fr
+    systemName: "fre{BIBLE}llbn"
+    title: "{BIBLE} extraite de lire.la-bible.net"
+
+  patterns:
+    chapterUrl: "https://lire.la-bible.net/bible/{BIBLE}/{BOOK}.{CHAPTER}"
+    chapterPublishedNumber: "{CHAPTER}"
+
+  args:
+    # By default, the CHAPTER argument should be evaluated only within chapter sequence, and default to $i, the OSIS chapter number.
+    CHAPTER: = $i
+
+  books:
+    - osis: Gen
+      args: { BOOK: GEN }
+      chapters: [ { from: 1, to: 50 } ]
+
+    - osis: Exod
+      args: { BOOK: EXO }
+      chapters: [ { from: 1, to: 40 } ]
+
+    - osis: Lev
+      args: { BOOK: LEV }
+      chapters: [ { from: 1, to: 27 } ]
+
+    - osis: Num
+      args: { BOOK: NUM }
+      chapters: [ { from: 1, to: 36 } ]
+
+    - osis: Deut
+      args: { BOOK: DEU }
+      chapters: [ { from: 1, to: 34 } ]
+
+    - osis: Josh
+      args: { BOOK: JOS }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: Judg
+      args: { BOOK: JDG }
+      chapters: [ { from: 1, to: 21 } ]
+
+    - osis: 1Sam
+      args: { BOOK: 1SA }
+      chapters: [ { from: 1, to: 31 } ]
+
+    - osis: 2Sam
+      args: { BOOK: 2SA }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: 1Kgs
+      args: { BOOK: 1KI }
+      chapters: [ { from: 1, to: 22 } ]
+
+    - osis: 2Kgs
+      args: { BOOK: 2KI }
+      chapters: [ { from: 1, to: 25 } ]
+
+    - osis: Isa
+      args: { BOOK: ISA }
+      chapters: [ { from: 1, to: 66 } ]
+
+    - osis: Jer
+      args: { BOOK: JER }
+      chapters: [ { from: 1, to: 52 } ]
+
+    - osis: Ezek
+      args: { BOOK: EZK }
+      chapters: [ { from: 1, to: 48 } ]
+
+    - osis: Hos
+      args: { BOOK: HOS }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Joel
+      args: { BOOK: JOL }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Amos
+      args: { BOOK: AMO }
+      chapters: [ { from: 1, to: 9 } ]
+
+    - osis: Obad
+      args: { BOOK: OBA }
+      chapters: [ { at: 1 } ]
+
+    - osis: Jonah
+      args: { BOOK: JON }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Mic
+      args: { BOOK: MIC }
+      chapters: [ { from: 1, to: 7 } ]
+
+    - osis: Nah
+      args: { BOOK: NAM }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Hab
+      args: { BOOK: HAB }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Zeph
+      args: { BOOK: ZEP }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Hag
+      args: { BOOK: HAG }
+      chapters: [ { from: 1, to: 2 } ]
+
+    - osis: Zech
+      args: { BOOK: ZEC }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: Mal
+      args: { BOOK: MAL }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Ps
+      args: { BOOK: PSA }
+      chapters: [ { from: 1, to: 150 } ]
+
+    - osis: Job
+      args: { BOOK: JOB }
+      chapters: [ { from: 1, to: 42 } ]
+
+    - osis: Prov
+      args: { BOOK: PRO }
+      chapters: [ { from: 1, to: 31 } ]
+
+    - osis: Ruth
+      args: { BOOK: RUT }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Song
+      args: { BOOK: SNG }
+      chapters: [ { from: 1, to: 8 } ]
+
+    - osis: Eccl
+      args: { BOOK: ECC }
+      chapters: [ { from: 1, to: 12 } ]
+
+    - osis: Lam
+      args: { BOOK: LAM }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: Esth
+      args: { BOOK: EST }
+      chapters: [ { from: 1, to: 10 } ]
+
+    - osis: Dan
+      args: { BOOK: DAN }
+      chapters: [ { from: 1, to: 12 } ]
+
+    - osis: Ezra
+      names: [ Esd ]
+      args: { BOOK: EZR }
+      chapters: [ { from: 1, to: 10 } ]
+
+    - osis: Neh
+      args: { BOOK: NEH }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: 1Chr
+      args: { BOOK: 1CH }
+      chapters: [ { from: 1, to: 29 } ]
+
+    - osis: 2Chr
+      args: { BOOK: 2CH }
+      chapters: [ { from: 1, to: 36 } ]
+
+    - osis: EsthGr
+      args: { BOOK: ESG }
+      chapters: [ { from: 1, to: 10 } ]
+
+    - osis: Jdt
+      args: { BOOK: JDT }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: Tob
+      args: { BOOK: TOB }
+      chapters: [ { from: 1, to: 14 } ]
+
+    - osis: 1Macc
+      args: { BOOK: 1MA }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 2Macc
+      args: { BOOK: 2MA }
+      chapters: [ { from: 1, to: 15 } ]
+
+    - osis: Wis
+      args: { BOOK: WIS }
+      chapters: [ { from: 1, to: 19 } ]
+
+    - osis: Sir
+      args: { BOOK: SIR }
+      chapters: [ { from: 1, to: 51 } ]
+
+    - osis: Bar
+      args: { BOOK: BAR }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: EpJer
+      args: { BOOK: LJE }
+      chapters: [ { at: 1 } ]
+
+    - osis: 1Esd
+      args: { BOOK: 1ES }
+      chapters: [ { from: 1, to: 9 } ]
+
+    - osis: 2Esd
+      args: { BOOK: 2ES }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 3Macc
+      args: { BOOK: 3MA }
+      chapters: [ { from: 1, to: 9 } ]
+
+    - osis: 4Macc
+      args: { BOOK: 4MA }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: PrMan
+      args: { BOOK: MAN }
+      chapters: [ { at: 1 } ]
+
+    - osis: AddPs
+      args: { BOOK: PS2 }
+      chapters: [ { at: 1 } ]
+
+    - osis: AddDan
+      args: { BOOK: DAG }
+      chapters: [ { at: 1 }, { from: 13, to: 14 } ]
+
+    - osis: Matt
+      args: { BOOK: MAT }
+      chapters: [ { from: 1, to: 28 } ]
+
+    - osis: Mark
+      args: { BOOK: MRK }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: Luke
+      args: { BOOK: LUK }
+      chapters: [ { from: 1, to: 24 } ]
+
+    - osis: John
+      args: { BOOK: JHN }
+      chapters: [ { from: 1, to: 21 } ]
+
+    - osis: Acts
+      args: { BOOK: ACT }
+      chapters: [ { from: 1, to: 28 } ]
+
+    - osis: Rom
+      args: { BOOK: ROM }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 1Cor
+      args: { BOOK: 1CO }
+      chapters: [ { from: 1, to: 16 } ]
+
+    - osis: 2Cor
+      args: { BOOK: 2CO }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Gal
+      args: { BOOK: GAL }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Eph
+      args: { BOOK: EPH }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: Phil
+      args: { BOOK: PHP }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Col
+      args: { BOOK: COL }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: 1Thess
+      args: { BOOK: 1TH }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2Thess
+      args: { BOOK: 2TH }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: 1Tim
+      args: { BOOK: 1TI }
+      chapters: [ { from: 1, to: 6 } ]
+
+    - osis: 2Tim
+      args: { BOOK: 2TI }
+      chapters: [ { from: 1, to: 4 } ]
+
+    - osis: Titus
+      args: { BOOK: TIT }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: Phlm
+      args: { BOOK: PHM }
+      chapters: [ { at: 1 } ]
+
+    - osis: Heb
+      args: { BOOK: HEB }
+      chapters: [ { from: 1, to: 13 } ]
+
+    - osis: Jas
+      args: { BOOK: JAS }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 1Pet
+      args: { BOOK: 1PE }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2Pet
+      args: { BOOK: 2PE }
+      chapters: [ { from: 1, to: 3 } ]
+
+    - osis: 1John
+      args: { BOOK: 1JN }
+      chapters: [ { from: 1, to: 5 } ]
+
+    - osis: 2John
+      args: { BOOK: 2JN }
+      chapters: [ { at: 1 } ]
+
+    - osis: 3John
+      args: { BOOK: 3JN }
+      chapters: [ { at: 1 } ]
+
+    - osis: Jude
+      args: { BOOK: JUD }
+      chapters: [ { at: 1 } ]
+
+    - osis: Rev
+      args: { BOOK: REV }
+      chapters: [ { from: 1, to: 22 } ]
+
+html:
+  elements:
+    - selector: "ibep-bible-chapter > h1"
+      contexts:
+        - type: CHAPTER_TITLE
+          descendants:
+            - type: TEXT
+              op: text
+
+    - selector: "ibep-render-bible-content bible-ms"
+      contexts:
+        - type: MAJOR_SECTION_TITLE
+          descendants:
+            - type: TEXT
+              op: text
+
+    - selector: "ibep-render-bible-content bible-s"
+      contexts:
+        - type: SECTION_TITLE
+          descendants:
+            - type: TEXT
+              op: text
+
+    - selector: "ibep-render-bible-content :is(bible-p, bible-m)"
+      contexts:
+        - type: PARAGRAPH_BREAK
+
+    - selector: "ibep-render-bible-content bible-q"
+      contexts:
+        - type: POETRY_LINE_START
+          op: "literal=1"
+
+    - selector: "ibep-render-bible-content bible-v"
+      contexts:
+        - type: VERSE
+          selector: "> sub"
+          op: ownText
+
+    - selector: "ibep-render-bible-content ibep-verse-text-renderer > span"
+      withAncestors: [ VERSE ]
+      contexts:
+        - type: TEXT
+          op: wholeOwnText
+
+    - selector: "ibep-render-bible-content ibep-verse-text-renderer > bible-nd > span"
+      withAncestors: [ VERSE ]
+      contexts:
+        - type: TEXT
+          op: wholeOwnText

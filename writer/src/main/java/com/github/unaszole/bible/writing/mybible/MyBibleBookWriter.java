@@ -6,6 +6,7 @@ import org.crosswire.jsword.versification.BibleBook;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class MyBibleBookWriter implements BookWriter {
@@ -104,7 +105,7 @@ public class MyBibleBookWriter implements BookWriter {
     private final MyBibleBookContentsWriter writer;
 
     public MyBibleBookWriter(VerseSink sink, BibleBook book) {
-        this.writer = new MyBibleBookContentsWriter(sink, OSIS_TO_MYBIBLE.get(book));
+        this.writer = new MyBibleBookContentsWriter(sink, Optional.ofNullable(OSIS_TO_MYBIBLE.get(book)).orElse(100));
     }
 
     @Override

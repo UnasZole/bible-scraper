@@ -14,7 +14,7 @@ public enum BibleContainers implements ContextType {
      * (typically, when the title spans several verses or before the first verse), they should usually be rendered as
      * one single title.
      */
-    PSALM_TITLE(NO_ID, NO_VALUE, NULL, one(FlatText.FLAT_TEXT)),
+    PSALM_TITLE(NO_ID, NO_VALUE, NO_IMPLICIT, one(FlatText.FLAT_TEXT)),
 
     /**
      * A verse.

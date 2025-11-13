@@ -62,6 +62,8 @@ public class WriterArgument {
 
             case MYBIBLE:
                 if(outputPath.isPresent()) {
+                    // We're not using stdout for actual output : plug the progress bar.
+                    ExecutionMonitor.INSTANCE.registerUpdateCallback(this::printStatus);
                     return new MyBibleBibleWriter(outputPath.get(), docMeta);
                 }
                 return new MyBibleBibleWriter(new PrintWriter(System.out));
