@@ -35,7 +35,7 @@ public class PageListParser implements ParserCore<PageData> {
             return textParserConfig.getLocalParser(
                     Files.newInputStream(cachedDownloader.getFile(pageData.sourceFile)),
                     currentContextStack,
-                    new ContextualData(pageData.args, bookReferences, pageData.sourceFile.getBaseUri())
+                    new ContextualData(pageData.args, bookReferences, pageData.sourceFile.getBaseUri(), cachedDownloader)
             );
         } catch (IOException e) {
             throw new RuntimeException(e);

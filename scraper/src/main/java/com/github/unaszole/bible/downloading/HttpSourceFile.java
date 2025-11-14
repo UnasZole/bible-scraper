@@ -17,6 +17,8 @@ import java.util.function.Function;
  * A remote source file fetched via HTTP.
  */
 public class HttpSourceFile implements SourceFile {
+    private static final String DEFAULT_USER_AGENT = "BibleScraper/1.0 (https://github.com/UnasZole/bible-scraper)";
+
     public static class Builder implements SourceFile.Builder {
         public static URL toUrl(String str) {
             try {
@@ -44,7 +46,7 @@ public class HttpSourceFile implements SourceFile {
             String method = propertySource.apply("Method").orElse("GET");
             String body = propertySource.apply("Body").orElse(null);
 
-            String userAgent = propertySource.apply("UserAgent").orElse("BibleScraper/1.0 (https://github.com/UnasZole/bible-scraper)");
+            String userAgent = propertySource.apply("UserAgent").orElse(DEFAULT_USER_AGENT);
 
             return Optional.of(new HttpSourceFile(toUrl(url.get()), Map.of("User-Agent", userAgent), method, body));
         }
@@ -68,7 +70,7 @@ public class HttpSourceFile implements SourceFile {
     public HttpSourceFile(URL url, Map<String, String> headers, String method, String body) {
         assert Objects.equals(url.getProtocol(), "http") || Objects.equals(url.getProtocol(), "https");
         this.url = url;
-        this.headers = headers;
+        this.headers = Optional.ofNullable(headers).orElse(Map.of("User-Agent", DEFAULT_USER_AGENT));
         this.method = method;
         this.body = body;
     }

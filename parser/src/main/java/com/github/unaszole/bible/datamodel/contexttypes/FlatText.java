@@ -59,7 +59,11 @@ public enum FlatText implements ContextType {
      */
     LINK(NO_ID, URI, NO_IMPLICIT, atLeastOne(TEXT)),
 
-    MARKUP(NO_ID, NO_VALUE, NULL, one(TRANSLATION_ADD, QUOTE, OT_QUOTE, SPEAKER, REFERENCE, LINK)),
+    FIG_ALT(NO_ID, STRING, NO_IMPLICIT),
+    FIG_CAPTION(NO_ID, STRING, NO_IMPLICIT),
+    FIGURE(NO_ID, ATTACHMENT, NO_IMPLICIT, atMostOne(FIG_ALT), atMostOne(FIG_CAPTION), atMostOne(FULL_REF)),
+
+    MARKUP(NO_ID, NO_VALUE, NULL, one(TRANSLATION_ADD, QUOTE, OT_QUOTE, SPEAKER, REFERENCE, LINK, FIGURE)),
     /**
      * An inline text, ie. a text that does not have any structure or any note whatsoever.
      * It may only contain semantic or formatting markup around portions of the text.

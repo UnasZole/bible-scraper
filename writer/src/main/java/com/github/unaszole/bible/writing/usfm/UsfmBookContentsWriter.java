@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.usfm;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
@@ -12,8 +13,8 @@ public class UsfmBookContentsWriter extends UsfmStructuredTextWriter implements 
     private boolean inPsalmTitle = false;
     private String pendingVerseTags = null;
 
-    public UsfmBookContentsWriter(PrintWriter out) {
-        super(out, "\\p");
+    public UsfmBookContentsWriter(PrintWriter out, OutputContainer container) {
+        super(out, container, "\\p");
     }
 
     @Override

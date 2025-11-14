@@ -38,7 +38,7 @@ public class ContextId {
     }
 
 
-    private final IdType idType;
+    public final IdType idType;
     private final Map<IdField<?>, Object> idMap;
 
     public ContextId(IdType idType, Map<IdField<?>, Object> idMap) {

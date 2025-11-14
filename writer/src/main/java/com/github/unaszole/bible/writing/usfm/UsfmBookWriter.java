@@ -1,13 +1,11 @@
 package com.github.unaszole.bible.writing.usfm;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import org.crosswire.jsword.versification.BibleBook;
 
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -141,24 +139,18 @@ public class UsfmBookWriter implements BookWriter {
     }
 
     private final PrintWriter out;
-    private final boolean closeOut;
+    private final OutputContainer container;
 
-    private UsfmBookWriter(BibleBook book, PrintWriter out, boolean closeOut) {
+    private UsfmBookWriter(BibleBook book, PrintWriter out, OutputContainer container) {
         this.out = out;
-        this.closeOut = closeOut;
-
+        this.container = container;
         out.println("\\id " + OSIS_TO_USFM.get(book));
     }
 
-    public UsfmBookWriter(BibleBook book, PrintWriter out) {
-        // Do not close the outWriter : it was provided externally, so it's the caller's job to manage it.
-        this(book, out, false);
-    }
-
-    public UsfmBookWriter(BibleBook book, int bookNb, Path outFolder) throws IOException {
-        this(book, new PrintWriter(Files.newBufferedWriter(
-                outFolder.resolve(String.format("%02d", bookNb) + "_" + book.getOSIS() + ".usfm")
-        )), true);
+    public UsfmBookWriter(BibleBook book, int bookNb, OutputContainer container) {
+        this(book, new PrintWriter(
+                container.createOutputStream(String.format("%02d", bookNb) + "_" + book.getOSIS() + ".usfm")
+        ), container);
     }
 
     @Override
@@ -168,7 +160,7 @@ public class UsfmBookWriter implements BookWriter {
 
     @Override
     public void introduction(Consumer<StructuredTextWriter.BookIntroWriter> writes) {
-        try(StructuredTextWriter.BookIntroWriter introWriter = new UsfmBookIntroWriter(out)) {
+        try(StructuredTextWriter.BookIntroWriter introWriter = new UsfmBookIntroWriter(out, container)) {
             writes.accept(introWriter);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -177,7 +169,7 @@ public class UsfmBookWriter implements BookWriter {
 
     @Override
     public void contents(Consumer<StructuredTextWriter.BookContentsWriter> writes) {
-        try(StructuredTextWriter.BookContentsWriter contentsWriter = new UsfmBookContentsWriter(out)) {
+        try(StructuredTextWriter.BookContentsWriter contentsWriter = new UsfmBookContentsWriter(out, container)) {
             writes.accept(contentsWriter);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -187,8 +179,6 @@ public class UsfmBookWriter implements BookWriter {
     @Override
     public void close() {
         out.flush();
-        if(closeOut) {
-            out.close();
-        }
+        out.close();
     }
 }

@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.usfm;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
@@ -7,8 +8,8 @@ import java.io.PrintWriter;
 import java.util.function.Consumer;
 
 public class UsfmBookIntroWriter extends UsfmStructuredTextWriter implements StructuredTextWriter.BookIntroWriter {
-    public UsfmBookIntroWriter(PrintWriter out) {
-        super(out, "\\ip");
+    public UsfmBookIntroWriter(PrintWriter out, OutputContainer container) {
+        super(out, container, "\\ip");
     }
 
     @Override

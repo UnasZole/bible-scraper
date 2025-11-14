@@ -4,6 +4,7 @@ import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.valuetypes.StdValueTypes;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
+import com.github.unaszole.bible.downloading.DownloadedAttachment;
 import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
@@ -12,7 +13,9 @@ import org.crosswire.jsword.versification.BibleBook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,6 +69,16 @@ public abstract class GenericContextExtractor<Position> {
             finalValue = Optional.ofNullable(contextualData.baseUri)
                     .map(baseUri -> baseUri.resolve(URI.create(value)))
                     .orElse(URI.create(value));
+        }
+        else if(type.valueType() == StdValueTypes.ATTACHMENT) {
+            try {
+                finalValue = new DownloadedAttachment(contextualData.downloader, Optional.ofNullable(contextualData.baseUri)
+                        .map(baseUri -> baseUri.resolve(URI.create(value)))
+                        .orElse(URI.create(value))
+                        .toURL());
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
         }
         else {
             finalValue = value;

@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.osis;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
@@ -8,8 +9,8 @@ import java.util.function.Consumer;
 
 public class OsisBookIntroWriter extends OsisStructuredTextWriter
         implements StructuredTextWriter.BookIntroWriter {
-    public OsisBookIntroWriter(XMLStreamWriter xmlWriter) {
-        super(xmlWriter);
+    public OsisBookIntroWriter(XMLStreamWriter xmlWriter, OutputContainer container) {
+        super(xmlWriter, container);
     }
 
     @Override

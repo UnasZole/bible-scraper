@@ -1,12 +1,13 @@
 package com.github.unaszole.bible.writing.osis;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.NoteTextWriter;
 
 import javax.xml.stream.XMLStreamWriter;
 
 public class OsisNoteTextWriter extends OsisTextWriter implements NoteTextWriter {
-    public OsisNoteTextWriter(XMLStreamWriter xmlWriter) {
-        super(xmlWriter);
+    public OsisNoteTextWriter(XMLStreamWriter xmlWriter, OutputContainer container) {
+        super(xmlWriter, container);
     }
 
     @Override

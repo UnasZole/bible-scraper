@@ -4,6 +4,7 @@ import com.github.unaszole.bible.writing.datamodel.BibleRef;
 
 import java.net.URI;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public interface TextWriter extends AutoCloseable {
     /**
@@ -50,6 +51,15 @@ public interface TextWriter extends AutoCloseable {
      * @param text The text contents of this link.
      */
     void link(URI uri, String text);
+
+    /**
+     * Write a figure.
+     * @param filename The file name of the attached image.
+     * @param bytes Accessor for the bytes composing the attached image.
+     * @param alt Alternative text to be rendered for users that can't view the image (or null).
+     * @param caption Caption for the figure (or null).
+     */
+    void figure(String filename, Supplier<byte[]> bytes, String alt, String caption);
 
     /**
      * Write a note.

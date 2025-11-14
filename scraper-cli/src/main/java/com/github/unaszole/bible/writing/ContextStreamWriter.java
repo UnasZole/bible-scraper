@@ -4,6 +4,7 @@ import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
 import com.github.unaszole.bible.datamodel.contexttypes.StructureMarkers;
 import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
+import com.github.unaszole.bible.datamodel.valuetypes.Attachment;
 import com.github.unaszole.bible.writing.datamodel.BibleRef;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
@@ -185,6 +186,14 @@ public class ContextStreamWriter {
 
             if(isOpen(FlatText.LINK, event)) {
                 w.link((URI) event.value, consumeAndAggregateValues(event.metadata));
+            }
+
+            if(isOpen(FlatText.FIGURE, event)) {
+                Map<ContextType, List<Object>> values = consumeAndListValuesByType(event.metadata);
+                String alt = (String) Optional.ofNullable(values.get(FlatText.FIG_ALT)).map(List::getFirst).orElse(null);
+                String caption = (String) Optional.ofNullable(values.get(FlatText.FIG_CAPTION)).map(List::getFirst).orElse(null);
+                Attachment attachment = (Attachment) event.value;
+                w.figure(attachment.getName(), attachment::getBytes, alt, caption);
             }
 
             // If inside a note, we have other specific markup available.

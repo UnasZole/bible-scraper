@@ -6,6 +6,7 @@ import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
 import java.net.URI;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class MyBibleTextWriter implements TextWriter {
 
@@ -63,6 +64,17 @@ public class MyBibleTextWriter implements TextWriter {
                 .append("\">")
                 .append(text)
                 .append("</a>");
+    }
+
+    @Override
+    public void figure(String filename, Supplier<byte[]> bytes, String alt, String caption) {
+        // Figures unsupported : use alt if given.
+        outText.append("<CM>-- Missing figure ").append(filename);
+        if(alt != null) {
+            outText.append(":")
+                    .append(alt);
+        }
+        outText.append(" --<CM>");
     }
 
     @Override

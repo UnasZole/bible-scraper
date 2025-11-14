@@ -18,4 +18,7 @@ public class StdValueTypes {
     public static final ValueType<List<Integer>> INTEGER_LIST = new IntegerListValue();
     public static final ValueType<URI> URI = new ValueType.ClassBased<>(URI.class, java.net.URI::create);
     public static final ValueType<BibleBook> BIBLE_BOOK = new BibleBookValue();
+    public static final ValueType<Attachment> ATTACHMENT = new ValueType.ClassBased<>(Attachment.class,
+            s -> { throw new UnsupportedOperationException("Received " + s + " instead of an instantiated attachment."); }
+    );
 }

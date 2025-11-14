@@ -515,6 +515,34 @@ html:
             - type: TEXT
               op: text
 
+    - selector: ".prp-pages-output table:has(img):has(div[style*=font-size:80%])"
+      withAncestors: [ BOOK_INTRO ]
+      contexts:
+        - type: FIGURE
+          selector: "img"
+          op: "attribute=src"
+          descendants:
+            - type: FIG_ALT
+              selector: "div[style*=font-size:80%]"
+              op: text
+            - type: FIG_CAPTION
+              selector: "div[style*=font-size:80%]"
+              op: text
+
+    - selector: ".prp-pages-output figure:has(img):has(figcaption)"
+      withAncestors: [ BOOK_INTRO ]
+      contexts:
+        - type: FIGURE
+          selector: "img"
+          op: "attribute=src"
+          descendants:
+            - type: FIG_ALT
+              selector: "figcaption"
+              op: text
+            - type: FIG_CAPTION
+              selector: "figcaption"
+              op: text
+
     - selector: "h4:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*)"
       contexts:
         - type: CHAPTER

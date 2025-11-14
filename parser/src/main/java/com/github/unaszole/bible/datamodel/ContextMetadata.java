@@ -7,6 +7,7 @@ public class ContextMetadata {
 	public final ContextId id;
 	
 	public ContextMetadata(ContextType type, ContextId id) {
+        assert id == null ? type.idType() == IdType.NO_ID : id.idType == type.idType();
 		this.type = type;
 		this.id = id;
 	}

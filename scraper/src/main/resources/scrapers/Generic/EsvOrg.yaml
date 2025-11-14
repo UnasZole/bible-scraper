@@ -342,6 +342,14 @@ html:
         nodes: []
 
         elements:
+          - selector: "img.book-illustration"
+            contexts:
+              - type: FIGURE
+                op: attribute=src
+                descendants:
+                  - type: FIG_ALT
+                    op: attribute=alt
+
           - selector: "h3"
             contexts:
               - type: SECTION_TITLE

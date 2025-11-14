@@ -67,8 +67,7 @@ For example `scraper-help -s Generic -i TheoPlace`.
   - `-s <ScraperName>` to specify the scraper, and `-i <input>` to specify scraper inputs (repeated if several)
   - `-b <osisBook> -c <chapterNb>` to specify the passage of the bible to extract, or `--fullBible` if you want to extract the complete bible.
   - `-w <outFormat> -o <outFileOrFolder>` to specify the output format (OSIS or USFM), and where to write the result. \
-For OSIS, a file will be created (or overwritten if exists) at the given path. \
-For USFM, the path must point to an existing empty folder. \
+For OSIS or USFM, the path must point to an existing empty folder. \
 For MyBible, the path must point to a (possibly non-existing) ".bbl.mybible" file that will be overwritten.\
 If the "-o" option is omitted, the output will be printed in your terminal (useful for testing when you're writing a new scraper).
   - `--typographyFixer <FRENCH or NONE>` to enforce some typography rules on the extracted text before printing it to the output document.

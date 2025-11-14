@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.osis;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 import org.crosswire.jsword.versification.BibleBook;
@@ -21,8 +22,8 @@ public class OsisBookContentsWriter extends OsisStructuredTextWriter
     private int[] pendingVerseNbs = null;
     private String[] pendingVerseSourceNb = null;
 
-    public OsisBookContentsWriter(XMLStreamWriter xmlWriter, BibleBook book) {
-        super(xmlWriter);
+    public OsisBookContentsWriter(XMLStreamWriter xmlWriter, OutputContainer container, BibleBook book) {
+        super(xmlWriter, container);
         this.book = book;
     }
 

@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.osis;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.datamodel.BibleRef;
 import com.github.unaszole.bible.writing.interfaces.NoteTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
@@ -7,11 +8,15 @@ import com.github.unaszole.bible.writing.interfaces.TextWriter;
 import javax.xml.stream.XMLStreamWriter;
 import java.net.URI;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class OsisTextWriter extends BaseXmlWriter implements TextWriter {
 
-    public OsisTextWriter(XMLStreamWriter xmlWriter) {
+    private final OutputContainer container;
+
+    public OsisTextWriter(XMLStreamWriter xmlWriter, OutputContainer container) {
         super(xmlWriter);
+        this.container = container;
     }
 
     @Override
@@ -86,10 +91,31 @@ public class OsisTextWriter extends BaseXmlWriter implements TextWriter {
     }
 
     @Override
+    public void figure(String attachmentName, Supplier<byte[]> bytes, String alt, String caption) {
+        String fileName = container.attach(attachmentName, bytes.get());
+
+        // <figure>
+        writeStartElement("figure");
+        writeAttribute("src", fileName);
+        if(alt != null) {
+            writeAttribute("alt", alt);
+        }
+        if(caption != null) {
+            // <caption>
+            writeStartElement("caption");
+            writeCharacters(caption);
+            writeEndElement();
+            // </caption>
+        }
+        writeEndElement();
+        // </figure>
+    }
+
+    @Override
     public void note(Consumer<NoteTextWriter> writes) {
         // <note>
         writeStartElement("note");
-        writes.accept(new OsisNoteTextWriter(xmlWriter));
+        writes.accept(new OsisNoteTextWriter(xmlWriter, container));
         writeEndElement();
         // </note>
     }

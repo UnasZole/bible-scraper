@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.usfm;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 
@@ -9,9 +10,12 @@ import java.util.function.Consumer;
 public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
 
     protected final PrintWriter out;
+    private final OutputContainer container;
     private final String paragraphMarker;
-    public UsfmStructuredTextWriter(PrintWriter out, String paragraphMarker) {
+
+    public UsfmStructuredTextWriter(PrintWriter out, OutputContainer container, String paragraphMarker) {
         this.out = out;
+        this.container = container;
         this.paragraphMarker = paragraphMarker;
     }
 
@@ -104,7 +108,7 @@ public abstract class UsfmStructuredTextWriter implements StructuredTextWriter {
     }
 
     protected void writeText(Consumer<TextWriter> writes) {
-        try(TextWriter writer = new UsfmTextWriter(out)) {
+        try(TextWriter writer = new UsfmTextWriter(out, container)) {
             writes.accept(writer);
         } catch (Exception e) {
             throw new RuntimeException(e);

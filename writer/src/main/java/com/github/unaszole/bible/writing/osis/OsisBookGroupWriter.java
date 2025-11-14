@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.osis;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.BookGroupWriter;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
@@ -10,10 +11,12 @@ import java.util.function.Consumer;
 
 public class OsisBookGroupWriter extends BaseXmlWriter implements BookGroupWriter {
 
+    private final OutputContainer container;
     private boolean introOpened = false;
 
-    public OsisBookGroupWriter(XMLStreamWriter xmlWriter) {
+    public OsisBookGroupWriter(XMLStreamWriter xmlWriter, OutputContainer container) {
         super(xmlWriter);
+        this.container = container;
 
         // <div>
         writeStartElement("div");
@@ -38,7 +41,7 @@ public class OsisBookGroupWriter extends BaseXmlWriter implements BookGroupWrite
 
         this.introOpened = true;
 
-        try(StructuredTextWriter.BookIntroWriter introWriter = new OsisBookIntroWriter(xmlWriter)) {
+        try(StructuredTextWriter.BookIntroWriter introWriter = new OsisBookIntroWriter(xmlWriter, container)) {
             writes.accept(introWriter);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -58,7 +61,7 @@ public class OsisBookGroupWriter extends BaseXmlWriter implements BookGroupWrite
     public void book(BibleBook book, Consumer<BookWriter> writes) {
         closeIntroduction();
 
-        try(BookWriter bookWriter = new OsisBookWriter(xmlWriter, book)) {
+        try(BookWriter bookWriter = new OsisBookWriter(xmlWriter, container, book)) {
             writes.accept(bookWriter);
         } catch (Exception e) {
             throw new RuntimeException(e);

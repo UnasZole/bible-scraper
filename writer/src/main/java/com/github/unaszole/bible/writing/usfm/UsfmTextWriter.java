@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.usfm;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.datamodel.BibleRef;
 import com.github.unaszole.bible.writing.interfaces.NoteTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
@@ -8,12 +9,16 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class UsfmTextWriter implements TextWriter {
 
     protected final PrintWriter out;
-    public UsfmTextWriter(PrintWriter out) {
+    private final OutputContainer container;
+
+    public UsfmTextWriter(PrintWriter out, OutputContainer container) {
         this.out = out;
+        this.container = container;
     }
 
     private String activeTagName = null;
@@ -102,9 +107,19 @@ public class UsfmTextWriter implements TextWriter {
     }
 
     @Override
+    public void figure(String attachmentName, Supplier<byte[]> bytes, String alt, String caption) {
+        String fileName = container.attach(attachmentName, bytes.get());
+
+        printTag("fig", (caption != null ? caption : "")
+                + "|src=\"" + fileName + "\""
+                + " ref=\"\""
+                + (alt != null ? " alt=\"" + alt + "\"" : ""), true);
+    }
+
+    @Override
     public void note(Consumer<NoteTextWriter> writes) {
         out.print("\\f + ");
-        writes.accept(new UsfmNoteTextWriter(out));
+        writes.accept(new UsfmNoteTextWriter(out, container));
         out.print("\\f*");
     }
 

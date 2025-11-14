@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.osis;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import com.github.unaszole.bible.writing.interfaces.TextWriter;
 
@@ -9,6 +10,8 @@ import java.util.function.Consumer;
 public abstract class OsisStructuredTextWriter
         extends BaseXmlWriter
         implements StructuredTextWriter {
+
+    private final OutputContainer container;
 
     private boolean inMajorSection = false;
     private boolean inSection = false;
@@ -28,12 +31,13 @@ public abstract class OsisStructuredTextWriter
      */
     private int pendingPoetryLine = 0;
 
-    public OsisStructuredTextWriter(XMLStreamWriter xmlWriter) {
+    public OsisStructuredTextWriter(XMLStreamWriter xmlWriter, OutputContainer container) {
         super(xmlWriter);
+        this.container = container;
     }
 
     protected final void writeText(Consumer<TextWriter> writes) {
-        try(TextWriter writer = new OsisTextWriter(xmlWriter)) {
+        try(TextWriter writer = new OsisTextWriter(xmlWriter, container)) {
             writes.accept(writer);
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.writing.osis;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.interfaces.BookWriter;
 import com.github.unaszole.bible.writing.interfaces.StructuredTextWriter;
 import org.crosswire.jsword.versification.BibleBook;
@@ -17,11 +18,13 @@ public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 
 	private final BibleNames bibleNames = BibleNames.instance();
 
+    private final OutputContainer container;
 	private final BibleBook book;
 	private boolean introOpened = false;
 	
-	public OsisBookWriter(XMLStreamWriter xmlWriter, BibleBook book) {
+	public OsisBookWriter(XMLStreamWriter xmlWriter, OutputContainer container, BibleBook book) {
 		super(xmlWriter);
+        this.container = container;
 		this.book = book;
 		
 		// <div>
@@ -49,7 +52,7 @@ public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 
 		this.introOpened = true;
 
-		try(StructuredTextWriter.BookIntroWriter introWriter = new OsisBookIntroWriter(xmlWriter)) {
+		try(StructuredTextWriter.BookIntroWriter introWriter = new OsisBookIntroWriter(xmlWriter, container)) {
 			writes.accept(introWriter);
 		} catch (Exception e) {
             throw new RuntimeException(e);
@@ -69,7 +72,7 @@ public class OsisBookWriter extends BaseXmlWriter implements BookWriter {
 	public void contents(Consumer<StructuredTextWriter.BookContentsWriter> writes) {
 		closeIntroduction();
 
-		try(StructuredTextWriter.BookContentsWriter contentsWriter = new OsisBookContentsWriter(xmlWriter, book)) {
+		try(StructuredTextWriter.BookContentsWriter contentsWriter = new OsisBookContentsWriter(xmlWriter, container, book)) {
 			writes.accept(contentsWriter);
 		} catch (Exception e) {
 			throw new RuntimeException(e);

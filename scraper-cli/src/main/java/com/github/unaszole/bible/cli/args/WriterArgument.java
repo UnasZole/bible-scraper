@@ -1,6 +1,8 @@
 package com.github.unaszole.bible.cli.args;
 
 import com.github.unaszole.bible.monitor.ExecutionMonitor;
+import com.github.unaszole.bible.writing.OutputDirectory;
+import com.github.unaszole.bible.writing.OutputSingleStream;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.writing.Typography;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
@@ -48,17 +50,17 @@ public class WriterArgument {
                 if(outputPath.isPresent()) {
                     // We're not using stdout for actual output : plug the progress bar.
                     ExecutionMonitor.INSTANCE.registerUpdateCallback(this::printStatus);
-                    return new OsisBibleWriter(outputPath.get(), docMeta);
+                    return new OsisBibleWriter(new OutputDirectory(outputPath.get()), docMeta);
                 }
-                return new OsisBibleWriter(System.out, docMeta);
+                return new OsisBibleWriter(new OutputSingleStream(System.out), docMeta);
 
             case USFM:
                 if(outputPath.isPresent()) {
                     // We're not using stdout for actual output : plug the progress bar.
                     ExecutionMonitor.INSTANCE.registerUpdateCallback(this::printStatus);
-                    return new UsfmBibleWriter(outputPath.get());
+                    return new UsfmBibleWriter(new OutputDirectory(outputPath.get()));
                 }
-                return new UsfmBibleWriter(new PrintWriter(System.out));
+                return new UsfmBibleWriter(new OutputSingleStream(System.out));
 
             case MYBIBLE:
                 if(outputPath.isPresent()) {

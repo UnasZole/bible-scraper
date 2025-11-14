@@ -9,6 +9,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 
+import com.github.unaszole.bible.writing.OutputContainer;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.writing.interfaces.BibleWriter;
 import com.github.unaszole.bible.writing.interfaces.BookGroupWriter;
@@ -38,8 +39,11 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 		);
 	}
 
-	public OsisBibleWriter(OutputStream outputStream, DocumentMetadata meta) throws XMLStreamException {
-		super(getXmlStreamWriter(outputStream));
+    private final OutputContainer container;
+
+	public OsisBibleWriter(OutputContainer container, DocumentMetadata meta) throws XMLStreamException {
+		super(getXmlStreamWriter(container.createOutputStream(meta.systemName + ".xml")));
+        this.container = container;
 
 		// <osis>
 		writeStartOsis();
@@ -109,24 +113,9 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 				// </header>
 	}
 
-	private static OutputStream getOutputStream(Path path) throws IOException {
-		if(Files.isDirectory(path)) {
-			throw new IllegalArgumentException(path + " must be a file.");
-		}
-		if(!path.getFileName().toString().endsWith(".xml")) {
-			throw new IllegalArgumentException(path + " must be a file ending with .xml");
-		}
-
-		return Files.newOutputStream(path);
-	}
-
-	public OsisBibleWriter(Path outFile, DocumentMetadata meta) throws IOException, XMLStreamException {
-		this(getOutputStream(outFile), meta);
-	}
-
 	@Override
 	public void bookGroup(Consumer<BookGroupWriter> writes) {
-		try(BookGroupWriter bookGroupWriter = new OsisBookGroupWriter(xmlWriter)) {
+		try(BookGroupWriter bookGroupWriter = new OsisBookGroupWriter(xmlWriter, container)) {
 			writes.accept(bookGroupWriter);
 		}
 		catch (Exception e) {
@@ -136,7 +125,7 @@ public class OsisBibleWriter extends BaseXmlWriter implements BibleWriter {
 
 	@Override
 	public void book(BibleBook book, Consumer<BookWriter> writes) {
-		try(BookWriter bookWriter = new OsisBookWriter(xmlWriter, book)) {
+		try(BookWriter bookWriter = new OsisBookWriter(xmlWriter, container, book)) {
 			writes.accept(bookWriter);
 		} catch (Exception e) {
             throw new RuntimeException(e);
