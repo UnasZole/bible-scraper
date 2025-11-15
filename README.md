@@ -62,7 +62,7 @@ The following sub commands are available :
 - `./run.sh help scraper-list` : list the available embedded scrapers.
 - `./run.sh help scraper-help -s <ScraperName>` : Get information about this scraper, and if it requires any additional inputs. \
 You can also specify additional inputs within this help command to check if they are valid, and get more specific help if available.
-For example `scraper-help -s Generic -i TheoPlace`.
+For example `scraper-help -s Generic -i Fr_Multi_TheoPlace`.
 - `./run.sh scrape` : Fetch and convert a remote bible. This command has many parameters :
   - `-s <ScraperName>` to specify the scraper, and `-i <input>` to specify scraper inputs (repeated if several)
   - `-b <osisBook> -c <chapterNb>` to specify the passage of the bible to extract, or `--fullBible` if you want to extract the complete bible.
@@ -75,9 +75,9 @@ If the "-o" option is omitted, the output will be printed in your terminal (usef
 Examples :
 
 - Scrape the full bible of André Chouraqui, applying transformations to integrate deuterocanonical additions in the catholic way, outputting an OSIS XML file with corrected French typography : \
-  `./run.sh scrape -s ChouraquiAggregated -i Catholic --fullBible -w OSIS -o andreChouraqui.xml --typographyFixer FRENCH`
+  `./run.sh scrape -s ChouraquiAggregated -i Catholic --fullBible -w OSIS -o outChouraqui/ --typographyFixer FRENCH`
 - Extract the book of Genesis from recatho.com's "Glaire et Vigouroux" bible using an embedded generic scraper, outputting USFM files in a given folder : \
-`./run.sh scrape -s Generic -i Recatho -i glaire-et-vigouroux -b Gen -w USFM -o outGlaireVigouroux/`
+`./run.sh scrape -s Generic -i Fr_Multi_Recatho -i glaire-et-vigouroux -b Gen -w USFM -o outGlaireVigouroux/`
 - Extract Revelation 1 from a custom website using the generic scraper, and output in USFM on your terminal's STDOUT (usually to test your custom scraper) : \
 `./run.sh scrape -s Generic -i path/to/custom/scraperconfig.yaml -b Rev -c 1 -w USFM`
 
