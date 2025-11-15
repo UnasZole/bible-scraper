@@ -26,7 +26,7 @@ public class OutputDirectory implements OutputContainer {
     }
 
     private String getUnusedName(String requestedName) {
-        String fileName = requestedName;
+        String fileName = requestedName.replaceAll("[^a-zA-Z0-9.]", "_");
         while(Files.exists(path.resolve(fileName))) {
             fileName = "_" + fileName;
         }

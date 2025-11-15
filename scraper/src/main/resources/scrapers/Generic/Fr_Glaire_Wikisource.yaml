@@ -529,7 +529,7 @@ html:
               selector: "div[style*=font-size:80%]"
               op: text
 
-    - selector: ".prp-pages-output figure:has(img):has(figcaption)"
+    - selector: ".prp-pages-output figure:has(img:not([src*=100px-Sep4.svg.png])):has(figcaption)"
       withAncestors: [ BOOK_INTRO ]
       contexts:
         - type: FIGURE
