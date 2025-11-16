@@ -519,6 +519,7 @@ parsers:
         - selector: ".prp-pages-output table:has(img):has(div[style*=font-size:80%])"
           withAncestors: [ BOOK_INTRO ]
           contexts:
+            - type: PARAGRAPH_BREAK
             - type: FIGURE
               selector: "img"
               op: "attribute=src"
@@ -529,10 +530,12 @@ parsers:
                 - type: FIG_CAPTION
                   selector: "div[style*=font-size:80%]"
                   op: text
+            - type: PARAGRAPH_BREAK
 
         - selector: ".prp-pages-output figure:has(img:not([src*=100px-Sep4.svg.png])):has(figcaption)"
           withAncestors: [ BOOK_INTRO ]
           contexts:
+            - type: PARAGRAPH_BREAK
             - type: FIGURE
               selector: "img"
               op: "attribute=src"
@@ -543,6 +546,7 @@ parsers:
                 - type: FIG_CAPTION
                   selector: "figcaption"
                   op: text
+            - type: PARAGRAPH_BREAK
 
         - selector: "h4:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*)"
           contexts:
@@ -588,15 +592,23 @@ parsers:
                 contexts:
                   - type: TEXT
                     op: "literal= "
-              # Italic longer than 30 or with specific keywords is a psalm title.
-              - selector: "p > i:is(:matches(^.{30,}$):not(:matches(ne vous viendra des secours)), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$))"
-                withAncestors: [ PSALM_TITLE ]
+              # Italics that are preceded only by the verse number, and nothing afterward, are psalm titles.
+              - selector: "p > i"
+                previousNode:
+                  exists: true
+                  isTextNodeMatching: "^\\d+\\.\\s*$"
+                nextNode:
+                  isTextNodeMatching: "^\\s*$"
                 contexts:
-                  - type: TEXT
-                    op: ownText
-              # Italic texts that didn't match the previous selector are translation additions.
-              - selector: "p > i:not(:is(:matches(^.{30,}$):not(:matches(ne vous viendra des secours)), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$)))"
-                withoutAncestors: [ STRUCTURE_MARKER, NOTE, PSALM_TITLE ]
+                  - type: PSALM_TITLE
+                    descendants:
+                      - type: TEXT
+                        op: ownText
+              # Italic texts that are not preceded by just a verse number are translation additions.
+              - selector: "p > i"
+                previousNode:
+                  isTextNodeMatching: "^.*[^\\d.\\s].*$"
+                withoutAncestors: [ NOTE, PSALM_TITLE ]
                 contexts:
                   - type: TRANSLATION_ADD
                     descendants:
