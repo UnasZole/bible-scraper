@@ -380,160 +380,161 @@ bible:
       names: [ Apoc, Ap, Apocalypse ]
       patterns: { bookUrl: null }
 
-html:
-  elements:
-    - selector: "h2 > span > span"
-      contexts:
-        - type: BOOK_TITLE
-          descendants:
-            - type: TEXT
+parsers:
+  - html:
+      elements:
+        - selector: "h2 > span > span"
+          contexts:
+            - type: BOOK_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: ":is(h3:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*), h4:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*))"
+          contexts:
+            - type: CHAPTER
               op: text
+              regexp: (?:CHAPITRE|Psaume|PSAUME) (\d+|[MmDdCcLlXxVvIi]+|PREMIER|Premier|UNIQUE).*
 
-    - selector: ":is(h3:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*), h4:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*))"
-      contexts:
-        - type: CHAPTER
-          op: text
-          regexp: (?:CHAPITRE|Psaume|PSAUME) (\d+|[MmDdCcLlXxVvIi]+|PREMIER|Premier|UNIQUE).*
+        - selector: "div.alinea"
+          withoutAncestors: [ NOTE ]
+          contexts:
+            - type: CHAPTER_INTRO
+              descendants:
+                - type: TEXT
+                  op: text
 
-    - selector: "div.alinea"
-      withoutAncestors: [ NOTE ]
-      contexts:
-        - type: CHAPTER_INTRO
-          descendants:
-            - type: TEXT
-              op: text
-
-  externalParsers:
-    # A paragraph starting with number+dot+space is a verse and must be parsed node-per-node.
-    - selector: "p:matches(^\\d+\\.\\s+.*$)"
-      withAncestors: [ CHAPTER ]
-      nodeParser:
-        nodes:
-          # Text node that starts with number+dot+space marks the start and first words of a new verse.
-          - regexp: ^\d+\.\s+.*$
-            contexts:
-              - type: VERSE
-                regexp: ^(\d+)\.\s+.*$
-                descendants:
+      externalParsers:
+        # A paragraph starting with number+dot+space is a verse and must be parsed node-per-node.
+        - selector: "p:matches(^\\d+\\.\\s+.*$)"
+          withAncestors: [ CHAPTER ]
+          nodeParser:
+            nodes:
+              # Text node that starts with number+dot+space marks the start and first words of a new verse.
+              - regexp: ^\d+\.\s+.*$
+                contexts:
+                  - type: VERSE
+                    regexp: ^(\d+)\.\s+.*$
+                    descendants:
+                      - type: TEXT
+                        regexp: ^\d+\.\s+(.*)$
+              # Other text nodes (that don't start by a number) are just simple text.
+              - regexp: ^[^\d].*$
+                withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                contexts:
                   - type: TEXT
-                    regexp: ^\d+\.\s+(.*)$
-          # Other text nodes (that don't start by a number) are just simple text.
-          - regexp: ^[^\d].*$
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
-            contexts:
-              - type: TEXT
-                regexp: (.*)
-        elements:
-          # Italic texts shorter than 20 characters are assumed to be translation additions.
-          - selector: "p > i:matches(^.{0,20}$)"
-            contexts:
-              - type: TRANSLATION_ADD
-                descendants:
+                    regexp: (.*)
+            elements:
+              # Italic texts shorter than 20 characters are assumed to be translation additions.
+              - selector: "p > i:matches(^.{0,20}$)"
+                contexts:
+                  - type: TRANSLATION_ADD
+                    descendants:
+                      - type: TEXT
+                        op: ownText
+              # Italic longer than 20 is regular text.
+              - selector: "p > i:matches(^.{20,}$)"
+                contexts:
                   - type: TEXT
                     op: ownText
-          # Italic longer than 20 is regular text.
-          - selector: "p > i:matches(^.{20,}$)"
-            contexts:
-              - type: TEXT
-                op: ownText
 
-          # Some simple text may be wrapped into a "coquille" span to highlight a correction from the manuscript.
-          # This "coquille" span may include a verse number, to be ignored, or not.
-          - selector: "p > span.coquille:matches(^\\d+\\.\\s+.+$)"
-            contexts:
-              - type: TEXT
-                op: text
-                regexp: ^\d+\.\s+(.+)$
-          - selector: "p > span.coquille:matches(^[^\\d].*$)"
-            contexts:
-              - type: TEXT
-                op: text
-                regexp: ^([^\d].*)$
+              # Some simple text may be wrapped into a "coquille" span to highlight a correction from the manuscript.
+              # This "coquille" span may include a verse number, to be ignored, or not.
+              - selector: "p > span.coquille:matches(^\\d+\\.\\s+.+$)"
+                contexts:
+                  - type: TEXT
+                    op: text
+                    regexp: ^\d+\.\s+(.+)$
+              - selector: "p > span.coquille:matches(^[^\\d].*$)"
+                contexts:
+                  - type: TEXT
+                    op: text
+                    regexp: ^([^\d].*)$
 
-          # Text in small caps is taken as-is.
-          - selector: "p > span.sc"
-            contexts:
-              - type: TEXT
-                op: text
+              # Text in small caps is taken as-is.
+              - selector: "p > span.sc"
+                contexts:
+                  - type: TEXT
+                    op: text
 
-        externalParsers:
-          - selector: "sup.reference > a"
-            linkTargetSelector: "> span.reference-text"
-            contextsBefore:
-              # Open a note before parsing its contents.
-              - type: NOTE
-            nodeParser:
-              nodes:
-                - withoutAncestors: [ NOTE_MARKUP ]
-                  contexts:
-                    - type: TEXT
-                      regexp: (.*)
-              elements:
-                # i elements in notes indicate quoted text.
-                - selector: "span.reference-text > i"
-                  contexts:
-                    - type: QUOTE
-                      descendants:
+            externalParsers:
+              - selector: "sup.reference > a"
+                linkTargetSelector: "> span.reference-text"
+                contextsBefore:
+                  # Open a note before parsing its contents.
+                  - type: NOTE
+                nodeParser:
+                  nodes:
+                    - withoutAncestors: [ NOTE_MARKUP ]
+                      contexts:
                         - type: TEXT
-                          op: text
-
-                # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing a sequence of numbers, are full references to verses.
-                - selector: "a[href~=^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*[\\d-]+.*$)"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: FULL_REF
+                          regexp: (.*)
+                  elements:
+                    # i elements in notes indicate quoted text.
+                    - selector: "span.reference-text > i"
+                      contexts:
+                        - type: QUOTE
                           descendants:
-                            - type: REF_BOOK
-                              op: attribute=href
-                              regexp: "^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^.*/[^/]+#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                            - type: REF_VERSES
+                            - type: TEXT
                               op: text
-                              regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
-                        - type: TEXT
-                          op: text
-                # Links containing a path followed by a "#CHAPITRE_" anchor, with text not containing a sequence of numbers, are full references to chapters.
-                - selector: "a[href~=^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*[\\d-]+.*$))"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: FULL_REF
+
+                    # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing a sequence of numbers, are full references to verses.
+                    - selector: "a[href~=^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*[\\d-]+.*$)"
+                      contexts:
+                        - type: REFERENCE
                           descendants:
-                            - type: REF_BOOK
-                              op: attribute=href
-                              regexp: "^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^.*/[^/]+#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                        - type: TEXT
-                          op: text
-                # Links containing only a "#CHAPITRE_" anchor, with text containing a sequence of numbers, are local references to verses.
-                - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*[\\d-]+.*$)"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: LOCAL_REF
-                          descendants:
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                            - type: REF_VERSES
+                            - type: FULL_REF
+                              descendants:
+                                - type: REF_BOOK
+                                  op: attribute=href
+                                  regexp: "^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^.*/[^/]+#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                                - type: REF_VERSES
+                                  op: text
+                                  regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
+                            - type: TEXT
                               op: text
-                              regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
-                        - type: TEXT
-                          op: text
-                # Links containing only a "#CHAPITRE_" anchor, with text containing no sequence of numbers, are local references to chapters.
-                - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*[\\d-]+.*$))"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: LOCAL_REF
+                    # Links containing a path followed by a "#CHAPITRE_" anchor, with text not containing a sequence of numbers, are full references to chapters.
+                    - selector: "a[href~=^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*[\\d-]+.*$))"
+                      contexts:
+                        - type: REFERENCE
                           descendants:
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                        - type: TEXT
-                          op: text
+                            - type: FULL_REF
+                              descendants:
+                                - type: REF_BOOK
+                                  op: attribute=href
+                                  regexp: "^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^.*/[^/]+#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                            - type: TEXT
+                              op: text
+                    # Links containing only a "#CHAPITRE_" anchor, with text containing a sequence of numbers, are local references to verses.
+                    - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*[\\d-]+.*$)"
+                      contexts:
+                        - type: REFERENCE
+                          descendants:
+                            - type: LOCAL_REF
+                              descendants:
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                                - type: REF_VERSES
+                                  op: text
+                                  regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
+                            - type: TEXT
+                              op: text
+                    # Links containing only a "#CHAPITRE_" anchor, with text containing no sequence of numbers, are local references to chapters.
+                    - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*[\\d-]+.*$))"
+                      contexts:
+                        - type: REFERENCE
+                          descendants:
+                            - type: LOCAL_REF
+                              descendants:
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                            - type: TEXT
+                              op: text

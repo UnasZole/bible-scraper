@@ -14,16 +14,17 @@ import java.nio.file.Files;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class PageListParser implements ParserCore<PageData> {
 
-    private final TextParser textParserConfig;
+    private final Map<String, TextParser> namedParsers;
     private final CachedDownloader cachedDownloader;
     private final Map<String, BibleBook> bookReferences;
 
-    public PageListParser(TextParser textParserConfig, CachedDownloader cachedDownloader,
+    public PageListParser(Map<String, TextParser> namedParsers, CachedDownloader cachedDownloader,
                           Map<String, BibleBook> bookReferences) {
-        this.textParserConfig = textParserConfig;
+        this.namedParsers = namedParsers;
         this.cachedDownloader = cachedDownloader;
         this.bookReferences = bookReferences;
     }
@@ -32,11 +33,13 @@ public class PageListParser implements ParserCore<PageData> {
     public Parser<?> parseExternally(PageData pageData, Deque<Context> currentContextStack) {
         // Each page data is parsed externally by a dedicated local parser.
         try {
-            return textParserConfig.getLocalParser(
-                    Files.newInputStream(cachedDownloader.getFile(pageData.sourceFile)),
-                    currentContextStack,
-                    new ContextualData(pageData.args, bookReferences, pageData.sourceFile.getBaseUri(), cachedDownloader)
-            );
+            return Optional.ofNullable(namedParsers.get(pageData.parserName))
+                    .orElseThrow(() -> new RuntimeException("Could not find parser definition for " + pageData.parserName))
+                    .getLocalParser(
+                            Files.newInputStream(cachedDownloader.getFile(pageData.sourceFile)),
+                            currentContextStack,
+                            new ContextualData(pageData.args, bookReferences, namedParsers, pageData.sourceFile.getBaseUri(), cachedDownloader)
+                    );
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

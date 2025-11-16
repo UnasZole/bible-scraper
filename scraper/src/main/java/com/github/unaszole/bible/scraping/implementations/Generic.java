@@ -131,11 +131,16 @@ public class Generic extends Scraper {
             })
     );
 
-    private static class Config extends TextParser {
+    private static class NamedTextParser extends TextParser {
+        public String id;
+    }
+
+    private static class Config {
 
         public String description;
         public List<String> inputs;
         public Bible bible;
+        public List<NamedTextParser> parsers;
 
         public PatternContainer getGlobalDefaults(List<String> inputValues) {
             int nbExpectedFlags = inputs == null ? 0 : inputs.size();
@@ -242,7 +247,14 @@ public class Generic extends Scraper {
     private ContextStream.Single contextStreamer(Context ctx, List<PageData> pages) {
         final ExecutionMonitor.Item statusItem = ExecutionMonitor.INSTANCE.register(ctx.metadata.id.toString());
         return new Parser.TerminalParser<>(
-                new PageListParser(config, downloader, config.bible.getBookReferences()),
+                new PageListParser(
+                        config.parsers.stream()
+                                .collect(Collectors.toMap(
+                                        p -> Optional.ofNullable(p.id).orElse("main"),
+                                        p -> p
+                                )),
+                        downloader, config.bible.getBookReferences()
+                ),
                 new NotifyingIterator<>(pages.iterator(), statusItem::start, statusItem::complete),
                 ctx
         ).asContextStream();

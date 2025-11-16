@@ -91,34 +91,35 @@ bible:
     - osis: Rev
       args: { BOOK: 27_revelation }
 
-html:
-  elements:
+parsers:
+  - html:
+      elements:
 
-    - selector: "font[size=+3] > b"
-      contexts:
-        - type: BOOK_TITLE
-          descendants:
-            - type: TEXT
-              op: text
-
-    - selector: "table[align=right] font[size=+2] > b"
-      contexts:
-        - type: CHAPTER
-          selector: "a[name]"
-          op: attribute=name
-          descendants:
-            - type: CHAPTER_TITLE
+        - selector: "font[size=+3] > b"
+          contexts:
+            - type: BOOK_TITLE
               descendants:
                 - type: TEXT
                   op: text
 
-    - selector: "font[size=+1] > table > tbody > tr:has(td)"
-      contexts:
-        - type: VERSE
-          selector: "> td:last-child > b"
-          op: text
-          descendants:
-            - type: TEXT
-              selector: "> td:first-child"
+        - selector: "table[align=right] font[size=+2] > b"
+          contexts:
+            - type: CHAPTER
+              selector: "a[name]"
+              op: attribute=name
+              descendants:
+                - type: CHAPTER_TITLE
+                  descendants:
+                    - type: TEXT
+                      op: text
+
+        - selector: "font[size=+1] > table > tbody > tr:has(td)"
+          contexts:
+            - type: VERSE
+              selector: "> td:last-child > b"
               op: text
+              descendants:
+                - type: TEXT
+                  selector: "> td:first-child"
+                  op: text
 

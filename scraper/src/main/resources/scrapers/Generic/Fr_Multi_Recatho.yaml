@@ -231,33 +231,34 @@ bible:
     - osis: Rev
       args: { BOOK: livre-de-l-apocalypse }
 
-html:
-  elements:
-    - selector: "#livre > h1"
-      contexts:
-        - type: BOOK_TITLE
-          descendants:
-            - type: TEXT
+parsers:
+  - html:
+      elements:
+        - selector: "#livre > h1"
+          contexts:
+            - type: BOOK_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+        - selector: "div.ch"
+          contexts:
+            - type: CHAPTER
+              op: attribute=data-ch
+        - selector: "div.vs > span.v"
+          contexts:
+            - type: VERSE
+              selector: "> span.nv"
               op: text
-    - selector: "div.ch"
-      contexts:
-        - type: CHAPTER
-          op: attribute=data-ch
-    - selector: "div.vs > span.v"
-      contexts:
-        - type: VERSE
-          selector: "> span.nv"
-          op: text
-          descendants:
-            - type: TEXT
-              selector: "> span:not(.nv)"
-              op: text
-    - selector: "div.vs > div.sep"
-      contexts:
-        - type: PARAGRAPH_BREAK
-    - selector: "div.vs > div.c"
-      contexts:
-        - type: NOTE
-          descendants:
-            - type: TEXT
-              op: text
+              descendants:
+                - type: TEXT
+                  selector: "> span:not(.nv)"
+                  op: text
+        - selector: "div.vs > div.sep"
+          contexts:
+            - type: PARAGRAPH_BREAK
+        - selector: "div.vs > div.c"
+          contexts:
+            - type: NOTE
+              descendants:
+                - type: TEXT
+                  op: text

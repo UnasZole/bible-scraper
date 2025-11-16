@@ -331,126 +331,134 @@ bible:
       args: { BOOK: Revelation }
       chapters: [ { from: 1, to: 22 } ]
 
-html:
-  elements: []
+parsers:
+  - html:
+      elements: []
 
-  externalParsers:
-    # The section for a chapter has a data-reference attribute, with either the book and chapter,
-    # Or just the book for books with a single chapter.
-    - selector: "div#bible-content > section:is([data-reference=\"{BOOK} {CHAPTER}\"], [data-reference=\"{BOOK}\"])"
-      nodeParser:
-        nodes: []
+      externalParsers:
+        # The section for a chapter has a data-reference attribute, with either the book and chapter,
+        # Or just the book for books with a single chapter.
+        - selector: "div#bible-content > section:is([data-reference=\"{BOOK} {CHAPTER}\"], [data-reference=\"{BOOK}\"])"
+          nodeParser:
+            nodes: []
 
-        elements:
-          - selector: "img.book-illustration"
-            contexts:
-              - type: FIGURE
-                op: attribute=src
-                descendants:
-                  - type: FIG_ALT
-                    op: attribute=alt
+            elements:
+              - selector: "img.book-illustration"
+                contexts:
+                  - type: FIGURE
+                    op: attribute=src
+                    descendants:
+                      - type: FIG_ALT
+                        op: attribute=alt
 
-          - selector: "h3"
-            contexts:
-              - type: SECTION_TITLE
-                descendants:
-                  - type: TEXT
-                    op: text
-
-          - selector: "b.chapter-num"
-            contexts:
-              - type: VERSE
-                op: literal=1
-
-          - selector: "b.verse-num"
-            contexts:
-              - type: VERSE
-                op: ownText
-
-          - selector: ":is(p:not([class]), p.same-paragraph)"
-            contexts:
-              - type: PARAGRAPH_BREAK
-
-          - selector: "section.line-group"
-            contexts:
-              - type: POETRY_STANZA_BREAK
-
-          - selector: "p.line:not(.indent)"
-            contexts:
-              - type: POETRY_LINE_START
-                op: literal=1
-
-          - selector: "p.line.indent"
-            contexts:
-              - type: POETRY_LINE_START
-                op: literal=2
-
-          - selector: "u"
-            withAncestors: [ INLINE_TEXT ]
-            withoutAncestors: [ MARKUP ]
-            contexts:
-              - type: TEXT
-                op: wholeText
-
-        externalParsers:
-          - selector: "sup.footnote > a"
-            textParser:
-              stringExtractor:
-                op: attribute=title
-              html:
-                elements: []
-                externalParsers:
-                  - selector: "span.footnote-embedded"
-                    nodeParser:
-                      nodes:
-                        - withoutAncestors: [ NOTE_MARKUP ]
-                          contexts:
-                            - type: TEXT
-                              regexp: (.*)
-                      elements:
-                        - selector: "span.footnote-embedded"
-                          contexts:
-                            - type: NOTE
-
-                        - selector: "i.catch-word"
-                          contexts:
-                            - type: CATCHPHRASE
-                              descendants:
-                                - type: TEXT
-                                  op: text
-
-                        - selector: "i:not(.catch-word)"
-                          contexts:
-                            - type: QUOTE
-                              descendants:
-                                - type: TEXT
-                                  op: text
-
-          - selector: "sup.crossref > a"
-            contextsBefore:
-              - type: NOTE
-            textParser:
-              stringExtractor:
-                op: attribute=data-passage
-              sliding:
-                rules:
-                  # Starting space : just normal text.
-                  - regexp: " "
-                    contexts:
+              - selector: "h3"
+                contexts:
+                  - type: SECTION_TITLE
+                    descendants:
                       - type: TEXT
-                        literal: " "
-                  # Reference to a single verse or verse range.
-                  - regexp: "[a-zA-Z0-9 ]+ \\d+:\\d+(?:–\\d+)?(?:; |$)"
-                    contexts:
-                      - type: REFERENCE
-                        descendants:
-                          - type: FULL_REF
-                            descendants:
-                              - type: REF_BOOK
-                                regexp: "^([a-zA-Z0-9 ]+) \\d+:\\d+(?:–\\d+)?;? ?$"
-                              - type: REF_CHAPTER
-                                regexp: "^[a-zA-Z0-9 ]+ (\\d+):\\d+(?:–\\d+)?;? ?$"
-                              - type: REF_VERSES
-                                regexp: "^[a-zA-Z0-9 ]+ \\d+:(\\d+(?:–\\d+)?);? ?$"
-                          - type: TEXT
-                            regexp: "(.*)"
+                        op: text
+
+              - selector: "b.chapter-num"
+                contexts:
+                  - type: VERSE
+                    op: literal=1
+
+              - selector: "b.verse-num"
+                contexts:
+                  - type: VERSE
+                    op: ownText
+
+              - selector: ":is(p:not([class]), p.same-paragraph)"
+                contexts:
+                  - type: PARAGRAPH_BREAK
+
+              - selector: "section.line-group"
+                contexts:
+                  - type: POETRY_STANZA_BREAK
+
+              - selector: "p.line:not(.indent)"
+                contexts:
+                  - type: POETRY_LINE_START
+                    op: literal=1
+
+              - selector: "p.line.indent"
+                contexts:
+                  - type: POETRY_LINE_START
+                    op: literal=2
+
+              - selector: "u"
+                withAncestors: [ INLINE_TEXT ]
+                withoutAncestors: [ MARKUP ]
+                contexts:
+                  - type: TEXT
+                    op: wholeText
+
+            externalParsers:
+              - selector: "sup.footnote > a"
+                textParser:
+                  stringExtractor:
+                    op: attribute=title
+                  ref: footnote
+
+              - selector: "sup.crossref > a"
+                contextsBefore:
+                  - type: NOTE
+                textParser:
+                  stringExtractor:
+                    op: attribute=data-passage
+                  ref: crossref
+
+  - id: footnote
+    html:
+      elements: [ ]
+      externalParsers:
+        - selector: "span.footnote-embedded"
+          nodeParser:
+            nodes:
+              - withoutAncestors: [ NOTE_MARKUP ]
+                contexts:
+                  - type: TEXT
+                    regexp: (.*)
+            elements:
+              - selector: "span.footnote-embedded"
+                contexts:
+                  - type: NOTE
+
+              - selector: "i.catch-word"
+                contexts:
+                  - type: CATCHPHRASE
+                    descendants:
+                      - type: TEXT
+                        op: text
+
+              - selector: "i:not(.catch-word)"
+                contexts:
+                  - type: QUOTE
+                    descendants:
+                      - type: TEXT
+                        op: text
+
+  - id: crossref
+    sliding:
+      rules:
+        # Starting space : just normal text.
+        - regexp: " "
+          contexts:
+            - type: TEXT
+              literal: " "
+        # Reference to a single verse or verse range.
+        - regexp: "[a-zA-Z0-9 ]+ \\d+:\\d+(?:–\\d+)?(?:; |$)"
+          contexts:
+            - type: REFERENCE
+              descendants:
+                - type: FULL_REF
+                  descendants:
+                    - type: REF_BOOK
+                      regexp: "^([a-zA-Z0-9 ]+) \\d+:\\d+(?:–\\d+)?;? ?$"
+                    - type: REF_CHAPTER
+                      regexp: "^[a-zA-Z0-9 ]+ (\\d+):\\d+(?:–\\d+)?;? ?$"
+                    - type: REF_VERSES
+                      regexp: "^[a-zA-Z0-9 ]+ \\d+:(\\d+(?:–\\d+)?);? ?$"
+                - type: TEXT
+                  regexp: "(.*)"
+

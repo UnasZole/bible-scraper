@@ -301,239 +301,240 @@ bible:
       names: [ Apoc, Ap, Apocalypse ]
       args: { BOOK: Apocalypse }
 
-html:
-  elements:
+parsers:
+  - html:
+      elements:
 
-    - selector: ".prp-pages-output h2"
-      withAncestors: [ BOOK_TITLE ]
-      contexts:
-        - type: TEXT
-          op: text
-        - type: TEXT
-          op: "literal= "
+        - selector: ".prp-pages-output h2"
+          withAncestors: [ BOOK_TITLE ]
+          contexts:
+            - type: TEXT
+              op: text
+            - type: TEXT
+              op: "literal= "
 
-    - selector: ".prp-pages-output h3"
-      withAncestors: [ MAJOR_SECTION_TITLE ]
-      contexts:
-        - type: TEXT
-          op: text
-        - type: TEXT
-          op: "literal= "
+        - selector: ".prp-pages-output h3"
+          withAncestors: [ MAJOR_SECTION_TITLE ]
+          contexts:
+            - type: TEXT
+              op: text
+            - type: TEXT
+              op: "literal= "
 
-    - selector: ".prp-pages-output h4"
-      withAncestors: [ SECTION_TITLE ]
-      contexts:
-        - type: TEXT
-          op: text
-        - type: TEXT
-          op: "literal= "
+        - selector: ".prp-pages-output h4"
+          withAncestors: [ SECTION_TITLE ]
+          contexts:
+            - type: TEXT
+              op: text
+            - type: TEXT
+              op: "literal= "
 
-    - selector: ":is(div.alineanegatif, div.alinea)"
-      withAncestors: [ MINOR_SECTION_TITLE ]
-      contexts:
-        - type: TEXT
-          op: text
-        - type: TEXT
-          op: "literal= "
+        - selector: ":is(div.alineanegatif, div.alinea)"
+          withAncestors: [ MINOR_SECTION_TITLE ]
+          contexts:
+            - type: TEXT
+              op: text
+            - type: TEXT
+              op: "literal= "
 
-    - selector: ".prp-pages-output div > a[href='#Sommaire']:matches(^\\d+$)"
-      contexts:
-        - type: CHAPTER
-          op: text
-          regexp: ^(\d+)$
+        - selector: ".prp-pages-output div > a[href='#Sommaire']:matches(^\\d+$)"
+          contexts:
+            - type: CHAPTER
+              op: text
+              regexp: ^(\d+)$
 
-    - selector: ".prp-pages-output p"
-      contexts:
-        - type: PARAGRAPH_BREAK
+        - selector: ".prp-pages-output p"
+          contexts:
+            - type: PARAGRAPH_BREAK
 
-    # A div inside a poem is an acrostic heading... unless it's a chapter start.
-    - selector: "div.poem > div:not(:has(a[href='#Sommaire']:matches(^\\d+$)))"
-      contexts:
-        - type: POETRY_ACROSTIC_START
-        - type: TEXT
-          op: text
+        # A div inside a poem is an acrostic heading... unless it's a chapter start.
+        - selector: "div.poem > div:not(:has(a[href='#Sommaire']:matches(^\\d+$)))"
+          contexts:
+            - type: POETRY_ACROSTIC_START
+            - type: TEXT
+              op: text
 
-  externalParsers:
-    - selector: ".prp-pages-output p:matches(^.*[^\\s].*$)"
-      withAncestors: [ CHAPTER ]
+      externalParsers:
+        - selector: ".prp-pages-output p:matches(^.*[^\\s].*$)"
+          withAncestors: [ CHAPTER ]
 
-      nodeParser:
-        nodes:
-          # All text nodes within the paragraph must be taken entirely as normal text.
-          - withAncestors: [ INLINE_TEXT ]
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
-            contexts:
-              - type: TEXT
-                regexp: (.*)
+          nodeParser:
+            nodes:
+              # All text nodes within the paragraph must be taken entirely as normal text.
+              - withAncestors: [ INLINE_TEXT ]
+                withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                contexts:
+                  - type: TEXT
+                    regexp: (.*)
 
-        elements:
-          # Start of a new paragraph denotes a paragraph break ONLY if it's not a poem formatting, or a spacer (ie empty paragraph)
-          - selector: ":not(div.poem) > p:not(:matches(^\\s*$))"
-            contexts:
-              - type: PARAGRAPH_BREAK
+            elements:
+              # Start of a new paragraph denotes a paragraph break ONLY if it's not a poem formatting, or a spacer (ie empty paragraph)
+              - selector: ":not(div.poem) > p:not(:matches(^\\s*$))"
+                contexts:
+                  - type: PARAGRAPH_BREAK
 
-          # Poem paragraph start means start of the first poetry line.
-          - selector: "div.poem > p"
-            contexts:
-              - type: POETRY_LINE_START
-                op: literal=1
+              # Poem paragraph start means start of the first poetry line.
+              - selector: "div.poem > p"
+                contexts:
+                  - type: POETRY_LINE_START
+                    op: literal=1
 
-          # Line breaks within a poem denote a new poetry line.
-          - selector: ".prp-pages-output div.poem > p > br"
-            contexts:
-              - type: POETRY_LINE_START
-                op: literal=1
+              # Line breaks within a poem denote a new poetry line.
+              - selector: ".prp-pages-output div.poem > p > br"
+                contexts:
+                  - type: POETRY_LINE_START
+                    op: literal=1
 
-          - selector: ":is(sup.verset-num, span.sidenote-left > small)"
-            contexts:
-              - type: VERSE
-                op: ownText
+              - selector: ":is(sup.verset-num, span.sidenote-left > small)"
+                contexts:
+                  - type: VERSE
+                    op: ownText
 
-          # Lettrine and small caps must be taken as normal text.
-          - selector: "span.lettrine + span"
-            withAncestors: [ INLINE_TEXT ]
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
-            contexts:
-              - type: TEXT
-                op: text
-          - selector: "span.sc"
-            withAncestors: [ INLINE_TEXT ]
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
-            contexts:
-              - type: TEXT
-                op: text
-
-          - selector: "i:not(:matches(^Séla$))"
-            contexts:
-              - type: TRANSLATION_ADD
-                descendants:
+              # Lettrine and small caps must be taken as normal text.
+              - selector: "span.lettrine + span"
+                withAncestors: [ INLINE_TEXT ]
+                withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                contexts:
+                  - type: TEXT
+                    op: text
+              - selector: "span.sc"
+                withAncestors: [ INLINE_TEXT ]
+                withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                contexts:
                   - type: TEXT
                     op: text
 
-          - selector: "i:matches(^Séla$)"
-            contexts:
-              - type: POETRY_SELAH_START
-              - type: TEXT
-                op: text
+              - selector: "i:not(:matches(^Séla$))"
+                contexts:
+                  - type: TRANSLATION_ADD
+                    descendants:
+                      - type: TEXT
+                        op: text
 
-        externalParsers:
-          - selector: "sup.reference > a"
-            linkTargetSelector: "> span.reference-text"
-            contextsBefore:
-              # Open a note before parsing its contents.
-              - type: NOTE
-            nodeParser:
-              nodes:
-                # All text nodes within the note must be taken entirely as normal text.
-                - withoutAncestors: [ NOTE_MARKUP ]
-                  contexts:
-                    - type: TEXT
-                      regexp: (.*)
-              elements:
-                # Other spans, sups and such are just formatting, register the text.
-                - selector: "span.reference-text > :is(span, sup)"
-                  contexts:
-                    - type: TEXT
-                      op: text
-                # Italic elements in notes are usually quotes - unless they are first, or preceded by a text containing "—"
-                - selector: "span.reference-text > i ~ i"
-                  previousNode:
-                    isTextNodeMatching: "[^—]*"
-                  contexts:
-                    - type: QUOTE
-                      descendants:
+              - selector: "i:matches(^Séla$)"
+                contexts:
+                  - type: POETRY_SELAH_START
+                  - type: TEXT
+                    op: text
+
+            externalParsers:
+              - selector: "sup.reference > a"
+                linkTargetSelector: "> span.reference-text"
+                contextsBefore:
+                  # Open a note before parsing its contents.
+                  - type: NOTE
+                nodeParser:
+                  nodes:
+                    # All text nodes within the note must be taken entirely as normal text.
+                    - withoutAncestors: [ NOTE_MARKUP ]
+                      contexts:
+                        - type: TEXT
+                          regexp: (.*)
+                  elements:
+                    # Other spans, sups and such are just formatting, register the text.
+                    - selector: "span.reference-text > :is(span, sup)"
+                      contexts:
                         - type: TEXT
                           op: text
-                # First italic element of the note is the catchphrase.
-                - selector: "span.reference-text > i:first-of-type"
-                  contexts:
-                    - type: CATCHPHRASE
-                      descendants:
-                        - type: TEXT
-                          op: text
-                # Italic element following a text containing "—" is a subsequent catchphrase.
-                - selector: "span.reference-text > i ~ i"
-                  previousNode:
-                    isTextNodeMatching: ".*—.*"
-                  contexts:
-                    - type: CATCHPHRASE
-                      descendants:
-                        - type: TEXT
-                          op: text
-
-                # Links are references to parse.
-
-                # Links containing a path followed by a "#Bible_Crampon_1923" anchor, with text containing a sequence of numbers, are full references to verses.
-                - selector: "a[href~=^.*/[^/]+#Bible_Crampon_1923/.+CH\\d+$]:matches(^.*\\d[\\d-]*.*$)"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: FULL_REF
+                    # Italic elements in notes are usually quotes - unless they are first, or preceded by a text containing "—"
+                    - selector: "span.reference-text > i ~ i"
+                      previousNode:
+                        isTextNodeMatching: "[^—]*"
+                      contexts:
+                        - type: QUOTE
                           descendants:
-                            - type: REF_BOOK
-                              op: attribute=href
-                              regexp: "^.*/([^/]+)#Bible_Crampon_1923/.+CH\\d+$"
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^.*/[^/]+#Bible_Crampon_1923/.+CH(\\d+)$"
-                            - type: REF_VERSES
+                            - type: TEXT
                               op: text
-                              regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
-                        - type: TEXT
-                          op: text
-                # Links containing a path followed by a "#Bible_Crampon_1923" anchor, with text not containing a sequence of numbers, are full references to chapters.
-                - selector: "a[href~=^.*/[^/]+#Bible_Crampon_1923/.+CH\\d+$]:not(:matches(^.*\\d[\\d-]*.*$))"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: FULL_REF
+                    # First italic element of the note is the catchphrase.
+                    - selector: "span.reference-text > i:first-of-type"
+                      contexts:
+                        - type: CATCHPHRASE
                           descendants:
-                            - type: REF_BOOK
-                              op: attribute=href
-                              regexp: "^.*/([^/]+)#Bible_Crampon_1923/.+CH\\d+$"
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^.*/[^/]+#Bible_Crampon_1923/.+CH(\\d+)$"
-                        - type: TEXT
-                          op: text
-
-                # Links containing a path followed by a #1-2 anchor are full references to a verse.
-                - selector: "a[href~=^.*Bible_Crampon_1923/[^/]+#\\d+-\\d+$]"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: FULL_REF
+                            - type: TEXT
+                              op: text
+                    # Italic element following a text containing "—" is a subsequent catchphrase.
+                    - selector: "span.reference-text > i ~ i"
+                      previousNode:
+                        isTextNodeMatching: ".*—.*"
+                      contexts:
+                        - type: CATCHPHRASE
                           descendants:
-                            - type: REF_BOOK
-                              op: attribute=href
-                              regexp: "^.*Bible_Crampon_1923/([^/]+)#\\d+-\\d+$"
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^.*Bible_Crampon_1923/[^/]+#(\\d+)-\\d+$"
-                            - type: REF_VERSES
-                              op: attribute=href
-                              regexp: "^.*Bible_Crampon_1923/[^/]+#\\d+-(\\d+)$"
-                        - type: TEXT
-                          op: text
+                            - type: TEXT
+                              op: text
 
-                # Links containing only a #1-2 anchor are local references to a verse.
-                - selector: "a[href~=^#\\d+-\\d+$]"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: LOCAL_REF
+                    # Links are references to parse.
+
+                    # Links containing a path followed by a "#Bible_Crampon_1923" anchor, with text containing a sequence of numbers, are full references to verses.
+                    - selector: "a[href~=^.*/[^/]+#Bible_Crampon_1923/.+CH\\d+$]:matches(^.*\\d[\\d-]*.*$)"
+                      contexts:
+                        - type: REFERENCE
                           descendants:
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^#(\\d+)-\\d+$"
-                            - type: REF_VERSES
-                              op: attribute=href
-                              regexp: "^#\\d+-(\\d+)$"
+                            - type: FULL_REF
+                              descendants:
+                                - type: REF_BOOK
+                                  op: attribute=href
+                                  regexp: "^.*/([^/]+)#Bible_Crampon_1923/.+CH\\d+$"
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^.*/[^/]+#Bible_Crampon_1923/.+CH(\\d+)$"
+                                - type: REF_VERSES
+                                  op: text
+                                  regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
+                            - type: TEXT
+                              op: text
+                    # Links containing a path followed by a "#Bible_Crampon_1923" anchor, with text not containing a sequence of numbers, are full references to chapters.
+                    - selector: "a[href~=^.*/[^/]+#Bible_Crampon_1923/.+CH\\d+$]:not(:matches(^.*\\d[\\d-]*.*$))"
+                      contexts:
+                        - type: REFERENCE
+                          descendants:
+                            - type: FULL_REF
+                              descendants:
+                                - type: REF_BOOK
+                                  op: attribute=href
+                                  regexp: "^.*/([^/]+)#Bible_Crampon_1923/.+CH\\d+$"
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^.*/[^/]+#Bible_Crampon_1923/.+CH(\\d+)$"
+                            - type: TEXT
+                              op: text
+
+                    # Links containing a path followed by a #1-2 anchor are full references to a verse.
+                    - selector: "a[href~=^.*Bible_Crampon_1923/[^/]+#\\d+-\\d+$]"
+                      contexts:
+                        - type: REFERENCE
+                          descendants:
+                            - type: FULL_REF
+                              descendants:
+                                - type: REF_BOOK
+                                  op: attribute=href
+                                  regexp: "^.*Bible_Crampon_1923/([^/]+)#\\d+-\\d+$"
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^.*Bible_Crampon_1923/[^/]+#(\\d+)-\\d+$"
+                                - type: REF_VERSES
+                                  op: attribute=href
+                                  regexp: "^.*Bible_Crampon_1923/[^/]+#\\d+-(\\d+)$"
+                            - type: TEXT
+                              op: text
+
+                    # Links containing only a #1-2 anchor are local references to a verse.
+                    - selector: "a[href~=^#\\d+-\\d+$]"
+                      contexts:
+                        - type: REFERENCE
+                          descendants:
+                            - type: LOCAL_REF
+                              descendants:
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^#(\\d+)-\\d+$"
+                                - type: REF_VERSES
+                                  op: attribute=href
+                                  regexp: "^#\\d+-(\\d+)$"
+                            - type: TEXT
+                              op: text
+
+                    # Links that are not inside Crampon should be taken as just text.
+                    - selector: "a:not([href~=^.*Bible_Crampon_1923.*$]):not([href~=^#\\d+-\\d+$])"
+                      contexts:
                         - type: TEXT
                           op: text
-
-                # Links that are not inside Crampon should be taken as just text.
-                - selector: "a:not([href~=^.*Bible_Crampon_1923.*$]):not([href~=^#\\d+-\\d+$])"
-                  contexts:
-                    - type: TEXT
-                      op: text

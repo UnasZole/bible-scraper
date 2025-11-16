@@ -329,14 +329,15 @@ bible:
       args: { BOOK: Ap }
       chapters: [ { from: 1, to: 22 } ]
 
-html:
-  elements:
-    - selector: "#right-col p:has(> span:is(.verse_number, .text-danger))"
-      contexts:
-        - type: VERSE
-          selector: "> span:is(.verse_number, .text-danger)"
-          op: text
-          descendants:
-            - type: TEXT
-              op: ownText
+parsers:
+  - html:
+      elements:
+        - selector: "#right-col p:has(> span:is(.verse_number, .text-danger))"
+          contexts:
+            - type: VERSE
+              selector: "> span:is(.verse_number, .text-danger)"
+              op: text
+              descendants:
+                - type: TEXT
+                  op: ownText
 

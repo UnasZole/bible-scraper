@@ -33,6 +33,10 @@ public class Page extends PatternContainer {
 
         return sourceFileBuilder.buildFrom(
                 patternName -> finalContainer.evaluate(patternPrefix + patternName, argEvaluator)
-        ).map(sf -> new PageData(sf, finalContainer.evaluateAllArgs(argEvaluator)));
+        ).map(sf -> new PageData(
+                sf,
+                finalContainer.evaluateAllArgs(argEvaluator),
+                finalContainer.evaluate(patternPrefix + "Parser", argEvaluator).orElse("main")
+        ));
     }
 }

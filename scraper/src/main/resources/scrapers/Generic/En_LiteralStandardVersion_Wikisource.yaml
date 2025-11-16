@@ -208,88 +208,91 @@ bible:
     - osis: Rev
       args: { BOOK: Revelation }
 
-html:
-  elements:
-    - selector: "span.wst-header-title > div.header-section-text"
-      contexts:
-        - type: BOOK_TITLE
-          descendants:
-            - type: TEXT
+parsers:
+  - html:
+      elements:
+        - selector: "span.wst-header-title > div.header-section-text"
+          contexts:
+            - type: BOOK_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: "div.mw-heading > h2:matches(^(Chapter|Psalm) \\d+)"
+          contexts:
+            - type: CHAPTER
               op: text
+              regexp: "(?:Chapter|Psalm) (\\d+)"
 
-    - selector: "div.mw-heading > h2:matches(^(Chapter|Psalm) \\d+)"
-      contexts:
-        - type: CHAPTER
-          op: text
-          regexp: "(?:Chapter|Psalm) (\\d+)"
-
-  externalParsers:
-    - selector: "p:not([class])"
-      withAncestors: [ CHAPTER ]
-      contextsBefore:
-        - type: PARAGRAPH_BREAK
-      nodeParser:
-        elements:
-          # A verse number which has subsequent double-vertical lines should start a poetry line.
-          - selector: "span.wst-verse"
-            nextNode:
-              isTextNodeMatching: ".*\\|\\|.*"
-            contexts:
-              - type: VERSE
-                selector: "> sup"
-                op: text
-                descendants:
-                  - type: POETRY_LINE_START
-                    op: "literal=1"
-          # Other verse numbers do not.
-          - selector: "span.wst-verse"
-            contexts:
-              - type: VERSE
-                selector: "> sup"
-                op: text
-                descendants:
-                  - type: POETRY_STANZA_BREAK
-
-          # an "or" in italic following a bold [[ marks the beginning of an alternate translation.
-          - selector: "i:matches(^or$)"
-            previousNode:
-              isElementMatching: "b:matches(\\[\\[)"
-            contexts:
-              - type: NOTE
-                descendants:
-                  - type: TEXT
-                    op: "literal=or "
-                  - type: ALTERNATE_TRANSLATION
-          # A bold ]] marks the end of an alternate translation, back to regular text.
-          - selector: "b:matches(\\]\\])"
-            withoutAncestors: [ NOTE ]
-            contexts:
-              - type: TEXT
-                op: "literal="
-
-        nodeExternalParsers:
-          - regexp: ".*[^\\s].*"
-            textParser:
-              sliding:
-                rules:
-                  # Text within single brackets is a translation addition.
-                  - regexp: "\\[[^\\[\\]]+\\]"
-                    contexts:
-                      - type: TRANSLATION_ADD
-                        descendants:
-                          - type: TEXT
-                            regexp: "\\[([^\\[\\]]+)\\]"
-
-                  # Two vertical bars signal a line break in poetry.
-                  - regexp: "\\|\\|"
-                    contexts:
+      externalParsers:
+        - selector: "p:not([class])"
+          withAncestors: [ CHAPTER ]
+          contextsBefore:
+            - type: PARAGRAPH_BREAK
+          nodeParser:
+            elements:
+              # A verse number which has subsequent double-vertical lines should start a poetry line.
+              - selector: "span.wst-verse"
+                nextNode:
+                  isTextNodeMatching: ".*\\|\\|.*"
+                contexts:
+                  - type: VERSE
+                    selector: "> sup"
+                    op: text
+                    descendants:
                       - type: POETRY_LINE_START
-                        literal: "1"
+                        op: "literal=1"
+              # Other verse numbers do not.
+              - selector: "span.wst-verse"
+                contexts:
+                  - type: VERSE
+                    selector: "> sup"
+                    op: text
+                    descendants:
+                      - type: POETRY_STANZA_BREAK
 
-                  # Match everything until the next space or special character ( [ or | ) as regular text.
-                  - regexp: ".?[^\\s\\[\\|]+\\s*"
-                    withoutAncestors: [ MARKUP ]
-                    contexts:
+              # an "or" in italic following a bold [[ marks the beginning of an alternate translation.
+              - selector: "i:matches(^or$)"
+                previousNode:
+                  isElementMatching: "b:matches(\\[\\[)"
+                contexts:
+                  - type: NOTE
+                    descendants:
                       - type: TEXT
-                        regexp: "(.*)"
+                        op: "literal=or "
+                      - type: ALTERNATE_TRANSLATION
+              # A bold ]] marks the end of an alternate translation, back to regular text.
+              - selector: "b:matches(\\]\\])"
+                withoutAncestors: [ NOTE ]
+                contexts:
+                  - type: TEXT
+                    op: "literal="
 
+            nodeExternalParsers:
+              - regexp: ".*[^\\s].*"
+                textParser:
+                  ref: annotatedText
+
+  - id: annotatedText
+    sliding:
+      rules:
+        # Text within single brackets is a translation addition.
+        - regexp: "\\[[^\\[\\]]+\\]"
+          contexts:
+            - type: TRANSLATION_ADD
+              descendants:
+                - type: TEXT
+                  regexp: "\\[([^\\[\\]]+)\\]"
+
+        # Two vertical bars signal a line break in poetry.
+        - regexp: "\\|\\|"
+          contexts:
+            - type: POETRY_LINE_START
+              literal: "1"
+
+        # Match everything until the next space or special character ( [ or | ) as regular text.
+        - regexp: ".?[^\\s\\[\\|]+\\s*"
+          withoutAncestors: [ MARKUP ]
+          contexts:
+            - type: TEXT
+              regexp: "(.*)"

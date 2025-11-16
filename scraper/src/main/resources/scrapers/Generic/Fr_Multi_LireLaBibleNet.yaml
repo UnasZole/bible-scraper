@@ -344,52 +344,53 @@ bible:
       args: { BOOK: REV }
       chapters: [ { from: 1, to: 22 } ]
 
-html:
-  elements:
-    - selector: "ibep-bible-chapter > h1"
-      contexts:
-        - type: CHAPTER_TITLE
-          descendants:
+parsers:
+  - html:
+      elements:
+        - selector: "ibep-bible-chapter > h1"
+          contexts:
+            - type: CHAPTER_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: "ibep-render-bible-content bible-ms"
+          contexts:
+            - type: MAJOR_SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: "ibep-render-bible-content bible-s"
+          contexts:
+            - type: SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: "ibep-render-bible-content :is(bible-p, bible-m)"
+          contexts:
+            - type: PARAGRAPH_BREAK
+
+        - selector: "ibep-render-bible-content bible-q"
+          contexts:
+            - type: POETRY_LINE_START
+              op: "literal=1"
+
+        - selector: "ibep-render-bible-content bible-v"
+          contexts:
+            - type: VERSE
+              selector: "> sub"
+              op: ownText
+
+        - selector: "ibep-render-bible-content ibep-verse-text-renderer > span"
+          withAncestors: [ VERSE ]
+          contexts:
             - type: TEXT
-              op: text
+              op: wholeOwnText
 
-    - selector: "ibep-render-bible-content bible-ms"
-      contexts:
-        - type: MAJOR_SECTION_TITLE
-          descendants:
+        - selector: "ibep-render-bible-content ibep-verse-text-renderer > bible-nd > span"
+          withAncestors: [ VERSE ]
+          contexts:
             - type: TEXT
-              op: text
-
-    - selector: "ibep-render-bible-content bible-s"
-      contexts:
-        - type: SECTION_TITLE
-          descendants:
-            - type: TEXT
-              op: text
-
-    - selector: "ibep-render-bible-content :is(bible-p, bible-m)"
-      contexts:
-        - type: PARAGRAPH_BREAK
-
-    - selector: "ibep-render-bible-content bible-q"
-      contexts:
-        - type: POETRY_LINE_START
-          op: "literal=1"
-
-    - selector: "ibep-render-bible-content bible-v"
-      contexts:
-        - type: VERSE
-          selector: "> sub"
-          op: ownText
-
-    - selector: "ibep-render-bible-content ibep-verse-text-renderer > span"
-      withAncestors: [ VERSE ]
-      contexts:
-        - type: TEXT
-          op: wholeOwnText
-
-    - selector: "ibep-render-bible-content ibep-verse-text-renderer > bible-nd > span"
-      withAncestors: [ VERSE ]
-      contexts:
-        - type: TEXT
-          op: wholeOwnText
+              op: wholeOwnText

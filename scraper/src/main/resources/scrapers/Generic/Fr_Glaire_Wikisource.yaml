@@ -458,264 +458,265 @@ bible:
       patterns: { bookUrl: "https://fr.wikisource.org/wiki/Jacques-Paul_Migne/{BOOK}" }
       args: { BOOK: Livre_d’Esdras_IV }
 
-html:
-  elements:
-    - selector: "h2 > span > span"
-      contexts:
-        - type: BOOK_TITLE
-          descendants:
+parsers:
+  - html:
+      elements:
+        - selector: "h2 > span > span"
+          contexts:
+            - type: BOOK_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: ".prp-pages-output h2"
+          contexts:
+            - type: BOOK_INTRO_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: ".prp-pages-output h3"
+          withAncestors: [ BOOK_INTRO ]
+          contexts:
+            - type: MAJOR_SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: ".prp-pages-output h4:not(:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*))"
+          withAncestors: [ BOOK_INTRO ]
+          contexts:
+            - type: SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: ".prp-pages-output h5"
+          withAncestors: [ BOOK_INTRO ]
+          contexts:
+            - type: MINOR_SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        - selector: ".prp-pages-output p:matches(.+)"
+          withAncestors: [ BOOK_INTRO ]
+          contexts:
+            - type: PARAGRAPH_BREAK
             - type: TEXT
               op: text
 
-    - selector: ".prp-pages-output h2"
-      contexts:
-        - type: BOOK_INTRO_TITLE
-          descendants:
+        - selector: ".prp-pages-output div[style*=font-size:85%]:matches(.+)"
+          withAncestors: [ BOOK_INTRO ]
+          contexts:
             - type: TEXT
-              op: text
+              op: "literal= "
+            - type: QUOTE
+              descendants:
+                - type: TEXT
+                  op: text
 
-    - selector: ".prp-pages-output h3"
-      withAncestors: [ BOOK_INTRO ]
-      contexts:
-        - type: MAJOR_SECTION_TITLE
-          descendants:
-            - type: TEXT
-              op: text
+        - selector: ".prp-pages-output table:has(img):has(div[style*=font-size:80%])"
+          withAncestors: [ BOOK_INTRO ]
+          contexts:
+            - type: FIGURE
+              selector: "img"
+              op: "attribute=src"
+              descendants:
+                - type: FIG_ALT
+                  selector: "div[style*=font-size:80%]"
+                  op: text
+                - type: FIG_CAPTION
+                  selector: "div[style*=font-size:80%]"
+                  op: text
 
-    - selector: ".prp-pages-output h4:not(:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*))"
-      withAncestors: [ BOOK_INTRO ]
-      contexts:
-        - type: SECTION_TITLE
-          descendants:
-            - type: TEXT
-              op: text
+        - selector: ".prp-pages-output figure:has(img:not([src*=100px-Sep4.svg.png])):has(figcaption)"
+          withAncestors: [ BOOK_INTRO ]
+          contexts:
+            - type: FIGURE
+              selector: "img"
+              op: "attribute=src"
+              descendants:
+                - type: FIG_ALT
+                  selector: "figcaption"
+                  op: text
+                - type: FIG_CAPTION
+                  selector: "figcaption"
+                  op: text
 
-    - selector: ".prp-pages-output h5"
-      withAncestors: [ BOOK_INTRO ]
-      contexts:
-        - type: MINOR_SECTION_TITLE
-          descendants:
-            - type: TEXT
+        - selector: "h4:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*)"
+          contexts:
+            - type: CHAPTER
               op: text
+              regexp: (?:CHAPITRE|Psaume|PSAUME) (\d+|[MmDdCcLlXxVvIi]+|PREMIER|Premier|UNIQUE).*
 
-    - selector: ".prp-pages-output p:matches(.+)"
-      withAncestors: [ BOOK_INTRO ]
-      contexts:
-        - type: PARAGRAPH_BREAK
-        - type: TEXT
-          op: text
+        - selector: "h4 + div.alinea"
+          withoutAncestors: [ NOTE ]
+          contexts:
+            - type: CHAPTER_INTRO
+              descendants:
+                - type: TEXT
+                  op: text
 
-    - selector: ".prp-pages-output div[style*=font-size:85%]:matches(.+)"
-      withAncestors: [ BOOK_INTRO ]
-      contexts:
-        - type: TEXT
-          op: "literal= "
-        - type: QUOTE
-          descendants:
-            - type: TEXT
-              op: text
-
-    - selector: ".prp-pages-output table:has(img):has(div[style*=font-size:80%])"
-      withAncestors: [ BOOK_INTRO ]
-      contexts:
-        - type: FIGURE
-          selector: "img"
-          op: "attribute=src"
-          descendants:
-            - type: FIG_ALT
-              selector: "div[style*=font-size:80%]"
-              op: text
-            - type: FIG_CAPTION
-              selector: "div[style*=font-size:80%]"
-              op: text
-
-    - selector: ".prp-pages-output figure:has(img:not([src*=100px-Sep4.svg.png])):has(figcaption)"
-      withAncestors: [ BOOK_INTRO ]
-      contexts:
-        - type: FIGURE
-          selector: "img"
-          op: "attribute=src"
-          descendants:
-            - type: FIG_ALT
-              selector: "figcaption"
-              op: text
-            - type: FIG_CAPTION
-              selector: "figcaption"
-              op: text
-
-    - selector: "h4:matches(^(?:CHAPITRE|Psaume|PSAUME)\\s+\\.*)"
-      contexts:
-        - type: CHAPTER
-          op: text
-          regexp: (?:CHAPITRE|Psaume|PSAUME) (\d+|[MmDdCcLlXxVvIi]+|PREMIER|Premier|UNIQUE).*
-
-    - selector: "h4 + div.alinea"
-      withoutAncestors: [ NOTE ]
-      contexts:
-        - type: CHAPTER_INTRO
-          descendants:
-            - type: TEXT
-              op: text
-
-  externalParsers:
-    # A non-empty paragraph within a chapter is verse text.
-    - selector: ".prp-pages-output p:matches(.+)"
-      withAncestors: [ CHAPTER ]
-      nodeParser:
-        nodes:
-          # In text nodes with a starting verse number and non-empty followup, verse number has to be ignored.
-          - regexp: ^\d+\.\s+.+$
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP, PSALM_TITLE ]
-            contexts:
-              - type: TEXT
-                regexp: ^\d+\.\s+(.+)$
-          # Non-empty text nodes that do not start with a verse number are taken as-is.
-          - regexp: ^[^\d].*$
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP, PSALM_TITLE ]
-            contexts:
-              - type: TEXT
-                regexp: ^([^\d].*)$
-        elements:
-          # If the paragraph starts with a number, open the corresponding verse before processing the nodes.
-          - selector: "p:matches(^\\d+\\.\\s+.*$)"
-            contexts:
-              - type: VERSE
-                op: text
-                regexp: ^(\d+)\.\s+.*$
-          # If the paragraph does not start with a number, it's a continuation of the current verse. Prepend a space.
-          - selector: "p:not(:matches(^\\d+\\.\\s+.*$))"
-            contexts:
-              - type: TEXT
-                op: "literal= "
-          # Italic longer than 30 or with specific keywords is a psalm title.
-          - selector: "p > i:is(:matches(^.{30,}$):not(:matches(ne vous viendra des secours)), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$))"
-            withAncestors: [ PSALM_TITLE ]
-            contexts:
-              - type: TEXT
-                op: ownText
-          # Italic texts that didn't match the previous selector are translation additions.
-          - selector: "p > i:not(:is(:matches(^.{30,}$):not(:matches(ne vous viendra des secours)), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$)))"
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, PSALM_TITLE ]
-            contexts:
-              - type: TRANSLATION_ADD
-                descendants:
+      externalParsers:
+        # A non-empty paragraph within a chapter is verse text.
+        - selector: ".prp-pages-output p:matches(.+)"
+          withAncestors: [ CHAPTER ]
+          nodeParser:
+            nodes:
+              # In text nodes with a starting verse number and non-empty followup, verse number has to be ignored.
+              - regexp: ^\d+\.\s+.+$
+                withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP, PSALM_TITLE ]
+                contexts:
+                  - type: TEXT
+                    regexp: ^\d+\.\s+(.+)$
+              # Non-empty text nodes that do not start with a verse number are taken as-is.
+              - regexp: ^[^\d].*$
+                withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP, PSALM_TITLE ]
+                contexts:
+                  - type: TEXT
+                    regexp: ^([^\d].*)$
+            elements:
+              # If the paragraph starts with a number, open the corresponding verse before processing the nodes.
+              - selector: "p:matches(^\\d+\\.\\s+.*$)"
+                contexts:
+                  - type: VERSE
+                    op: text
+                    regexp: ^(\d+)\.\s+.*$
+              # If the paragraph does not start with a number, it's a continuation of the current verse. Prepend a space.
+              - selector: "p:not(:matches(^\\d+\\.\\s+.*$))"
+                contexts:
+                  - type: TEXT
+                    op: "literal= "
+              # Italic longer than 30 or with specific keywords is a psalm title.
+              - selector: "p > i:is(:matches(^.{30,}$):not(:matches(ne vous viendra des secours)), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$))"
+                withAncestors: [ PSALM_TITLE ]
+                contexts:
                   - type: TEXT
                     op: ownText
+              # Italic texts that didn't match the previous selector are translation additions.
+              - selector: "p > i:not(:is(:matches(^.{30,}$):not(:matches(ne vous viendra des secours)), :matches(^Pour .*$), :matches(^.*[Pp]saume.*$), :matches(^.*(de|par) David.*$), :matches(^.*Asaph.\\s*$)))"
+                withoutAncestors: [ STRUCTURE_MARKER, NOTE, PSALM_TITLE ]
+                contexts:
+                  - type: TRANSLATION_ADD
+                    descendants:
+                      - type: TEXT
+                        op: ownText
 
-          # Some simple text may be wrapped into a "coquille" span to highlight a correction from the manuscript.
-          # This "coquille" span may include a verse number, to be ignored, or not.
-          - selector: "p > span.coquille:matches(^\\d+\\.\\s+.+$)"
-            contexts:
-              - type: TEXT
-                op: text
-                regexp: ^\d+\.\s+(.+)$
-          - selector: "p > span.coquille:matches(^[^\\d].*$)"
-            contexts:
-              - type: TEXT
-                op: text
-                regexp: ^([^\d].*)$
-
-          # Text in small caps is the speaker identification.
-          - selector: "p > span.sc"
-            contexts:
-              - type: SPEAKER
-                descendants:
+              # Some simple text may be wrapped into a "coquille" span to highlight a correction from the manuscript.
+              # This "coquille" span may include a verse number, to be ignored, or not.
+              - selector: "p > span.coquille:matches(^\\d+\\.\\s+.+$)"
+                contexts:
                   - type: TEXT
                     op: text
+                    regexp: ^\d+\.\s+(.+)$
+              - selector: "p > span.coquille:matches(^[^\\d].*$)"
+                contexts:
+                  - type: TEXT
+                    op: text
+                    regexp: ^([^\d].*)$
 
-        externalParsers:
-          - selector: "sup.reference > a"
-            linkTargetSelector: "> span.reference-text"
-            contextsBefore:
-              # Open a note before parsing its contents.
-              - type: NOTE
-            nodeParser:
-              nodes:
-                - withoutAncestors: [ NOTE_MARKUP ]
-                  contexts:
-                    - type: TEXT
-                      regexp: (.*)
-              elements:
-                # i elements in notes indicate quoted text.
-                - selector: "span.reference-text > i"
-                  contexts:
-                    - type: QUOTE
-                      descendants:
+              # Text in small caps is the speaker identification.
+              - selector: "p > span.sc"
+                contexts:
+                  - type: SPEAKER
+                    descendants:
+                      - type: TEXT
+                        op: text
+
+            externalParsers:
+              - selector: "sup.reference > a"
+                linkTargetSelector: "> span.reference-text"
+                contextsBefore:
+                  # Open a note before parsing its contents.
+                  - type: NOTE
+                nodeParser:
+                  nodes:
+                    - withoutAncestors: [ NOTE_MARKUP ]
+                      contexts:
                         - type: TEXT
-                          op: text
-                # Other items to be taken as text.
-                - selector: ":is(span.coquille, span.sc, abbr)"
-                  withoutAncestors: [ NOTE_MARKUP ]
-                  contexts:
-                    - type: TEXT
-                      op: text
-
-                # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing numbers, are full references to verses.
-                - selector: "a[href~=^(.*La_sainte_Bible_selon_la_Vulgate_\\(J.-B._Glaire\\)/)?([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*\\d+.*$)"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: FULL_REF
+                          regexp: (.*)
+                  elements:
+                    # i elements in notes indicate quoted text.
+                    - selector: "span.reference-text > i"
+                      contexts:
+                        - type: QUOTE
                           descendants:
-                            - type: REF_BOOK
-                              op: attribute=href
-                              regexp: "^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^.*/[^/]+#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                            - type: REF_VERSES
+                            - type: TEXT
                               op: text
-                              regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
-                        - type: TEXT
-                          op: text
-                # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing no number, are full references to chapters.
-                - selector: "a[href~=^(.*La_sainte_Bible_selon_la_Vulgate_\\(J.-B._Glaire\\)/)?/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*\\d+.*$))"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: FULL_REF
-                          descendants:
-                            - type: REF_BOOK
-                              op: attribute=href
-                              regexp: "^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^.*/[^/]+#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                        - type: TEXT
-                          op: text
-                # Links containing only a "#CHAPITRE_" anchor, with text containing numbers, are local references to verses.
-                - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*\\d+.*$)"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: LOCAL_REF
-                          descendants:
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
-                            - type: REF_VERSES
-                              op: text
-                              regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
-                        - type: TEXT
-                          op: text
-                # Links containing only a "#CHAPITRE_" anchor, with text containing no number, are local references to chapters.
-                - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*\\d+.*$))"
-                  contexts:
-                    - type: REFERENCE
-                      descendants:
-                        - type: LOCAL_REF
-                          descendants:
-                            - type: REF_CHAPTER
-                              op: attribute=href
-                              regexp: "^#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                    # Other items to be taken as text.
+                    - selector: ":is(span.coquille, span.sc, abbr)"
+                      withoutAncestors: [ NOTE_MARKUP ]
+                      contexts:
                         - type: TEXT
                           op: text
 
-                # Other links are kept as external.
-                - selector: "a[href]"
-                  contexts:
-                    - type: LINK
-                      op: attribute=href
-                      descendants:
-                        - type: TEXT
-                          op: text
+                    # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing numbers, are full references to verses.
+                    - selector: "a[href~=^(.*La_sainte_Bible_selon_la_Vulgate_\\(J.-B._Glaire\\)/)?([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*\\d+.*$)"
+                      contexts:
+                        - type: REFERENCE
+                          descendants:
+                            - type: FULL_REF
+                              descendants:
+                                - type: REF_BOOK
+                                  op: attribute=href
+                                  regexp: "^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^.*/[^/]+#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                                - type: REF_VERSES
+                                  op: text
+                                  regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
+                            - type: TEXT
+                              op: text
+                    # Links containing a path followed by a "#CHAPITRE_" anchor, with text containing no number, are full references to chapters.
+                    - selector: "a[href~=^(.*La_sainte_Bible_selon_la_Vulgate_\\(J.-B._Glaire\\)/)?/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*\\d+.*$))"
+                      contexts:
+                        - type: REFERENCE
+                          descendants:
+                            - type: FULL_REF
+                              descendants:
+                                - type: REF_BOOK
+                                  op: attribute=href
+                                  regexp: "^.*/([^/]+)#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^.*/[^/]+#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                            - type: TEXT
+                              op: text
+                    # Links containing only a "#CHAPITRE_" anchor, with text containing numbers, are local references to verses.
+                    - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:matches(^.*\\d+.*$)"
+                      contexts:
+                        - type: REFERENCE
+                          descendants:
+                            - type: LOCAL_REF
+                              descendants:
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                                - type: REF_VERSES
+                                  op: text
+                                  regexp: "^.*[^\\d]+(\\d[\\d-]*)[^\\d]*$"
+                            - type: TEXT
+                              op: text
+                    # Links containing only a "#CHAPITRE_" anchor, with text containing no number, are local references to chapters.
+                    - selector: "a[href~=^#(?:CHAPITRE|PSAUME)_(?:\\d+|[MmDdCcLlXxVvIi]+)[._].*$]:not(:matches(^.*\\d+.*$))"
+                      contexts:
+                        - type: REFERENCE
+                          descendants:
+                            - type: LOCAL_REF
+                              descendants:
+                                - type: REF_CHAPTER
+                                  op: attribute=href
+                                  regexp: "^#(?:CHAPITRE|PSAUME)_(\\d+|[MmDdCcLlXxVvIi]+)[._].*$"
+                            - type: TEXT
+                              op: text
+
+                    # Other links are kept as external.
+                    - selector: "a[href]"
+                      contexts:
+                        - type: LINK
+                          op: attribute=href
+                          descendants:
+                            - type: TEXT
+                              op: text

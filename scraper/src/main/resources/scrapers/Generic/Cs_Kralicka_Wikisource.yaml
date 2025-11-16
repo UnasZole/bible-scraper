@@ -239,88 +239,89 @@ bible:
     - osis: Rev
       args: { BOOK: Zjevení }
 
-html:
-  elements:
+parsers:
+  - html:
+      elements:
 
-    - selector: "div.mw-body-content td.act b"
-      contexts:
-        - type: BOOK_TITLE
-          descendants:
-          - type: TEXT
-            op: text
+        - selector: "div.mw-body-content td.act b"
+          contexts:
+            - type: BOOK_TITLE
+              descendants:
+              - type: TEXT
+                op: text
 
-    # Main books : chapter title is an h2.
-    - selector: ".prp-pages-output h2"
-      contexts:
-        - type: CHAPTER
-          op: text
-          regexp: "(?:Kapitola|Žalm) ([CLXVI0-9]+).?"
-    # Main books : intro paragraph does not contain chapter title.
-    - selector: ".prp-pages-output > div.intro > p:not(:matches(^Kapitola\\s+))"
-      contexts:
-        - type: CHAPTER_INTRO
-          descendants:
-          - type: TEXT
-            op: text
-
-    # Deuterocanonical books : chapter title is included in chapter intro paragraph.
-    - selector: ".prp-pages-output > div.intro > p:matches(^Kapitola\\s+)"
-      contexts:
-        - type: CHAPTER
-          selector: "> span.rimske-cislice"
-          op: text
-          descendants:
+        # Main books : chapter title is an h2.
+        - selector: ".prp-pages-output h2"
+          contexts:
+            - type: CHAPTER
+              op: text
+              regexp: "(?:Kapitola|Žalm) ([CLXVI0-9]+).?"
+        # Main books : intro paragraph does not contain chapter title.
+        - selector: ".prp-pages-output > div.intro > p:not(:matches(^Kapitola\\s+))"
+          contexts:
             - type: CHAPTER_INTRO
               descendants:
-                - type: TEXT
-                  op: text
-
-  externalParsers:
-    - selector: ".prp-pages-output > div.text > p:not(:matches(^\\s+$))"
-
-      nodeParser:
-        nodes:
-          # All text nodes within the paragraph must be taken entirely as normal verse text.
-          - withAncestors: [ VERSE ]
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
-            contexts:
-              - type: TEXT
-                regexp: (.*)
-
-        elements:
-          # Side notes are actually section titles.
-          - selector: "span.poznamkapostrane"
-            contexts:
-              - type: SECTION_TITLE
-                descendants:
-                  - type: TEXT
-                    op: text
-
-          # Superscript is used for verse numbers, marking the start of a new verse.
-          - selector: "sup.cisloverse"
-            contexts:
-              - type: VERSE
-                op: text
-
-          # Initial is to be taken as normal text.
-          - selector: "span.iniciala"
-            withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
-            contexts:
               - type: TEXT
                 op: text
 
-          # Italics is used for additions by the translator.
-          - selector: "i"
-            contexts:
-              - type: TRANSLATION_ADD
-                descendants:
+        # Deuterocanonical books : chapter title is included in chapter intro paragraph.
+        - selector: ".prp-pages-output > div.intro > p:matches(^Kapitola\\s+)"
+          contexts:
+            - type: CHAPTER
+              selector: "> span.rimske-cislice"
+              op: text
+              descendants:
+                - type: CHAPTER_INTRO
+                  descendants:
+                    - type: TEXT
+                      op: text
+
+      externalParsers:
+        - selector: ".prp-pages-output > div.text > p:not(:matches(^\\s+$))"
+
+          nodeParser:
+            nodes:
+              # All text nodes within the paragraph must be taken entirely as normal verse text.
+              - withAncestors: [ VERSE ]
+                withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                contexts:
+                  - type: TEXT
+                    regexp: (.*)
+
+            elements:
+              # Side notes are actually section titles.
+              - selector: "span.poznamkapostrane"
+                contexts:
+                  - type: SECTION_TITLE
+                    descendants:
+                      - type: TEXT
+                        op: text
+
+              # Superscript is used for verse numbers, marking the start of a new verse.
+              - selector: "sup.cisloverse"
+                contexts:
+                  - type: VERSE
+                    op: text
+
+              # Initial is to be taken as normal text.
+              - selector: "span.iniciala"
+                withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                contexts:
                   - type: TEXT
                     op: text
 
-          - selector: "sup.reference > a"
-            contexts:
-              - type: NOTE
-                descendants:
-                  - type: TEXT
-                    linkTargetSelector: "span.reference-text"
-                    op: text
+              # Italics is used for additions by the translator.
+              - selector: "i"
+                contexts:
+                  - type: TRANSLATION_ADD
+                    descendants:
+                      - type: TEXT
+                        op: text
+
+              - selector: "sup.reference > a"
+                contexts:
+                  - type: NOTE
+                    descendants:
+                      - type: TEXT
+                        linkTargetSelector: "span.reference-text"
+                        op: text

@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
 
 public class TextParser {
 
@@ -19,11 +21,17 @@ public class TextParser {
         ParserCore<Position> getParser(ContextualData contextualData);
     }
 
+    public String ref;
     public HtmlParserProvider html;
     public JsonParserProvider json;
     public SlidingParserProvider sliding;
 
-    private Provider<?> getProvider() {
+    private Provider<?> getProvider(Map<String, TextParser> namedParsers) {
+        if(ref != null) {
+            return Optional.ofNullable(namedParsers.get(ref))
+                    .map(tp -> tp.getProvider(namedParsers))
+                    .orElseThrow(() -> new RuntimeException("Could not find parser with name " + ref));
+        }
         if(html != null) {
             return html;
         }
@@ -47,6 +55,6 @@ public class TextParser {
 
     public Parser<?> getLocalParser(InputStream input,
                                     Deque<Context> currentContextStack, ContextualData contextualData) {
-        return getLocalParser(getProvider(), input, currentContextStack, contextualData);
+        return getLocalParser(getProvider(contextualData.namedParsers), input, currentContextStack, contextualData);
     }
 }

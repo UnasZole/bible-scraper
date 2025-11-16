@@ -241,36 +241,44 @@ bible:
     - osis: 2Esd
       args: { BOOK: Liber_Quartus_Esdrae }
 
-html:
-  elements:
+parsers:
+  - html:
+      elements:
 
-    - selector: "div.titulusHeaderBox > div.ws-noexport[style*=font-size:110%]"
-      contexts:
-        - type: BOOK_TITLE
-          descendants:
-          - type: TEXT
-            op: text
-
-    - selector: "div.text h2 span[id^=Caput_], div.text h2[id^=Caput_]"
-      contexts:
-        - type: CHAPTER
-          op: text
-          regexp: "^Caput\\s+(\\d+)$"
-
-
-  externalParsers:
-    - selector: "div.text > p"
-      nodeParser:
-        nodes:
-          # All text nodes within the paragraph must be taken entirely as normal text.
-          - withAncestors: [ CHAPTER ]
-            withoutAncestors: [ CHAPTER_TITLE, CHAPTER_INTRO, STRUCTURE_MARKER, NOTE, MARKUP ]
-            contexts:
+        - selector: "div.titulusHeaderBox > div.ws-noexport[style*=font-size:110%]"
+          contexts:
+            - type: BOOK_TITLE
+              descendants:
               - type: TEXT
-                regexp: " ?(.*)"
-
-        elements:
-          - selector: "p > sup"
-            contexts:
-              - type: VERSE
                 op: text
+
+        - selector: "div.text h4[id^=Caput_]"
+          contexts:
+            - type: CHAPTER
+              op: text
+              regexp: "^Caput\\s+(\\d+)$"
+              descendants:
+                - type: CHAPTER_TITLE
+                  descendants:
+                    - type: TEXT
+                      op: text
+
+
+      externalParsers:
+        - selector: "div.text > p"
+          contextsBefore:
+            - type: PARAGRAPH_BREAK
+          nodeParser:
+            nodes:
+              # All text nodes within the paragraph must be taken entirely as normal text.
+              - withAncestors: [ CHAPTER ]
+                withoutAncestors: [ CHAPTER_TITLE, CHAPTER_INTRO, STRUCTURE_MARKER, NOTE, MARKUP ]
+                contexts:
+                  - type: TEXT
+                    regexp: " ?(.*)"
+
+            elements:
+              - selector: "p sup:matches(\\d+)"
+                contexts:
+                  - type: VERSE
+                    op: text

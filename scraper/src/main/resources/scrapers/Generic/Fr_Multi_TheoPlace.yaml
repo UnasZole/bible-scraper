@@ -336,267 +336,268 @@ bible:
       args: { BOOK_NB: 73, BOOK_NAME: ecclesiastique }
       chapters: [ { from: 0, to: 51 } ]
 
-html:
-  elements:
-    - selector: "h1.mb-3"
-      contexts:
-        - type: BOOK_TITLE
-          descendants:
-            - type: TEXT
-              op: ownText
-    - selector: "#logos > p"
-      withAncestors: [ BOOK_INTRO ]
-      contexts:
-        - type: PARAGRAPH_BREAK
-        - type: TEXT
-          op: text
-    # h2 is either a major or a normal section title... (See https://theo.place/bible-tob-1-1 or https://theo.place/bible-dby-7-3)
-    # We consider it a major section only if immediately followed by a minor (ie h3).
-    - selector: "#logos > h2"
-      nextElement:
-        matchesSelector: "h3"
-      contexts:
-        - type: MAJOR_SECTION_TITLE
-          descendants:
+parsers:
+  - html:
+      elements:
+        - selector: "h1.mb-3"
+          contexts:
+            - type: BOOK_TITLE
+              descendants:
+                - type: TEXT
+                  op: ownText
+        - selector: "#logos > p"
+          withAncestors: [ BOOK_INTRO ]
+          contexts:
+            - type: PARAGRAPH_BREAK
             - type: TEXT
               op: text
-    - selector: "#logos > h2"
-      nextElement:
-        matchesSelector: ":not(h3)"
-      contexts:
-        - type: SECTION_TITLE
-          descendants:
+        # h2 is either a major or a normal section title... (See https://theo.place/bible-tob-1-1 or https://theo.place/bible-dby-7-3)
+        # We consider it a major section only if immediately followed by a minor (ie h3).
+        - selector: "#logos > h2"
+          nextElement:
+            matchesSelector: "h3"
+          contexts:
+            - type: MAJOR_SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+        - selector: "#logos > h2"
+          nextElement:
+            matchesSelector: ":not(h3)"
+          contexts:
+            - type: SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+        - selector: "#logos > h3"
+          previousElement:
+            matchesSelector: "h2"
+          contexts:
+            - type: SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+        - selector: "#logos > h3"
+          previousElement:
+            matchesSelector: ":not(h2)"
+          contexts:
+            - type: MINOR_SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+
+        # If a verse 0 is printed, treat it as pre-verse text (not a psalm title or chapter intro)
+        - selector: "#logos > span.verset:matches(^0$)"
+          withAncestors: [ STRUCTURED_TEXT ]
+          withoutAncestors: [ VERSE ]
+          contexts:
             - type: TEXT
-              op: text
-    - selector: "#logos > h3"
-      previousElement:
-        matchesSelector: "h2"
-      contexts:
-        - type: SECTION_TITLE
-          descendants:
-            - type: TEXT
-              op: text
-    - selector: "#logos > h3"
-      previousElement:
-        matchesSelector: ":not(h2)"
-      contexts:
-        - type: MINOR_SECTION_TITLE
-          descendants:
-            - type: TEXT
+              op: "literal="
+
+        # Any other verse number starts an actual verse.
+        - selector: "#logos > span.verset:not(:matches(^0$))"
+          contexts:
+            - type: VERSE
               op: text
 
-    # If a verse 0 is printed, treat it as pre-verse text (not a psalm title or chapter intro)
-    - selector: "#logos > span.verset:matches(^0$)"
-      withAncestors: [ STRUCTURED_TEXT ]
-      withoutAncestors: [ VERSE ]
-      contexts:
-        - type: TEXT
-          op: "literal="
+      externalParsers:
+        # A span[data-verset] directly contains verse text nodes and elements.
+        - selector: "#logos > span[data-verset]"
+          nodeParser:
+            nodes:
+              - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                contexts:
+                  - type: TEXT
+                    regexp: (.*)
 
-    # Any other verse number starts an actual verse.
-    - selector: "#logos > span.verset:not(:matches(^0$))"
-      contexts:
-        - type: VERSE
-          op: text
+            elements:
+              # Outside of a blockquote, we take <br> into account.
+              # If a br is found at the end of verse text, consider it a paragraph break. (See https://theo.place/bible-mdm-40-5)
+              - selector: "#logos > span[data-verset] > br"
+                nextNode:
+                  exists: false
+                contexts:
+                  - type: PARAGRAPH_BREAK
+              # If a br is found before the end of verse text, it could be considered a poetry line start (See https://theo.place/bible-tob-4-21), but then we wouldn't be able to detect the end of poetry.
+              # So we just replace it by a space instead.
+              - selector: "#logos > span[data-verset] > br"
+                nextNode:
+                  exists: true
+                contexts:
+                  - type: TEXT
+                    op: "literal= "
 
-  externalParsers:
-    # A span[data-verset] directly contains verse text nodes and elements.
-    - selector: "#logos > span[data-verset]"
-      nodeParser:
-        nodes:
-          - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
-            contexts:
-              - type: TEXT
-                regexp: (.*)
-
-        elements:
-          # Outside of a blockquote, we take <br> into account.
-          # If a br is found at the end of verse text, consider it a paragraph break. (See https://theo.place/bible-mdm-40-5)
-          - selector: "#logos > span[data-verset] > br"
-            nextNode:
-              exists: false
-            contexts:
-              - type: PARAGRAPH_BREAK
-          # If a br is found before the end of verse text, it could be considered a poetry line start (See https://theo.place/bible-tob-4-21), but then we wouldn't be able to detect the end of poetry.
-          # So we just replace it by a space instead.
-          - selector: "#logos > span[data-verset] > br"
-            nextNode:
-              exists: true
-            contexts:
-              - type: TEXT
-                op: "literal= "
-
-          - selector: "b"
-            contexts:
-              - type: POETRY_ACROSTIC_START
-              - type: TEXT
-                op: text
-
-          # Parsing of verse text.
-          # TODO : in verse 1 or 2 of psalms, should be interpreted as psalm title instead...
-          - selector: "i"
-            contexts:
-              - type: OT_QUOTE
-                descendants:
+              - selector: "b"
+                contexts:
+                  - type: POETRY_ACROSTIC_START
                   - type: TEXT
                     op: text
-          - selector: "em"
-            contexts:
-              - type: TEXT
-                op: text
-          - selector: "#logos button.footnote"
-            contexts:
-              - type: NOTE
-                descendants:
-                  - type: TEXT
-                    op: attribute=data-bs-content
 
-        externalParsers:
-          # span.sr is a note containing cross references.
-          - selector: "#logos > span[data-verset] > span.sr"
-            contextsBefore:
-              - type: NOTE
-            textParser:
-              stringExtractor:
-                op: text
-              sliding:
-                rules:
-                  # Match a single-chapter cross-reference.
-                  - regexp: "(?:\\d )?[a-zA-Z0-9]+ \\d+\\.\\d+(?:-\\d+)?"
-                    contexts:
-                      - type: REFERENCE
-                        descendants:
-                          - type: FULL_REF
+              # Parsing of verse text.
+              # TODO : in verse 1 or 2 of psalms, should be interpreted as psalm title instead...
+              - selector: "i"
+                contexts:
+                  - type: OT_QUOTE
+                    descendants:
+                      - type: TEXT
+                        op: text
+              - selector: "em"
+                contexts:
+                  - type: TEXT
+                    op: text
+              - selector: "#logos button.footnote"
+                contexts:
+                  - type: NOTE
+                    descendants:
+                      - type: TEXT
+                        op: attribute=data-bs-content
+
+            externalParsers:
+              # span.sr is a note containing cross references.
+              - selector: "#logos > span[data-verset] > span.sr"
+                contextsBefore:
+                  - type: NOTE
+                textParser:
+                  stringExtractor:
+                    op: text
+                  sliding:
+                    rules:
+                      # Match a single-chapter cross-reference.
+                      - regexp: "(?:\\d )?[a-zA-Z0-9]+ \\d+\\.\\d+(?:-\\d+)?"
+                        contexts:
+                          - type: REFERENCE
                             descendants:
-                              - type: REF_BOOK
-                                regexp: "^((?:\\d )?[a-zA-Z0-9]+) \\d+\\.\\d+(?:-\\d+)?$"
-                              - type: REF_CHAPTER
-                                regexp: "^(?:\\d )?[a-zA-Z0-9]+ (\\d+)\\.\\d+(?:-\\d+)?$"
-                              - type: REF_VERSES
-                                regexp: "^(?:\\d )?[a-zA-Z0-9]+ \\d+\\.(\\d+(?:-\\d+)?)$"
+                              - type: FULL_REF
+                                descendants:
+                                  - type: REF_BOOK
+                                    regexp: "^((?:\\d )?[a-zA-Z0-9]+) \\d+\\.\\d+(?:-\\d+)?$"
+                                  - type: REF_CHAPTER
+                                    regexp: "^(?:\\d )?[a-zA-Z0-9]+ (\\d+)\\.\\d+(?:-\\d+)?$"
+                                  - type: REF_VERSES
+                                    regexp: "^(?:\\d )?[a-zA-Z0-9]+ \\d+\\.(\\d+(?:-\\d+)?)$"
+                              - type: TEXT
+                                regexp: "(.*)"
+
+                      # Match everything until the next space.
+                      - regexp: "\\s*[^\\s]+\\s*"
+                        withoutAncestors: [ MARKUP ]
+                        contexts:
                           - type: TEXT
                             regexp: "(.*)"
 
-                  # Match everything until the next space.
-                  - regexp: "\\s*[^\\s]+\\s*"
-                    withoutAncestors: [ MARKUP ]
-                    contexts:
-                      - type: TEXT
-                        regexp: "(.*)"
 
+              # blockquote marks start of a poetry block
+              - selector: "#logos > span[data-verset] > blockquote"
 
-          # blockquote marks start of a poetry block
-          - selector: "#logos > span[data-verset] > blockquote"
+                contextsBefore:
+                  # Start a poetry line at the beginning of the blockquote.
+                  - type: POETRY_LINE_START
+                    op: literal=1
+                contextsAfter:
+                  # Stanza break (potentially ending poetry) at the end of the blockquote.
+                  - type: POETRY_STANZA_BREAK
 
-            contextsBefore:
-              # Start a poetry line at the beginning of the blockquote.
-              - type: POETRY_LINE_START
-                op: literal=1
-            contextsAfter:
-              # Stanza break (potentially ending poetry) at the end of the blockquote.
-              - type: POETRY_STANZA_BREAK
-
-            nodeParser:
-              nodes:
-                - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
-                  contexts:
-                    - type: TEXT
-                      regexp: (.*)
-              elements:
-                # A single line break in the middle of blockquote text is a poetry line start.
-                - selector: "blockquote > br"
-                  previousNode:
-                    isTextNodeMatching: ".*[^\\s]+.*"
-                  nextNode:
-                    isTextNodeMatching: ".*[^\\s]+.*"
-                  contexts:
-                    - type: POETRY_LINE_START
-                      op: literal=1
-                # Two consecutive line breaks inside the blockquote are the start of a new stanza.
-                - selector: "blockquote > br"
-                  previousNode:
-                    isElementMatching: "br"
-                  contexts:
-                    - type: POETRY_STANZA_BREAK
-                    - type: POETRY_LINE_START
-                      op: literal=1
-                - selector: "blockquote > br"
-                  previousElement:
-                    matchesSelector: "br"
-                  previousNode:
-                    isTextNodeMatching: "\\s*"
-                  contexts:
-                    - type: POETRY_STANZA_BREAK
-                    - type: POETRY_LINE_START
-                      op: literal=1
-
-                # Nested verse number inside a blockquote poetry block.
-                - selector: "span.verset"
-                  contexts:
-                    - type: VERSE
-                      op: text
-
-                # Parsing of verse text, identical to the parent parser.
-                - selector: "i"
-                  contexts:
-                    - type: OT_QUOTE
-                      descendants:
+                nodeParser:
+                  nodes:
+                    - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                      contexts:
                         - type: TEXT
-                          op: text
-                - selector: "em"
-                  contexts:
-                    - type: TEXT
-                      op: text
-                - selector: "#logos button.footnote"
-                  contexts:
-                    - type: NOTE
-                      descendants:
-                        - type: TEXT
-                          op: attribute=data-bs-content
-                - selector: "span.sr"
-                  contexts:
-                    - type: NOTE
-                      descendants:
-                        - type: TEXT
+                          regexp: (.*)
+                  elements:
+                    # A single line break in the middle of blockquote text is a poetry line start.
+                    - selector: "blockquote > br"
+                      previousNode:
+                        isTextNodeMatching: ".*[^\\s]+.*"
+                      nextNode:
+                        isTextNodeMatching: ".*[^\\s]+.*"
+                      contexts:
+                        - type: POETRY_LINE_START
+                          op: literal=1
+                    # Two consecutive line breaks inside the blockquote are the start of a new stanza.
+                    - selector: "blockquote > br"
+                      previousNode:
+                        isElementMatching: "br"
+                      contexts:
+                        - type: POETRY_STANZA_BREAK
+                        - type: POETRY_LINE_START
+                          op: literal=1
+                    - selector: "blockquote > br"
+                      previousElement:
+                        matchesSelector: "br"
+                      previousNode:
+                        isTextNodeMatching: "\\s*"
+                      contexts:
+                        - type: POETRY_STANZA_BREAK
+                        - type: POETRY_LINE_START
+                          op: literal=1
+
+                    # Nested verse number inside a blockquote poetry block.
+                    - selector: "span.verset"
+                      contexts:
+                        - type: VERSE
                           op: text
 
-              externalParsers:
-                # Nested verse inside a blockquote poetry block.
-                - selector: "blockquote span[data-verset]"
-                  nodeParser:
-                    nodes:
-                      - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
-                        contexts:
-                          - type: TEXT
-                            regexp: (.*)
+                    # Parsing of verse text, identical to the parent parser.
+                    - selector: "i"
+                      contexts:
+                        - type: OT_QUOTE
+                          descendants:
+                            - type: TEXT
+                              op: text
+                    - selector: "em"
+                      contexts:
+                        - type: TEXT
+                          op: text
+                    - selector: "#logos button.footnote"
+                      contexts:
+                        - type: NOTE
+                          descendants:
+                            - type: TEXT
+                              op: attribute=data-bs-content
+                    - selector: "span.sr"
+                      contexts:
+                        - type: NOTE
+                          descendants:
+                            - type: TEXT
+                              op: text
 
-                    elements:
-                      # Inside poetry, line break means new poetry line.
-                      - selector: "br"
-                        contexts:
-                          - type: POETRY_LINE_START
-                            op: literal=1
+                  externalParsers:
+                    # Nested verse inside a blockquote poetry block.
+                    - selector: "blockquote span[data-verset]"
+                      nodeParser:
+                        nodes:
+                          - withoutAncestors: [ STRUCTURE_MARKER, NOTE, MARKUP ]
+                            contexts:
+                              - type: TEXT
+                                regexp: (.*)
 
-                      # Parsing of verse text, identical to the parent parser.
-                      - selector: "i"
-                        contexts:
-                          - type: OT_QUOTE
-                            descendants:
+                        elements:
+                          # Inside poetry, line break means new poetry line.
+                          - selector: "br"
+                            contexts:
+                              - type: POETRY_LINE_START
+                                op: literal=1
+
+                          # Parsing of verse text, identical to the parent parser.
+                          - selector: "i"
+                            contexts:
+                              - type: OT_QUOTE
+                                descendants:
+                                  - type: TEXT
+                                    op: text
+                          - selector: "em"
+                            contexts:
                               - type: TEXT
                                 op: text
-                      - selector: "em"
-                        contexts:
-                          - type: TEXT
-                            op: text
-                      - selector: "#logos button.footnote"
-                        contexts:
-                          - type: NOTE
-                            descendants:
-                              - type: TEXT
-                                op: attribute=data-bs-content
-                      - selector: "span.sr"
-                        contexts:
-                          - type: NOTE
-                            descendants:
-                              - type: TEXT
-                                op: text
+                          - selector: "#logos button.footnote"
+                            contexts:
+                              - type: NOTE
+                                descendants:
+                                  - type: TEXT
+                                    op: attribute=data-bs-content
+                          - selector: "span.sr"
+                            contexts:
+                              - type: NOTE
+                                descendants:
+                                  - type: TEXT
+                                    op: text

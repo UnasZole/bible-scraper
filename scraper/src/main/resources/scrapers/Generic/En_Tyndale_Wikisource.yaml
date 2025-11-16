@@ -109,37 +109,38 @@ bible:
     - osis: Rev
       args: { BOOK: Revelation }
 
-html:
-  elements:
+parsers:
+  - html:
+      elements:
 
-    - selector: "span.wst-header-title > div.header-section-text"
-      contexts:
-        - type: BOOK_TITLE
-          descendants:
-            - type: TEXT
-              op: text
-
-    - selector: "div.mw-heading h2"
-      contexts:
-        - type: CHAPTER
-          op: "literal= "
-          descendants:
-            - type: CHAPTER_TITLE
+        - selector: "span.wst-header-title > div.header-section-text"
+          contexts:
+            - type: BOOK_TITLE
               descendants:
                 - type: TEXT
                   op: text
 
-  externalParsers:
+        - selector: "div.mw-heading h2"
+          contexts:
+            - type: CHAPTER
+              op: "literal= "
+              descendants:
+                - type: CHAPTER_TITLE
+                  descendants:
+                    - type: TEXT
+                      op: text
 
-    - selector: "p:has(span.wst-verse > sup:not(:empty))"
-      nodeParser:
-        nodes:
-          - contexts:
-              - type: TEXT
-                regexp: (.*)
-        elements:
-          - selector: "span.wst-verse > sup"
-            contexts:
-              - type: VERSE
-                op: ownText
+      externalParsers:
+
+        - selector: "p:has(span.wst-verse > sup:not(:empty))"
+          nodeParser:
+            nodes:
+              - contexts:
+                  - type: TEXT
+                    regexp: (.*)
+            elements:
+              - selector: "span.wst-verse > sup"
+                contexts:
+                  - type: VERSE
+                    op: ownText
 

@@ -308,57 +308,58 @@ bible:
       args: { BOOK: apokalyps }
       chapters: [ { from: 1, to: 22 } ]
 
-json:
-  nodes:
-    - selector: "$[?(@.stitel != null)].stitel"
-      contexts:
-        - type: SECTION_TITLE
-          descendants:
+parsers:
+  - json:
+      nodes:
+        - selector: "$[?(@.stitel != null)].stitel"
+          contexts:
+            - type: SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  selector: "$"
+
+        - selector: "$[*].iversnummer"
+          contexts:
+            - type: VERSE
+              selector: "$"
+
+        - selector: "$[*].sjson.children[*].text"
+          withoutAncestors: [ NOTE, MARKUP, STRUCTURE_MARKER ]
+          contexts:
             - type: TEXT
               selector: "$"
 
-    - selector: "$[*].iversnummer"
-      contexts:
-        - type: VERSE
-          selector: "$"
+        - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')]"
+          contexts:
+            - type: POETRY_LINE_START
+              literal: 1
 
-    - selector: "$[*].sjson.children[*].text"
-      withoutAncestors: [ NOTE, MARKUP, STRUCTURE_MARKER ]
-      contexts:
-        - type: TEXT
-          selector: "$"
+        - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[?(@.tag == 'br')]"
+          contexts:
+            - type: POETRY_LINE_START
+              literal: 1
 
-    - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')]"
-      contexts:
-        - type: POETRY_LINE_START
-          literal: 1
-
-    - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[?(@.tag == 'br')]"
-      contexts:
-        - type: POETRY_LINE_START
-          literal: 1
-
-    - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[:-1].text"
-      contexts:
-        - type: TEXT
-          selector: "$"
-
-    - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[-1].text"
-      contexts:
-        - type: TEXT
-          selector: "$"
-        - type: POETRY_STANZA_BREAK
-
-    - selector: "$[*].sjson.children[?(@.tag == 'abbr')].ref"
-      contexts:
-        - type: NOTE
-          descendants:
+        - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[:-1].text"
+          contexts:
             - type: TEXT
               selector: "$"
 
-    - selector: "$[*].sjson.children[?(@.tag == 'abbr')].title"
-      contexts:
-        - type: NOTE
-          descendants:
+        - selector: "$[*].sjson.children[?(@.tag == 'div' && @.class == 'poezie')].children[-1].text"
+          contexts:
             - type: TEXT
               selector: "$"
+            - type: POETRY_STANZA_BREAK
+
+        - selector: "$[*].sjson.children[?(@.tag == 'abbr')].ref"
+          contexts:
+            - type: NOTE
+              descendants:
+                - type: TEXT
+                  selector: "$"
+
+        - selector: "$[*].sjson.children[?(@.tag == 'abbr')].title"
+          contexts:
+            - type: NOTE
+              descendants:
+                - type: TEXT
+                  selector: "$"

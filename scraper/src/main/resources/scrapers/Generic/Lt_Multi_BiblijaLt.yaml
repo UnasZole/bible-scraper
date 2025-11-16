@@ -307,77 +307,78 @@ bible:
       args: { BOOK: Apr }
       chapters: [ { from: 1, to: 22 } ]
 
-html:
-  elements:
-    - selector: "span#ctl00_ContentLB table p.bibl_metmuo"
-      contexts:
-        - type: MAJOR_SECTION_TITLE
-          descendants:
-            - type: TEXT
-              op: text
-    - selector: "span#ctl00_ContentLB table :is(p.bibl_tema, td.bibl_tema)"
-      contexts:
-        - type: SECTION_TITLE
-          descendants:
-            - type: TEXT
-              op: text
+parsers:
+  - html:
+      elements:
+        - selector: "span#ctl00_ContentLB table p.bibl_metmuo"
+          contexts:
+            - type: MAJOR_SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+        - selector: "span#ctl00_ContentLB table :is(p.bibl_tema, td.bibl_tema)"
+          contexts:
+            - type: SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
 
-  externalParsers:
-    - selector: "span#ctl00_ContentLB table p.bibl"
-      contextsBefore:
-        # Open a paragraph before parsing its contents.
-        - type: PARAGRAPH_BREAK
-      nodeParser:
-        nodes:
-          - withoutAncestors: [ NOTE, MARKUP, PSALM_TITLE ]
-            contexts:
-              - type: TEXT
-                regexp: (.*)
+      externalParsers:
+        - selector: "span#ctl00_ContentLB table p.bibl"
+          contextsBefore:
+            # Open a paragraph before parsing its contents.
+            - type: PARAGRAPH_BREAK
+          nodeParser:
+            nodes:
+              - withoutAncestors: [ NOTE, MARKUP, PSALM_TITLE ]
+                contexts:
+                  - type: TEXT
+                    regexp: (.*)
 
-        elements:
-          - selector: "p.bibl > sup:matches(^\\d+$)"
-            contexts:
-              - type: VERSE
-                op: text
+            elements:
+              - selector: "p.bibl > sup:matches(^\\d+$)"
+                contexts:
+                  - type: VERSE
+                    op: text
 
-          - selector: "p.bibl > i:is(:matches(^Dovydo.*$), :matches(^Giesmė.*$), :matches(^Malda.*$), :matches(^Kai.*$), :matches(^Koraho sūnų.*$), :matches(^Atminimo.*$), :matches(^.*[Cc]horvedžiui.*$), :matches(^.*[Pp]salmė.*$))"
-            withAncestors: [ PSALM_TITLE ]
-            contexts:
-              - type: TEXT
-                op: text
+              - selector: "p.bibl > i:is(:matches(^Dovydo.*$), :matches(^Giesmė.*$), :matches(^Malda.*$), :matches(^Kai.*$), :matches(^Koraho sūnų.*$), :matches(^Atminimo.*$), :matches(^.*[Cc]horvedžiui.*$), :matches(^.*[Pp]salmė.*$))"
+                withAncestors: [ PSALM_TITLE ]
+                contexts:
+                  - type: TEXT
+                    op: text
 
-          - selector: "p.bibl > i:not(:is(:matches(^Dovydo.*$), :matches(^Giesmė.*$), :matches(^Malda.*$), :matches(^Kai.*$), :matches(^Koraho sūnų.*$), :matches(^Atminimo.*$), :matches(^.*[Cc]horvedžiui.*$), :matches(^.*[Pp]salmė.*$)))"
-            withAncestors: [ OT_QUOTE ]
-            contexts:
-              - type: TEXT
-                op: text
+              - selector: "p.bibl > i:not(:is(:matches(^Dovydo.*$), :matches(^Giesmė.*$), :matches(^Malda.*$), :matches(^Kai.*$), :matches(^Koraho sūnų.*$), :matches(^Atminimo.*$), :matches(^.*[Cc]horvedžiui.*$), :matches(^.*[Pp]salmė.*$)))"
+                withAncestors: [ OT_QUOTE ]
+                contexts:
+                  - type: TEXT
+                    op: text
 
-        externalParsers:
-          - selector: "p.bibl > sup > a[onMouseOver]"
-            contextsBefore:
-              # Open a note before parsing its contents.
-              - type: NOTE
-            textParser:
-              stringExtractor:
-                op: attribute=onMouseOver
-                regexp: ^return overlib\('(.*)'\);$
-              html:
-                externalParsers:
-                  # When parsing an HTML string, JSoup automatically adds the html and body root tags if they are missing.
-                  - selector: "body"
-                    nodeParser:
-                      nodes:
+            externalParsers:
+              - selector: "p.bibl > sup > a[onMouseOver]"
+                contextsBefore:
+                  # Open a note before parsing its contents.
+                  - type: NOTE
+                textParser:
+                  stringExtractor:
+                    op: attribute=onMouseOver
+                    regexp: ^return overlib\('(.*)'\);$
+                  html:
+                    externalParsers:
+                      # When parsing an HTML string, JSoup automatically adds the html and body root tags if they are missing.
+                      - selector: "body"
+                        nodeParser:
+                          nodes:
 
-                        - withoutAncestors: [ MARKUP ]
-                          contexts:
-                            - type: TEXT
-                              regexp: (.*)
+                            - withoutAncestors: [ MARKUP ]
+                              contexts:
+                                - type: TEXT
+                                  regexp: (.*)
 
-                      elements:
+                          elements:
 
-                        - selector: "i"
-                          withAncestors: [ QUOTE ]
-                          contexts:
-                            - type: TEXT
-                              op: text
+                            - selector: "i"
+                              withAncestors: [ QUOTE ]
+                              contexts:
+                                - type: TEXT
+                                  op: text
 
