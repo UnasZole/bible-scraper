@@ -596,9 +596,21 @@ parsers:
               - selector: "p > i"
                 previousNode:
                   exists: true
-                  isTextNodeMatching: "^\\d+\\.\\s*$"
+                  isTextNodeMatching: "^\\s*\\d+\\.\\s*$"
                 nextNode:
                   isTextNodeMatching: "^\\s*$"
+                contexts:
+                  - type: PSALM_TITLE
+                    descendants:
+                      - type: TEXT
+                        op: ownText
+              # Same but with a note afterwards.
+              - selector: "p > i"
+                previousNode:
+                  exists: true
+                  isTextNodeMatching: "^\\s*\\d+\\.\\s*$"
+                nextNode:
+                  isElementMatching: "sup"
                 contexts:
                   - type: PSALM_TITLE
                     descendants:
