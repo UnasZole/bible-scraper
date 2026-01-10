@@ -112,6 +112,7 @@ public class UsfmTextWriter implements TextWriter {
 
         printTag("fig", (caption != null ? caption : "")
                 + "|src=\"" + fileName + "\""
+                + " size=\"col\""
                 + " ref=\"\""
                 + (alt != null ? " alt=\"" + alt + "\"" : ""), true);
     }

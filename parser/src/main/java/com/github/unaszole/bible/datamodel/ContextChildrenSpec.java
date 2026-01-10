@@ -3,10 +3,7 @@ package com.github.unaszole.bible.datamodel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class ContextChildrenSpec {
     private static final Logger LOG = LoggerFactory.getLogger(com.github.unaszole.bible.datamodel.ContextChildrenSpec.class);
@@ -145,5 +142,16 @@ public class ContextChildrenSpec {
 
         // All children sequences are complete.
         return false;
+    }
+
+    public Set<ContextType> getDescendants() {
+        Set<ContextType> descendants = new HashSet<>();
+        for(ContextSequence seq: allowedChildren) {
+            for(ContextType allowedType: seq.allowedTypes) {
+                descendants.add(allowedType);
+                descendants.addAll(allowedType.childrenSpec().getDescendants());
+            }
+        }
+        return descendants;
     }
 }

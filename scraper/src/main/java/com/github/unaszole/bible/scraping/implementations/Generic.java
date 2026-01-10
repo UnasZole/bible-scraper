@@ -1,42 +1,27 @@
 package com.github.unaszole.bible.scraping.implementations;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.unaszole.bible.JarUtils;
-import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
-import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
-import com.github.unaszole.bible.datamodel.contexttypes.StructureMarkers;
 import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.parsing.Parser;
+import com.github.unaszole.bible.scraping.generic.Config;
 import com.github.unaszole.bible.scraping.generic.data.*;
 import com.github.unaszole.bible.scraping.generic.parsing.PageListParser;
-import com.github.unaszole.bible.scraping.generic.parsing.html.EvaluatorWrapper;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.CachedDownloader;
 import com.github.unaszole.bible.downloading.HttpSourceFile;
 import com.github.unaszole.bible.scraping.Scraper;
-import com.github.unaszole.bible.scraping.generic.parsing.TextParser;
 import com.github.unaszole.bible.stream.ContextStream;
-import com.jayway.jsonpath.JsonPath;
-import org.crosswire.jsword.versification.BibleBook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Generic extends Scraper {
@@ -80,105 +65,16 @@ public class Generic extends Scraper {
 
     }
 
-    private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory()).registerModule(new SimpleModule()
-            .addDeserializer(EvaluatorWrapper.class, new StdDeserializer<>(EvaluatorWrapper.class) {
-                @Override
-                public EvaluatorWrapper deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-                        throws IOException {
-                    return new EvaluatorWrapper(jsonParser.readValueAs(String.class));
-                }
-            })
-            .addDeserializer(JsonPath.class, new StdDeserializer<>(JsonPath.class) {
-                @Override
-                public JsonPath deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-                        throws IOException {
-                    return JsonPath.compile(jsonParser.readValueAs(String.class));
-                }
-            })
-            .addDeserializer(BibleBook.class, new StdDeserializer<>(BibleBook.class) {
-                @Override
-                public BibleBook deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-                        throws IOException {
-                    return BibleBook.fromOSIS(jsonParser.readValueAs(String.class));
-                }
-            })
-            .addDeserializer(Pattern.class, new StdDeserializer<>(Pattern.class) {
-                @Override
-                public Pattern deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-                        throws IOException {
-                    return Pattern.compile(jsonParser.readValueAs(String.class), Pattern.DOTALL);
-                }
-            })
-            .addDeserializer(ContextType.class, new StdDeserializer<>(ContextType.class) {
-                @Override
-                public ContextType deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-                        throws IOException {
-                    String typeStr = jsonParser.readValueAs(String.class);
-                    try {
-                        return FlatText.valueOf(typeStr);
-                    } catch (IllegalArgumentException e) {
-                        try {
-                            return StructureMarkers.valueOf(typeStr);
-                        } catch (IllegalArgumentException ex) {
-                            try {
-                                return BibleContainers.valueOf(typeStr);
-                            } catch (IllegalArgumentException exc) {
-                                throw new RuntimeException("Unknown context type " + typeStr);
-                            }
-                        }
-                    }
-                }
-            })
-    );
-
-    private static class NamedTextParser extends TextParser {
-        public String id;
-    }
-
-    private static class Config {
-
-        public String description;
-        public List<String> inputs;
-        public Bible bible;
-        public List<NamedTextParser> parsers;
-
-        public PatternContainer getGlobalDefaults(List<String> inputValues) {
-            int nbExpectedFlags = inputs == null ? 0 : inputs.size();
-            int nbGivenFlags = inputValues.size();
-            if(nbGivenFlags != nbExpectedFlags) {
-                throw new IllegalArgumentException("Provided " + nbGivenFlags + " flags (" + inputValues + "), while expecting "
-                        + nbExpectedFlags + (inputs == null ? "" : " (" + inputs + ")")
-                );
-            }
-
-            PatternContainer globalDefaults = new PatternContainer();
-            globalDefaults.args = new HashMap<>();
-            for(int i = 0; i < inputValues.size(); i++) {
-                globalDefaults.args.put(inputs.get(i), inputValues.get(i));
-            }
-            return globalDefaults;
-        }
-
-        @Override
-        public String toString() {
-            try {
-                return MAPPER.writeValueAsString(this);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     private static Config getConfig(String flag) throws IOException {
         // If the flag is the path to an existing file, use it.
         File configFile = new File(flag);
         if(configFile.exists()) {
-            return MAPPER.readValue(configFile, Config.class);
+            return Config.parse(Files.newInputStream(configFile.toPath()));
         }
 
         // Else, try to load one from the embedded resources.
         try(InputStream is = Generic.class.getResourceAsStream("/scrapers/Generic/" + flag + ".yaml")) {
-            return MAPPER.readValue(is, Config.class);
+            return Config.parse(is);
         }
     }
 
