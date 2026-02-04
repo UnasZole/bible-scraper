@@ -616,6 +616,20 @@ parsers:
                     descendants:
                       - type: TEXT
                         op: ownText
+              # Italic texts that are preceded only by the verse number but followed by actual text are translation additions.
+              - selector: "p > i"
+                previousNode:
+                  exists: true
+                  isTextNodeMatching: "^\\s*\\d+\\.\\s*$"
+                nextNode:
+                  exists: true
+                  isTextNodeMatching: "^.*[^\\s]+.*$"
+                withoutAncestors: [ NOTE, PSALM_TITLE ]
+                contexts:
+                  - type: TRANSLATION_ADD
+                    descendants:
+                      - type: TEXT
+                        op: ownText
               # Italic texts that are not preceded by just a verse number are translation additions.
               - selector: "p > i"
                 previousNode:
