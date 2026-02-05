@@ -41,23 +41,64 @@ public class ElementAndContextStackAware extends ContextStackAware {
         public EvaluatorWrapper isElementMatching;
         public Pattern isTextNodeMatching;
 
+        public NodeMatcher previous;
+        public NodeMatcher next;
+
+        public List<NodeMatcher> anyOf;
+        public List<NodeMatcher> noneOf;
+
+        private static boolean anyMatch(List<NodeMatcher> matchers, Node node, ContextualData contextualData) {
+            for(NodeMatcher matcher: matchers) {
+                if(matcher.matches(node, contextualData)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public boolean matches(Node node, ContextualData contextualData) {
-            if(exists != null && (exists != (node != null))) {
+            if(node == null) {
+                if(exists == Boolean.TRUE) {
+                    // Fail if node is expected to exist.
+                    return false;
+                }
+
+                if(previous != null || next != null || isElementMatching != null || isTextNodeMatching != null) {
+                    // Fail all checks which imply existence.
+                    return false;
+                }
+            }
+            else {
+                if(exists == Boolean.FALSE) {
+                    // Fail if node is expected to not exist.
+                    return false;
+                }
+
+                if(previous != null && !previous.matches(node.previousSibling(), contextualData)) {
+                    return false;
+                }
+
+                if(next != null && !next.matches(node.nextSibling(), contextualData)) {
+                    return false;
+                }
+
+                if(isElementMatching != null &&
+                        (!(node instanceof Element) || !((Element) node).is(isElementMatching.get(contextualData)))
+                ){
+                    return false;
+                }
+
+                if(isTextNodeMatching != null &&
+                        (!(node instanceof TextNode) || !isTextNodeMatching.matcher(((TextNode) node).text()).matches())) {
+                    return false;
+                }
+            }
+
+            if(anyOf != null && !anyMatch(anyOf, node, contextualData) ) {
                 return false;
             }
 
-            if(isElementMatching != null &&
-                    (node == null
-                            || !(node instanceof Element)
-                            || !((Element) node).is(isElementMatching.get(contextualData)))
-            ){
-                return false;
-            }
-
-            if(isTextNodeMatching != null &&
-                    (node == null
-                            || !(node instanceof TextNode)
-                            || !isTextNodeMatching.matcher(((TextNode)node).text()).matches())) {
+            if(noneOf != null && anyMatch(noneOf, node, contextualData)) {
                 return false;
             }
 

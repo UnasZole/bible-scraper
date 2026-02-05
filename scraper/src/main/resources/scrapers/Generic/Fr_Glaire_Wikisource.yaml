@@ -592,38 +592,45 @@ parsers:
                 contexts:
                   - type: TEXT
                     op: "literal= "
-              # Italics that are preceded only by the verse number, and nothing afterward, are psalm titles.
+              # Italics that are preceded only by the verse number, and nothing but a single note or empty text afterward, are psalm titles.
               - selector: "p > i"
                 previousNode:
-                  exists: true
                   isTextNodeMatching: "^\\s*\\d+\\.\\s*$"
                 nextNode:
-                  isTextNodeMatching: "^\\s*$"
+                  anyOf:
+                    - exists: false
+                    - isTextNodeMatching: "^\\s*$"
+                      next:
+                        exists: false
+                    - isElementMatching: "sup"
+                      next:
+                        anyOf:
+                          - exists: false
+                          - isTextNodeMatching: "^\\s*$"
+                            next:
+                              exists: false
                 contexts:
                   - type: PSALM_TITLE
                     descendants:
                       - type: TEXT
                         op: ownText
-              # Same but with a note afterwards.
+              # Italic texts that are preceded only by the verse number but followed by non-empty text or a non-final element are translation additions.
               - selector: "p > i"
                 previousNode:
-                  exists: true
                   isTextNodeMatching: "^\\s*\\d+\\.\\s*$"
                 nextNode:
-                  isElementMatching: "sup"
-                contexts:
-                  - type: PSALM_TITLE
-                    descendants:
-                      - type: TEXT
-                        op: ownText
-              # Italic texts that are preceded only by the verse number but followed by actual text are translation additions.
-              - selector: "p > i"
-                previousNode:
-                  exists: true
-                  isTextNodeMatching: "^\\s*\\d+\\.\\s*$"
-                nextNode:
-                  exists: true
-                  isTextNodeMatching: "^.*[^\\s]+.*$"
+                  noneOf:
+                    - exists: false
+                    - isTextNodeMatching: "^\\s*$"
+                      next:
+                        exists: false
+                    - isElementMatching: "sup"
+                      next:
+                        anyOf:
+                          - exists: false
+                          - isTextNodeMatching: "^\\s*$"
+                            next:
+                              exists: false
                 withoutAncestors: [ NOTE, PSALM_TITLE ]
                 contexts:
                   - type: TRANSLATION_ADD
@@ -633,7 +640,8 @@ parsers:
               # Italic texts that are not preceded by just a verse number are translation additions.
               - selector: "p > i"
                 previousNode:
-                  isTextNodeMatching: "^.*[^\\d.\\s].*$"
+                  noneOf:
+                    - isTextNodeMatching: "^\\s*\\d+\\.\\s*$"
                 withoutAncestors: [ NOTE, PSALM_TITLE ]
                 contexts:
                   - type: TRANSLATION_ADD
