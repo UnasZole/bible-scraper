@@ -44,7 +44,7 @@ public class ChouraquiAggregated extends Scraper {
     @Override
     protected ContextStream.Single getContextStreamFor(ContextMetadata rootContextMeta) {
         if (rootContextMeta.type.equals(BibleContainers.BOOK)) {
-            switch (rootContextMeta.id.get(BibleIdFields.BOOK)) {
+            switch (rootContextMeta.id.<BibleBook>get(BibleIdFields.BOOK)) {
                 case JOB:
                     return theoPlace.stream(rootContextMeta);
                 default:

@@ -10,9 +10,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
-import com.github.unaszole.bible.datamodel.contexttypes.FlatText;
 import com.github.unaszole.bible.scraping.generic.data.Bible;
-import com.github.unaszole.bible.scraping.generic.data.PatternContainer;
 import com.github.unaszole.bible.scraping.generic.parsing.TextParser;
 import com.github.unaszole.bible.scraping.generic.parsing.html.EvaluatorWrapper;
 import com.jayway.jsonpath.JsonPath;
@@ -20,12 +18,12 @@ import org.crosswire.jsword.versification.BibleBook;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Config {
 
@@ -112,21 +110,27 @@ public class Config {
     public Bible bible;
     public List<NamedTextParser> parsers;
 
-    public PatternContainer getGlobalDefaults(List<String> inputValues) {
-        int nbExpectedFlags = inputs == null ? 0 : inputs.size();
+    public PatternConfig getGlobalDefaults(List<String> inputValues) {
+        List<String> inputNames = inputs == null ? List.of() : inputs;
+
+        int nbExpectedFlags = inputNames.size();
         int nbGivenFlags = inputValues.size();
         if (nbGivenFlags != nbExpectedFlags) {
             throw new IllegalArgumentException("Provided " + nbGivenFlags + " flags (" + inputValues + "), while expecting "
-                    + nbExpectedFlags + (inputs == null ? "" : " (" + inputs + ")")
+                    + nbExpectedFlags + " (" + inputNames + ")"
             );
         }
 
-        PatternContainer globalDefaults = new PatternContainer();
-        globalDefaults.args = new HashMap<>();
-        for (int i = 0; i < inputValues.size(); i++) {
-            globalDefaults.args.put(inputs.get(i), inputValues.get(i));
-        }
-        return globalDefaults;
+        return new PatternConfig(
+                Map.of(),
+                IntStream.range(0, nbGivenFlags)
+                        .boxed()
+                        .collect(Collectors.toMap(
+                                inputNames::get,
+                                inputValues::get
+                        )),
+                null
+        );
     }
 
     @Override

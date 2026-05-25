@@ -220,7 +220,7 @@ public class ChouraquiSpiritualLand extends Scraper {
                         chapterNb = 1;
                         chapterNbStr = "0-1";
                     }
-                    if (previousOfType != null && chapterNb == previousOfType.id.get(BibleIdFields.CHAPTER)) {
+                    if (previousOfType != null && chapterNb == (previousOfType.id.<Integer>get(BibleIdFields.CHAPTER))) {
                         // If chapter is the same as previous, ignore.
                         return List.of();
                     }
@@ -478,10 +478,10 @@ public class ChouraquiSpiritualLand extends Scraper {
 						ScrapingUtils.forVerse(BibleBook.DAN, 3, 24),
 						ScrapingUtils.forVerse(BibleBook.DAN, 3, 33),
 						new VersificationUpdater()
-								.verseNbs(m -> m.id.get(BibleIdFields.VERSES).stream()
+								.verseNbs(m -> (m.id.<List<Integer>>get(BibleIdFields.VERSES)).stream()
 										.map(v -> v + 67)
 										.collect(Collectors.toList()))
-								.verseValue(m -> m.id.get(BibleIdFields.VERSES).stream()
+								.verseValue(m -> (m.id.<List<Integer>>get(BibleIdFields.VERSES)).stream()
 										.map(v -> v + 67)
 										.map(Object::toString)
 										.collect(Collectors.joining("-")))
@@ -503,13 +503,13 @@ public class ChouraquiSpiritualLand extends Scraper {
 				// Move to chapter 5, verse 2B. Remove the second part of verse 2B, and verse 2C, which should not be
 				// in the Greek version of Esther.
 				editor.doNothingUntil(ContextStreamEditor.InjectionPosition.AT_START,
-						(m, v) -> m.type == BibleContainers.VERSE && m.id.get(BibleIdFields.CHAPTER) == 5 && Objects.equals(v, "2B")
+						(m, v) -> m.type == BibleContainers.VERSE && (m.id.<Integer>get(BibleIdFields.CHAPTER)) == 5 && Objects.equals(v, "2B")
 				);
 				editor.remove(
 						(m, v) -> m.type == FlatText.TEXT && ((String)v).startsWith(" Èstér revêt"),
 						(m, v) -> m.type == FlatText.TEXT && ((String)v).endsWith("la maison.")
 				);
-				editor.remove((m, v) -> m.type == BibleContainers.VERSE && m.id.get(BibleIdFields.CHAPTER) == 5 && Objects.equals(v, "2C"));
+				editor.remove((m, v) -> m.type == BibleContainers.VERSE && (m.id.<Integer>get(BibleIdFields.CHAPTER)) == 5 && Objects.equals(v, "2C"));
 
 				// Shift chapter 9 verses 20 to 32 by 1, but not touching the values.
 				// (In catholic bibles, a verse 19A is present, which is missing here.)
@@ -517,7 +517,7 @@ public class ChouraquiSpiritualLand extends Scraper {
 						ScrapingUtils.forVerse(BibleBook.ESTH_GR, 9, 20),
 						ScrapingUtils.forVerse(BibleBook.ESTH_GR, 9, 32),
 						new VersificationUpdater()
-								.verseNbs(m -> m.id.get(BibleIdFields.VERSES).stream()
+								.verseNbs(m -> (m.id.<List<Integer>>get(BibleIdFields.VERSES)).stream()
 										.map(v -> v + 1)
 										.collect(Collectors.toList()))
 				);

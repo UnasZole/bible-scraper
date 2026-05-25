@@ -90,7 +90,7 @@ public class ScrapingUtils {
                 nbAdditionalVerses = endNb - startNb;
             }
 
-            int realStartNb = Math.max(startNb, expectedVerseId.get(BibleIdFields.VERSES).get(0));
+            int realStartNb = Math.max(startNb, (expectedVerseId.<List<Integer>>get(BibleIdFields.VERSES)).get(0));
 
             return new ContextMetadata(BibleContainers.VERSE, BibleIds.VERSE_ID.ofFields(
                     BibleIdFields.BOOK.of(expectedVerseId.get(BibleIdFields.BOOK)),

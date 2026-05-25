@@ -294,7 +294,7 @@ public class ContextStreamWriter {
             }
             if(isOpen(BibleContainers.VERSE, event)) {
                 w.verse(
-                        event.metadata.id.get(BibleIdFields.VERSES).stream()
+                        (event.metadata.id.<List<Integer>>get(BibleIdFields.VERSES)).stream()
                                 .mapToInt(v -> v)
                                 .toArray(),
                         (String) event.value

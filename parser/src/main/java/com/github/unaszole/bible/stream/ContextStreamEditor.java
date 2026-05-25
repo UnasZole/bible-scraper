@@ -171,10 +171,10 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
     }
 
     public static class ContextUpdater {
-        private final Map<IdField<?>, BiFunction<ContextMetadata, Object, ? extends Optional<?>>> idFieldUpdaters = new HashMap<>();
+        private final Map<IdField, BiFunction<ContextMetadata, Object, ? extends Optional<?>>> idFieldUpdaters = new HashMap<>();
         private BiFunction<ContextMetadata, Object, Optional<?>> valueUpdater = null;
 
-        public <T> ContextUpdater idField(IdField<T> idField, BiFunction<ContextMetadata, Object, Optional<T>> updater) {
+        public <T> ContextUpdater idField(IdField idField, BiFunction<ContextMetadata, Object, Optional<T>> updater) {
             idFieldUpdaters.put(idField, updater);
             return this;
         }
@@ -184,11 +184,11 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
             return this;
         }
 
-        private <T> Optional<BiFunction<ContextMetadata, Object, Optional<T>>> getUpdater(IdField<T> field) {
+        private <T> Optional<BiFunction<ContextMetadata, Object, Optional<T>>> getUpdater(IdField field) {
             return Optional.ofNullable((BiFunction<ContextMetadata, Object, Optional<T>>) idFieldUpdaters.get(field));
         }
 
-        private <T> void updateField(ContextId.Builder builder, ContextEvent e, IdField<T> field) {
+        private <T> void updateField(ContextId.Builder builder, ContextEvent e, IdField field) {
             getUpdater(field)
                     .flatMap(u -> u.apply(e.metadata, e.value))
                     .ifPresent(nfv -> builder.with(field, nfv));
@@ -199,7 +199,7 @@ public class ContextStreamEditor<StreamType extends ContextStream<StreamType>> {
             if(newId != null) {
                 ContextId.Builder newIdBuilder = new ContextId.Builder(newId);
                 // Loop through all ID fields to check for an updater.
-                for (IdField<?> field : e.metadata.type.idType().fields) {
+                for (IdField field : e.metadata.type.idType().fields) {
                     updateField(newIdBuilder, e, field);
                 }
                 newId = newIdBuilder.build();

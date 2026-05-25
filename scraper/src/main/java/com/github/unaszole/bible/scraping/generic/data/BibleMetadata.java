@@ -1,5 +1,6 @@
 package com.github.unaszole.bible.scraping.generic.data;
 
+import com.github.unaszole.bible.scraping.generic.VarSubstitution;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 
 import java.util.Locale;

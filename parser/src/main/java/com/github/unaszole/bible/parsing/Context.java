@@ -36,29 +36,32 @@ public class Context {
 	public Context(ContextMetadata metadata) {
 		this(metadata, null);
 	}
+
+	public List<ContextType> getAllowedTypesForNextChild() {
+		return metadata.type.childrenSpec().getAllowedTypesForNextChild(
+				children.stream().map(c -> c.metadata.type).collect(Collectors.toList())
+		);
+	}
 	
-	Context addChild(Context child) {
+	Context withChild(Context childToAppend) {
+		List<ContextType> allowedTypes = getAllowedTypesForNextChild();
+		if(!allowedTypes.contains(childToAppend.metadata.type)) {
+			throw new IllegalArgumentException(metadata + " received child of type " + childToAppend.metadata.type + " while expecting " + allowedTypes);
+		}
+
 		List<Context> newChildren = new ArrayList<>(children);
-		newChildren.add(child);
+		newChildren.add(childToAppend);
 		return new Context(metadata, value, newChildren, contextUniqueId);
 	}
 	
 	public Optional<Context> getLastChild() {
 		return children.isEmpty() ? Optional.empty() : Optional.of(children.get(children.size() - 1));
 	}
-	
-	public List<ContextType> getAllowedTypesForNextChild() {
-		return metadata.type.childrenSpec().getAllowedTypesForNextChild(
-			children.stream().map(c -> c.metadata.type).collect(Collectors.toList())
-		);
-	}
 
-	public ContextMetadata getLastChildOfTypeMeta(final ContextType type) {
+	public Optional<Context> getLastChildOfType(final ContextType type) {
 		return children.stream()
-				.map(c -> c.metadata)
-				.filter(m -> m.type == type)
-				.reduce((first, second) -> second)
-				.orElse(null);
+				.filter(c -> c.metadata.type == type)
+				.reduce((first, second) -> second);
 	}
 	
 	public boolean isIncomplete() {

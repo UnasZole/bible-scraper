@@ -52,10 +52,10 @@ public class StreamEditorConfig {
         public VersificationUpdater getUpdater() {
             VersificationUpdater updater = new VersificationUpdater();
             if (shiftChapter != null) {
-                updater.chapterNb(m -> m.id.get(BibleIdFields.CHAPTER) + shiftChapter);
+                updater.chapterNb(m -> (m.id.<Integer>get(BibleIdFields.CHAPTER)) + shiftChapter);
             }
             if (shiftVerse != null) {
-                updater.verseNbs(m -> m.id.get(BibleIdFields.VERSES).stream()
+                updater.verseNbs(m -> (m.id.<List<Integer>>get(BibleIdFields.VERSES)).stream()
                         .map(v -> v + shiftVerse)
                         .collect(Collectors.toList()));
             }

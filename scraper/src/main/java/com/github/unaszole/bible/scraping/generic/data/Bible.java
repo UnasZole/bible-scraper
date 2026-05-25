@@ -1,22 +1,22 @@
 package com.github.unaszole.bible.scraping.generic.data;
 
+import com.github.unaszole.bible.datamodel.ContextType;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
-import com.github.unaszole.bible.parsing.Context;
-import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.scraping.ScrapingUtils;
+import com.github.unaszole.bible.scraping.generic.ValueMapper;
+import com.github.unaszole.bible.scraping.generic.index.IndexNode;
+import com.github.unaszole.bible.scraping.generic.index.providers.Container;
+import com.github.unaszole.bible.scraping.generic.index.providers.ContextProvider;
+import com.github.unaszole.bible.scraping.generic.PatternConfig;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
-import com.github.unaszole.bible.downloading.SourceFile;
-import com.github.unaszole.bible.stream.ContextStream;
-import com.github.unaszole.bible.stream.ContextStreamEditor;
 import org.crosswire.jsword.versification.BibleBook;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.BiFunction;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Bible extends PagesContainer {
+    private static final Map<String, ContextType> CONTEXT_TYPES = BibleContainers.BIBLE.descendantTypesByName();
+
     public BibleMetadata metadata;
     public List<Book> books;
 
@@ -25,21 +25,10 @@ public class Bible extends PagesContainer {
      */
     public List<StreamEditorConfig> edit;
 
-    public DocumentMetadata getDocMeta(PatternContainer globalDefaults) {
-        final PatternContainer bibleDefaults = this.defaultedBy(globalDefaults);
+    public DocumentMetadata getDocMeta(PatternConfig globalDefaults) {
+        final PatternConfig bibleDefaults = this.asPatternConfig().defaultedBy(globalDefaults);
         BibleMetadata meta = metadata != null ? metadata : new BibleMetadata();
-        return meta.getDocMeta(bibleDefaults.args);
-    }
-
-    public List<BibleBook> getBooks() {
-        return books.stream().map(b -> b.osis).collect(Collectors.toList());
-    }
-
-    public Book getBook(BibleBook book) {
-        return books.stream()
-                .filter(b -> b.osis == book)
-                .findAny()
-                .orElse(null);
+        return meta.getDocMeta(bibleDefaults.arguments());
     }
 
     public Map<String, BibleBook> getBookReferences() {
@@ -54,56 +43,35 @@ public class Bible extends PagesContainer {
                 ));
     }
 
-    public List<PageData> getBiblePages(PatternContainer bibleDefaults, SourceFile.Builder sourceFileBuilder) {
-        return getPageFiles(bibleDefaults, a -> a, "bible", sourceFileBuilder);
+    public Container asContainer() {
+        PatternConfig biblePatternConfig = new PatternConfig(
+                Map.of(),
+                Map.of(),
+                "bible"
+        );
+
+        return new Container(
+                new ContextProvider(
+                        BibleContainers.BIBLE.name(),
+                        Map.of(),
+                        null
+                ),
+                asPatternConfig().defaultedBy(biblePatternConfig),
+                Stream.concat(
+                        getPatternPages(),
+                        Optional.ofNullable(books).stream()
+                                .flatMap(Collection::stream)
+                                .map(Book::asContainer)
+                ).toList()
+        );
     }
 
-    public ContextStream.Single streamBible(PatternContainer globalDefaults, ContextMetadata bibleCtxMeta,
-                                            final SourceFile.Builder sourceFileBuilder,
-                                            final BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
-        assert bibleCtxMeta.type == BibleContainers.BIBLE;
-        final PatternContainer bibleDefaults = this.defaultedBy(globalDefaults);
-
-        // Build the list of context streams for all books, to append to the bible page stream.
-        List<ContextStream.Single> bookStreams;
-        if(books != null && !books.isEmpty()) {
-            // If we have a books defined, build context streams for each.
-            bookStreams = books.stream()
-                    .map(book -> book.streamBook(bibleDefaults, ScrapingUtils.forBook(book.osis),
-                            sourceFileBuilder, ctxStreamer))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-        }
-        else {
-            // No information on books, nothing to append to the bible page stream.
-            bookStreams = List.of();
-        }
-
-        // Build the bible stream.
-        Context bibleCtx = new Context(bibleCtxMeta);
-        ContextStream.Single bibleStream = null;
-
-        List<PageData> biblePages = getBiblePages(bibleDefaults, sourceFileBuilder);
-        if(!biblePages.isEmpty()) {
-            // We have pages for this bible, prepare a context with the given streamer and append books at the end.
-            bibleStream = ctxStreamer.apply(bibleCtx, biblePages).edit().inject(
-                    ContextStreamEditor.InjectionPosition.AT_END, bibleCtxMeta, bookStreams
-            ).process();
-        }
-        else if(!bookStreams.isEmpty()) {
-            // If we don't have a book page but we have chapter contents, just aggregate them.
-            bibleStream = ContextStream.fromContents(bibleCtx, bookStreams);
-        }
-
-        // Configure editor if provided and we have a bible to return.
-        if(bibleStream != null && edit != null) {
-            ContextStreamEditor<ContextStream.Single> editor = bibleStream.edit();
-            for(StreamEditorConfig cfg: edit) {
-                cfg.configureEditor(editor, null, 0);
-            }
-            bibleStream = editor.process();
-        }
-
-        return bibleStream;
+    public IndexNode getRootNode(PatternConfig globalDefaults, ValueMapper mapper) {
+        return asContainer().getNodes(
+                globalDefaults,
+                CONTEXT_TYPES,
+                Map.of(),
+                mapper
+        ).get(0);
     }
 }

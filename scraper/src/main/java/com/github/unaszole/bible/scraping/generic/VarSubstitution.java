@@ -1,4 +1,4 @@
-package com.github.unaszole.bible.scraping.generic.data;
+package com.github.unaszole.bible.scraping.generic;
 
 import java.util.function.Function;
 import java.util.regex.Matcher;

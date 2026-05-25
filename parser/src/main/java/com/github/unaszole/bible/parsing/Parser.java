@@ -75,7 +75,7 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 					: "Context to open " + context + " must be one of " + contextStack.get(0).getAllowedTypesForNextChild();
 
 			// Head of stack is replaced by one where the new child is added.
-			Context parentCtx = contextStack.get(0).addChild(context);
+			Context parentCtx = contextStack.get(0).withChild(context);
 			LinkedList<Context> newStack = new LinkedList<>(contextStack);
 			newStack.removeFirst();
 			newStack.addFirst(parentCtx);
@@ -126,7 +126,7 @@ public class Parser<Position> implements Iterator<List<ContextEvent>> {
 
 		// Loop through all allowed types for the next child of the head context.
 		for(ContextType eltType: baseContext.getAllowedTypesForNextChild()) {
-			ContextMetadata previousOfType = baseContext.getLastChildOfTypeMeta(eltType);
+			ContextMetadata previousOfType = baseContext.getLastChildOfType(eltType).map(c -> c.metadata).orElse(null);
 
 			// Try to extract a real context of this type.
 			ParserCore.PositionParseOutput out = core.readContext(baseState.contextStack, eltType, previousOfType, position);

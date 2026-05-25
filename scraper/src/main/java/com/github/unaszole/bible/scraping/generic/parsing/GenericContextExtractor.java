@@ -2,22 +2,14 @@ package com.github.unaszole.bible.scraping.generic.parsing;
 
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.datamodel.ContextType;
-import com.github.unaszole.bible.datamodel.valuetypes.StdValueTypes;
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
-import com.github.unaszole.bible.downloading.DownloadedAttachment;
-import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.parsing.ContextReaderListBuilder;
 import com.github.unaszole.bible.scraping.ScrapingUtils;
-import org.crosswire.jsword.versification.BibleBook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.List;
-import java.util.Optional;
 
 public abstract class GenericContextExtractor<Position> {
     private static final Logger LOG = LoggerFactory.getLogger(GenericContextExtractor.class);
@@ -54,35 +46,7 @@ public abstract class GenericContextExtractor<Position> {
         }
 
         String value = extractValue(position, contextualData);
-        final Object finalValue;
-
-        if(type.valueType() == StdValueTypes.BIBLE_BOOK) {
-            finalValue = Optional.<Object>ofNullable(contextualData.bookRefs.get(value))
-                    .or(() -> Optional.ofNullable(BibleBook.fromOSIS(value)))
-                    .orElseGet(() -> {
-                        LOG.warn("Unknown book {} : replacing by BIBLE_INTRO to proceed.", value);
-                        ExecutionMonitor.INSTANCE.message("Unknown book " + value);
-                        return BibleBook.INTRO_BIBLE;
-                    });
-        }
-        else if(type.valueType() == StdValueTypes.URI) {
-            finalValue = Optional.ofNullable(contextualData.baseUri)
-                    .map(baseUri -> baseUri.resolve(URI.create(value)))
-                    .orElse(URI.create(value));
-        }
-        else if(type.valueType() == StdValueTypes.ATTACHMENT) {
-            try {
-                finalValue = new DownloadedAttachment(contextualData.downloader, Optional.ofNullable(contextualData.baseUri)
-                        .map(baseUri -> baseUri.resolve(URI.create(value)))
-                        .orElse(URI.create(value))
-                        .toURL());
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        else {
-            finalValue = value;
-        }
+        final Object finalValue = contextualData.mapper.mapToValue(type.valueType(), value);
 
         builder.followedBy(
                 (as, pot) -> getContextMetadata(as, pot, finalValue),

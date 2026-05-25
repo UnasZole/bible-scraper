@@ -2,18 +2,13 @@ package com.github.unaszole.bible.scraping.generic.data;
 
 import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
 import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
-import com.github.unaszole.bible.parsing.Context;
-import com.github.unaszole.bible.datamodel.ContextMetadata;
-import com.github.unaszole.bible.downloading.SourceFile;
-import com.github.unaszole.bible.scraping.ScrapingUtils;
-import com.github.unaszole.bible.stream.ContextStream;
-import com.github.unaszole.bible.stream.ContextStreamEditor;
+import com.github.unaszole.bible.scraping.generic.index.providers.Container;
+import com.github.unaszole.bible.scraping.generic.index.providers.ContextProvider;
+import com.github.unaszole.bible.scraping.generic.PatternConfig;
 import org.crosswire.jsword.versification.BibleBook;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * Specifies the contents of a book to retrieve from the source.
@@ -39,79 +34,27 @@ public class Book extends PagesContainer {
      * May be left empty if the {@link #pages} already contain all chapters of the book.
      */
     public List<ChapterSeq> chapters;
-    /**
-     * Configuration for a stream editor.
-     */
-    public List<StreamEditorConfig> edit;
 
-    public ChapterSeq getChapterSeq(int chapterNb) {
-        if(chapters == null) {
-            return null;
-        }
-        for (ChapterSeq seq : chapters) {
-            if (seq.containsChapter(chapterNb)) {
-                return seq;
-            }
-        }
-        return null;
-    }
+    public Container asContainer() {
+        PatternConfig bookPatternConfig = new PatternConfig(
+                Map.of("bookId", osis.getOSIS()),
+                Map.of(),
+                "book"
+        );
 
-    public List<PageData> getBookPages(PatternContainer bookDefaults, SourceFile.Builder sourceFileBuilder) {
-        return getPageFiles(bookDefaults, a -> a, "book", sourceFileBuilder);
-    }
-
-    public ContextStream.Single streamBook(PatternContainer bibleDefaults, ContextMetadata bookCtxMeta,
-                                           final SourceFile.Builder sourceFileBuilder,
-                                           final BiFunction<Context, List<PageData>, ContextStream.Single> ctxStreamer) {
-        assert bookCtxMeta.type == BibleContainers.BOOK && bookCtxMeta.id.get(BibleIdFields.BOOK) == osis;
-        final PatternContainer bookDefaults = this.defaultedBy(bibleDefaults);
-
-        // Build the list of context streams for all chapters, to append to the book page stream.
-        List<ContextStream.Single> chapterStreams;
-        if(chapters != null && !chapters.isEmpty()) {
-            // If we have a chapter structure defined, build context streams for each.
-            chapterStreams = chapters.stream()
-                    .flatMap(seq -> seq.listChapters()
-                            .map(chapterNb -> seq.streamChapter(
-                                    bookDefaults,
-                                    ScrapingUtils.forChapter(osis, chapterNb),
-                                    sourceFileBuilder,
-                                    ctxStreamer
-                            ))
-                            .filter(Objects::nonNull)
-                    )
-                    .collect(Collectors.toList());
-        }
-        else {
-            // No information on chapters, nothing to append to the book page stream.
-            chapterStreams = List.of();
-        }
-
-        // Build the book stream.
-        Context bookCtx = new Context(bookCtxMeta, bookCtxMeta.id.get(BibleIdFields.BOOK).getOSIS());
-        ContextStream.Single bookStream = null;
-
-        List<PageData> bookPages = getBookPages(bookDefaults, sourceFileBuilder);
-        if(!bookPages.isEmpty()) {
-            // We have pages for this book, prepare a context with the given streamer and append chapters at the end.
-            bookStream = ctxStreamer.apply(bookCtx, bookPages).edit().inject(
-                    ContextStreamEditor.InjectionPosition.AT_END, bookCtxMeta, chapterStreams
-            ).process();
-        }
-        else if(!chapterStreams.isEmpty()) {
-            // If we don't have a book page but we have chapter contents, just aggregate them.
-            bookStream = ContextStream.fromContents(bookCtx, chapterStreams);
-        }
-
-        // Configure editor if provided and we have a book to return.
-        if(bookStream != null && edit != null) {
-            ContextStreamEditor<ContextStream.Single> editor = bookStream.edit();
-            for(StreamEditorConfig cfg: edit) {
-                cfg.configureEditor(editor, bookCtxMeta.id.get(BibleIdFields.BOOK), 0);
-            }
-            bookStream = editor.process();
-        }
-
-        return bookStream;
+        return new Container(
+                new ContextProvider(
+                        BibleContainers.BOOK.name(),
+                        Map.of(BibleIdFields.BOOK.name(), "Id"),
+                        "Id"
+                ),
+                asPatternConfig().defaultedBy(bookPatternConfig),
+                Stream.concat(
+                        getPatternPages(),
+                        Optional.ofNullable(chapters).stream()
+                                .flatMap(Collection::stream)
+                                .map(ChapterSeq::asIteration)
+                ).toList()
+        );
     }
 }

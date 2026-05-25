@@ -23,7 +23,7 @@ public class WriterArgument {
     @CommandLine.Option(names={"--writer", "-w"}, required = true, description = "Output format to write the extracted Bible. One of : OSIS, USFM")
     private WriterType writer;
 
-    @CommandLine.Option(names = {"--outputPath", "-o"}, description = "Output file (for OSIS) or folder (for USFM). If unset, will print on stdout.")
+    @CommandLine.Option(names = {"--outputPath", "-o"}, description = "Output folder. If unset, will print on stdout.")
     private Optional<Path> outputPath;
 
     @CommandLine.Option(names = {"--typographyFixer"}, description = "Apply typography fixes while outputting. One of : ${COMPLETION-CANDIDATES}")

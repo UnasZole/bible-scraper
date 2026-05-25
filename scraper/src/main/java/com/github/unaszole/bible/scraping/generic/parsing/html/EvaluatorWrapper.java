@@ -1,6 +1,6 @@
 package com.github.unaszole.bible.scraping.generic.parsing.html;
 
-import com.github.unaszole.bible.scraping.generic.data.VarSubstitution;
+import com.github.unaszole.bible.scraping.generic.VarSubstitution;
 import com.github.unaszole.bible.scraping.generic.parsing.ContextualData;
 import org.jsoup.select.Evaluator;
 import org.jsoup.select.QueryParser;

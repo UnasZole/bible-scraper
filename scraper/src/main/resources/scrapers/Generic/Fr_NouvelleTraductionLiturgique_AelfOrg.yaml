@@ -91,11 +91,6 @@ bible:
       chapters:
         - at: 1
           pages: [ { args: { CHAPTER: 0 } }, { args: { CHAPTER: 1 } } ]
-          edit:
-            - from: { type: VERSE, verse: 12 }
-              to: { type: VERSE, verse: 33 }
-              updateVersification:
-                shiftVerse: 7
         - { from: 2, to: 10 }
 
     - osis: 1Macc
@@ -328,6 +323,12 @@ bible:
     - osis: Rev
       args: { BOOK: Ap }
       chapters: [ { from: 1, to: 22 } ]
+
+  edit:
+    - from: { type: VERSE, book: Esth, chapter: 1, verse: 12 }
+      to: { type: VERSE, book: Esth, chapter: 1, verse: 33 }
+      updateVersification:
+        shiftVerse: 7
 
 parsers:
   - html:

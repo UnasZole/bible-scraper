@@ -15,6 +15,11 @@ public class ContextMetadata {
 	public ContextMetadata(ContextType type) {
 		this(type, null);
 	}
+
+	public boolean isAncestorOf(ContextMetadata potentialDescendant) {
+		return type.childrenSpec().getDescendants().contains(potentialDescendant.type)
+				&& (id == null || id.isAncestorOf(potentialDescendant.id));
+	}
 	
 	@Override
 	public String toString() {

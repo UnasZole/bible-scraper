@@ -6,9 +6,9 @@ import java.util.stream.Collectors;
 public class ContextId {
     public static class Builder {
         private final IdType idType;
-        private final Map<IdField<?>, Object> idMap = new HashMap<>();
+        private final Map<IdField, Object> idMap = new HashMap<>();
 
-        private Builder(IdType idType, Map<IdField<?>, Object> idMap) {
+        private Builder(IdType idType, Map<IdField, Object> idMap) {
             this.idType = idType;
             this.idMap.putAll(idMap);
         }
@@ -21,14 +21,14 @@ public class ContextId {
             this(id.idType, id.idMap);
         }
 
-        public <T> Builder with(IdField<T> field, T value) {
+        public <T> Builder with(IdField field, T value) {
             assert Arrays.stream(idType.fields).anyMatch(f -> f == field)
                     : "Field " + field + " is not allowed in ID type " + idType;
             this.idMap.put(field, value);
             return this;
         }
 
-        public boolean has(IdField<?> field) {
+        public boolean has(IdField field) {
             return idMap.containsKey(field);
         }
 
@@ -39,24 +39,31 @@ public class ContextId {
 
 
     public final IdType idType;
-    private final Map<IdField<?>, Object> idMap;
+    public final Map<IdField, Object> idMap;
 
-    public ContextId(IdType idType, Map<IdField<?>, Object> idMap) {
+    public ContextId(IdType idType, Map<IdField, Object> idMap) {
         assert idType.isValid(idMap);
         this.idType = idType;
         this.idMap = Collections.unmodifiableMap(idMap);
     }
 
-    public <T> T get(IdField<T> field) {
+    public <T> T get(IdField field) {
         return (T) idMap.get(field);
     }
 
-    public <T> ContextId with(IdField<T> field, T value) {
+    public <T> ContextId with(IdField field, T value) {
         return new Builder(idType, idMap).with(field, value).build();
     }
 
-    private <T> Optional<ContextId> withNextValueForField(IdField<T> field) {
-        Optional<T> nextFieldValue = field.type.next(get(field));
+    public boolean isAncestorOf(ContextId potentialDescendant) {
+        // A context ID is an ancestor of another if all its ID fields have the same value in the descendant.
+        // (The descendant may, and usually will, have additional fields).
+        return this.idMap.entrySet().stream()
+                .allMatch(e -> Objects.equals(potentialDescendant.idMap.get(e.getKey()), e.getValue()));
+    }
+
+    private Optional<ContextId> withNextValueForField(IdField field) {
+        Optional<?> nextFieldValue = field.valueType().next(get(field));
         return nextFieldValue.map(t -> with(field, t));
     }
 
@@ -64,8 +71,8 @@ public class ContextId {
         return withNextValueForField(idType.fields[idType.fields.length - 1]);
     }
 
-    private <T> String fieldToString(IdField<T> field) {
-        return field.type.toString(get(field));
+    private String fieldToString(IdField field) {
+        return field.valueType().toString(get(field));
     }
 
     @Override

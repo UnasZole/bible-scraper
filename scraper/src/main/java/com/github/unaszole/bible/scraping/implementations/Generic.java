@@ -1,18 +1,23 @@
 package com.github.unaszole.bible.scraping.implementations;
 
 import com.github.unaszole.bible.JarUtils;
-import com.github.unaszole.bible.datamodel.contexttypes.BibleContainers;
-import com.github.unaszole.bible.datamodel.idtypes.BibleIdFields;
+import com.github.unaszole.bible.datamodel.valuetypes.StdValueTypes;
 import com.github.unaszole.bible.parsing.Context;
 import com.github.unaszole.bible.datamodel.ContextMetadata;
 import com.github.unaszole.bible.monitor.ExecutionMonitor;
 import com.github.unaszole.bible.parsing.Parser;
 import com.github.unaszole.bible.scraping.generic.Config;
+import com.github.unaszole.bible.scraping.generic.ValueMapper;
+import com.github.unaszole.bible.scraping.generic.ValueTypeMapper;
 import com.github.unaszole.bible.scraping.generic.data.*;
-import com.github.unaszole.bible.scraping.generic.parsing.PageListParser;
+import com.github.unaszole.bible.scraping.generic.index.IndexNode;
+import com.github.unaszole.bible.scraping.generic.index.IndexedContentParser;
+import com.github.unaszole.bible.scraping.generic.index.NotifyingIterator;
+import com.github.unaszole.bible.scraping.generic.PatternConfig;
+import com.github.unaszole.bible.scraping.generic.parsing.TextParser;
+import com.github.unaszole.bible.stream.ContextStreamEditor;
 import com.github.unaszole.bible.writing.datamodel.DocumentMetadata;
 import com.github.unaszole.bible.downloading.CachedDownloader;
-import com.github.unaszole.bible.downloading.HttpSourceFile;
 import com.github.unaszole.bible.scraping.Scraper;
 import com.github.unaszole.bible.stream.ContextStream;
 import org.slf4j.Logger;
@@ -106,57 +111,27 @@ public class Generic extends Scraper {
         this.downloader = new CachedDownloader(getCacheSubPath(cachePath, inputs));
     }
 
-    private static class NotifyingIterator<T> implements Iterator<T> {
-
-        private final Iterator<T> wrapped;
-        private final Runnable startCallback;
-        private boolean startNotified = false;
-        private final Runnable endCallback;
-        private boolean endNotified = false;
-
-        private NotifyingIterator(Iterator<T> wrapped, Runnable startCallback, Runnable endCallback) {
-            this.wrapped = wrapped;
-            this.startCallback = startCallback;
-            this.endCallback = endCallback;
-        }
-
-        @Override
-        public boolean hasNext() {
-            if(!startNotified) {
-                startNotified = true;
-                startCallback.run();
-            }
-            boolean res = wrapped.hasNext();
-            if(!res && !endNotified) {
-                endNotified = true;
-                endCallback.run();
-            }
-            return res;
-        }
-
-        @Override
-        public T next() {
-            return wrapped.next();
-        }
-    }
-
     private ContextStream.Single contextStreamer(Context ctx, List<PageData> pages) {
+        ValueMapper mapper = new ValueMapper()
+                .withMapper(StdValueTypes.BIBLE_BOOK, new ValueTypeMapper.BibleBookMapper(config.bible.getBookReferences()));
+
         final ExecutionMonitor.Item statusItem = ExecutionMonitor.INSTANCE.register(ctx.metadata.id.toString());
         return new Parser.TerminalParser<>(
-                new PageListParser(
+                new IndexedContentParser(
                         config.parsers.stream()
                                 .collect(Collectors.toMap(
                                         p -> Optional.ofNullable(p.id).orElse("main"),
                                         p -> p
                                 )),
-                        downloader, config.bible.getBookReferences()
+                        downloader, mapper
                 ),
-                new NotifyingIterator<>(pages.iterator(), statusItem::start, statusItem::complete),
+                new NotifyingIterator<>(pages.stream()
+                        .map(IndexNode::new).iterator(), statusItem::start, statusItem::complete),
                 ctx
         ).asContextStream();
     }
 
-    private PatternContainer globalDefaults() {
+    private PatternConfig globalDefaults() {
         return config.getGlobalDefaults(flagValues);
     }
 
@@ -167,41 +142,32 @@ public class Generic extends Scraper {
 
     @Override
     protected ContextStream.Single getContextStreamFor(final ContextMetadata rootContextMeta) {
-        Book book;
-        ChapterSeq seq;
-        switch ((BibleContainers) rootContextMeta.type) {
-            case CHAPTER:
-                // Fetch book and chapter sequence. If we can't find them, nothing to load, return null.
-                book = config.bible.getBook(rootContextMeta.id.get(BibleIdFields.BOOK));
-                if(book == null) {
-                    return null;
-                }
-                seq = book.getChapterSeq(rootContextMeta.id.get(BibleIdFields.CHAPTER));
-                if(seq == null) {
-                    return null;
-                }
+        ValueMapper mapper = new ValueMapper()
+                .withMapper(StdValueTypes.BIBLE_BOOK, new ValueTypeMapper.BibleBookMapper(config.bible.getBookReferences()));
 
-                // Stream the requested chapter.
-                return seq.streamChapter(book.defaultedBy(config.bible.defaultedBy(globalDefaults())), rootContextMeta,
-                        new HttpSourceFile.Builder(), this::contextStreamer);
+        IndexNode rootNode = config.bible.getRootNode(globalDefaults(), mapper);
 
-            case BOOK:
-                // Fetch book. If we can't find it, nothing to load, return null.
-                book = config.bible.getBook(rootContextMeta.id.get(BibleIdFields.BOOK));
-                if(book == null) {
-                    return null;
-                }
+        IndexNode closestAncestor = rootNode.find(rootContextMeta)
+                .orElseThrow(() -> new IllegalArgumentException("Could not find any entry for " + rootContextMeta + " in the index."));
 
-                // Stream the requested book.
-                return book.streamBook(config.bible.defaultedBy(globalDefaults()), rootContextMeta,
-                        new HttpSourceFile.Builder(), this::contextStreamer);
+        Map<String, TextParser> namedParsers = config.parsers.stream()
+                .collect(Collectors.toMap(
+                        p -> Optional.ofNullable(p.id).orElse("main"),
+                        p -> p
+                ));
 
-            case BIBLE:
-                return config.bible.streamBible(globalDefaults(), rootContextMeta,
-                        new HttpSourceFile.Builder(), this::contextStreamer);
+        ContextStream.Single ctxStream = closestAncestor.stream(namedParsers, downloader, mapper).extractStream(rootContextMeta);
+
+        // Configure editor if provided and we have a bible to return.
+        if(config.bible.edit != null) {
+            ContextStreamEditor<ContextStream.Single> editor = ctxStream.edit();
+            for(StreamEditorConfig cfg: config.bible.edit) {
+                cfg.configureEditor(editor, null, 0);
+            }
+            ctxStream = editor.process();
         }
 
-        return null;
+        return ctxStream;
     }
 
 }
