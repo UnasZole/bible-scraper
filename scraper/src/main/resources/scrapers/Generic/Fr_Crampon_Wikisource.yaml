@@ -306,36 +306,40 @@ parsers:
       elements:
 
         - selector: ".prp-pages-output h2"
-          withAncestors: [ BOOK_TITLE ]
           contexts:
-            - type: TEXT
-              op: text
-            - type: TEXT
-              op: "literal= "
+            - type: BOOK_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+                - type: TEXT
+                  op: "literal= "
 
         - selector: ".prp-pages-output h3"
-          withAncestors: [ MAJOR_SECTION_TITLE ]
           contexts:
-            - type: TEXT
-              op: text
-            - type: TEXT
-              op: "literal= "
+            - type: MAJOR_SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+                - type: TEXT
+                  op: "literal= "
 
         - selector: ".prp-pages-output h4"
-          withAncestors: [ SECTION_TITLE ]
           contexts:
-            - type: TEXT
-              op: text
-            - type: TEXT
-              op: "literal= "
+            - type: SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+                - type: TEXT
+                  op: "literal= "
 
         - selector: ":is(div.alineanegatif, div.alinea)"
-          withAncestors: [ MINOR_SECTION_TITLE ]
           contexts:
-            - type: TEXT
-              op: text
-            - type: TEXT
-              op: "literal= "
+            - type: MINOR_SECTION_TITLE
+              descendants:
+                - type: TEXT
+                  op: text
+                - type: TEXT
+                  op: "literal= "
 
         - selector: ".prp-pages-output div > a[href='#Sommaire']:matches(^\\d+$)"
           contexts:

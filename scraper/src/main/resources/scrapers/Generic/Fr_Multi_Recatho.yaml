@@ -262,3 +262,17 @@ parsers:
               descendants:
                 - type: TEXT
                   op: text
+        - selector: "div.vs > div.div-image"
+          contexts:
+            - type: PARAGRAPH_BREAK
+            - type: FIGURE
+              selector: "img.image"
+              op: "attribute=src"
+              descendants:
+                - type: FIG_ALT
+                  selector: "div.legende"
+                  op: text
+                - type: FIG_CAPTION
+                  selector: "div.legende"
+                  op: text
+            - type: PARAGRAPH_BREAK
